@@ -625,15 +625,15 @@ function app() {
 
     // F22.9.3-bonus — Cron presets per wizard goals
     GOAL_CRON_PRESETS: [
-      { id: 'manual',           label: 'Solo manuale (no auto-judge)', expr: '' },
+      { id: 'manual',           label: 'Manual only (no auto-judge)', expr: '' },
       { id: 'daily_morning',    label: 'Daily · 09:00',               expr: '0 9 * * *' },
       { id: 'daily_evening',    label: 'Daily · 18:00',               expr: '0 18 * * *' },
       { id: 'every_2h',         label: 'Every 2 hours',                  expr: '0 */2 * * *' },
       { id: 'every_6h',         label: 'Every 6 hours',                  expr: '0 */6 * * *' },
-      { id: 'weekly_mon_09',    label: 'Settimanale · Lun 09:00',     expr: '0 9 * * 1' },
-      { id: 'weekly_sun_18',    label: 'Settimanale · Dom 18:00',     expr: '0 18 * * 0' },
-      { id: 'weekly_fri_17',    label: 'Settimanale · Ven 17:00 (post-week review)', expr: '0 17 * * 5' },
-      { id: 'monthly_1st',      label: 'Mensile · 1° del mese 09:00', expr: '0 9 1 * *' },
+      { id: 'weekly_mon_09',    label: 'Weekly · Mon 09:00',     expr: '0 9 * * 1' },
+      { id: 'weekly_sun_18',    label: 'Weekly · Sun 18:00',     expr: '0 18 * * 0' },
+      { id: 'weekly_fri_17',    label: 'Weekly · Fri 17:00 (post-week review)', expr: '0 17 * * 5' },
+      { id: 'monthly_1st',      label: 'Monthly · 1st of the month 09:00', expr: '0 9 1 * *' },
       { id: 'custom',           label: 'Custom (free cron expression)', expr: '' },
     ],
 
@@ -1571,7 +1571,7 @@ function app() {
 
     _pianoStatoLabel(stato) {
       return {
-        pubblicato: 'Pubblicato', bozza: 'Bozza', brief: 'Brief',
+        pubblicato: 'Published', bozza: 'Draft', brief: 'Brief',
         idea: 'Idea', repurposed: 'Repurposed',
       }[stato] || stato;
     },
@@ -1713,14 +1713,14 @@ function app() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ project: proj }),
         });
-        if (!res.ok) { this.socialPerfMsg = '⚠️ ' + ((await res.json()).detail || 'Refresh fallito'); return; }
+        if (!res.ok) { this.socialPerfMsg = '⚠️ ' + ((await res.json()).detail || 'Refresh failed'); return; }
         const d = await res.json();
         const errs = (d.errors || []).length;
-        this.socialPerfMsg = `Engagement aggiornato: ${d.collected} post${errs ? ` · ${errs} non raccolti` : ''}.`;
+        this.socialPerfMsg = `Engagement updated: ${d.collected} posts${errs ? ` · ${errs} not collected` : ''}.`;
         await this.loadSocialPerf();
         setTimeout(() => { this.socialPerfMsg = ''; }, 9000);
       } catch (e) {
-        this.socialPerfMsg = '⚠️ Errore: ' + (e.message || e);
+        this.socialPerfMsg = '⚠️ Error: ' + (e.message || e);
       } finally {
         this.socialPerfRefreshing = false;
       }
@@ -1761,13 +1761,13 @@ function app() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ project: proj }),
         });
-        if (!res.ok) { this.statsMsg = '⚠️ ' + ((await res.json()).detail || 'Refresh fallito'); return; }
+        if (!res.ok) { this.statsMsg = '⚠️ ' + ((await res.json()).detail || 'Refresh failed'); return; }
         const d = await res.json();
-        this.statsMsg = d.collected ? `Aggiornato: ${d.collected} righe raccolte.` : ('ℹ️ ' + (d.note || 'Nessun dato raccolto.'));
+        this.statsMsg = d.collected ? `Updated: ${d.collected} rows collected.` : ('ℹ️ ' + (d.note || 'No data collected.'));
         await this.loadStats();
         setTimeout(() => { this.statsMsg = ''; }, 8000);
       } catch (e) {
-        this.statsMsg = '⚠️ Errore: ' + (e.message || e);
+        this.statsMsg = '⚠️ Error: ' + (e.message || e);
       } finally {
         this.statsRefreshing = false;
       }
@@ -1806,50 +1806,50 @@ function app() {
     },
 
     get overviewKpis() {
-      const p = `vs ${this.statsRange}gg prec.`;
+      const p = `vs prev. ${this.statsRange}d`;
       return [
-        this._kpi('clicks', 'Click organici', 'num', p, true),
-        this._kpi('impressions', 'Impressioni', 'num', p),
+        this._kpi('clicks', 'Organic clicks', 'num', p, true),
+        this._kpi('impressions', 'Impressions', 'num', p),
         this._kpi('ctr', 'CTR', 'pct', p),
-        this._kpi('position', 'Posizione media', 'pos', p),
+        this._kpi('position', 'Average position', 'pos', p),
       ];
     },
 
     get analyticsKpis() {
-      const p = `vs ${this.statsRange}gg prec.`;
+      const p = `vs prev. ${this.statsRange}d`;
       return [
-        this._kpi('sessions', 'Sessioni', 'num', p, false),
-        this._kpi('conversions', 'Conversioni', 'num', p),
-        this._kpi('clicks', 'Click da SEO', 'num', 'organico GSC'),
-        this._kpi('ctr', 'CTR organico', 'pct', p),
+        this._kpi('sessions', 'Sessions', 'num', p, false),
+        this._kpi('conversions', 'Conversions', 'num', p),
+        this._kpi('clicks', 'SEO clicks', 'num', 'GSC organic'),
+        this._kpi('ctr', 'Organic CTR', 'pct', p),
       ];
     },
 
     get adsKpis() {
       return [
-        this._kpi('spend', 'Spesa', 'eur', `${this.statsRange}gg`),
-        this._kpi('roas', 'ROAS', 'num', 'ricavi / spesa'),
+        this._kpi('spend', 'Spend', 'eur', `${this.statsRange}d`),
+        this._kpi('roas', 'ROAS', 'num', 'revenue / spend'),
       ];
     },
 
     get shoppingKpis() {
-      const p = `vs ${this.statsRange}gg prec.`;
+      const p = `vs prev. ${this.statsRange}d`;
       const m = this.statsData?.merchant?.kpis || {};
       return [
-        this._kpiFrom(m.clicks, 'mclicks', 'Click listing', 'num', p, true),
-        this._kpiFrom(m.impressions, 'mimpr', 'Impressioni', 'num', p),
+        this._kpiFrom(m.clicks, 'mclicks', 'Listing clicks', 'num', p, true),
+        this._kpiFrom(m.impressions, 'mimpr', 'Impressions', 'num', p),
         this._kpiFrom(m.ctr, 'mctr', 'CTR', 'pct', p),
-        this._kpiFrom(m.conversion_value, 'mval', 'Valore conversioni', 'eur', p),
+        this._kpiFrom(m.conversion_value, 'mval', 'Conversion value', 'eur', p),
       ];
     },
 
     get socialKpis() {
-      const p = `vs ${this.statsRange}gg prec.`;
+      const p = `vs prev. ${this.statsRange}d`;
       const s = this.statsData?.social || {};
       const k = s.kpis || {};
       return [
         this._kpiFrom(k.ig_reach, 'sreach', 'Reach IG', 'num', p, true),
-        this._kpiFrom(k.fb_interactions, 'sint', 'Interazioni FB', 'num', p),
+        this._kpiFrom(k.fb_interactions, 'sint', 'FB interactions', 'num', p),
         this._kpiFrom({ value: s.followers?.instagram ?? null, delta: null }, 'sfig', 'Follower IG', 'num', 'snapshot'),
         this._kpiFrom({ value: s.followers?.facebook ?? null, delta: null }, 'sffb', 'Follower FB', 'num', 'snapshot'),
       ];
@@ -1878,11 +1878,11 @@ function app() {
           type: 'line',
           data: { labels: g.map(p => p.date), datasets: [
             { label: 'Click', data: g.map(p => p.clicks), borderColor: BRAND, backgroundColor: 'rgba(11,136,123,.10)', yAxisID: 'y', tension: .3, fill: true, pointRadius: 0, borderWidth: 2 },
-            { label: 'Impressioni', data: g.map(p => p.impressions), borderColor: INK, borderDash: [5, 4], yAxisID: 'y1', tension: .3, pointRadius: 0, borderWidth: 1.5 },
+            { label: 'Impressions', data: g.map(p => p.impressions), borderColor: INK, borderDash: [5, 4], yAxisID: 'y1', tension: .3, pointRadius: 0, borderWidth: 1.5 },
           ] },
           options: baseOpts({ scales: {
             y: { position: 'left', beginAtZero: true, title: { display: true, text: 'Click' } },
-            y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Impressioni' } },
+            y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Impressions' } },
             x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } },
           } }),
         });
@@ -1892,7 +1892,7 @@ function app() {
         mk('stat-chart-ga', {
           type: 'line',
           data: { labels: a.map(p => p.date), datasets: [
-            { label: 'Sessioni', data: a.map(p => p.sessions), borderColor: BRAND, backgroundColor: 'rgba(11,136,123,.12)', tension: .3, fill: true, pointRadius: 0, borderWidth: 2 },
+            { label: 'Sessions', data: a.map(p => p.sessions), borderColor: BRAND, backgroundColor: 'rgba(11,136,123,.12)', tension: .3, fill: true, pointRadius: 0, borderWidth: 2 },
           ] },
           options: baseOpts({ plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } } } }),
         });
@@ -1916,11 +1916,11 @@ function app() {
           type: 'line',
           data: { labels: m.map(p => p.date), datasets: [
             { label: 'Click', data: m.map(p => p.clicks), borderColor: BRAND, backgroundColor: 'rgba(11,136,123,.10)', yAxisID: 'y', tension: .3, fill: true, pointRadius: 0, borderWidth: 2 },
-            { label: 'Impressioni', data: m.map(p => p.impressions), borderColor: INK, borderDash: [5, 4], yAxisID: 'y1', tension: .3, pointRadius: 0, borderWidth: 1.5 },
+            { label: 'Impressions', data: m.map(p => p.impressions), borderColor: INK, borderDash: [5, 4], yAxisID: 'y1', tension: .3, pointRadius: 0, borderWidth: 1.5 },
           ] },
           options: baseOpts({ scales: {
             y: { position: 'left', beginAtZero: true, title: { display: true, text: 'Click' } },
-            y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Impressioni' } },
+            y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Impressions' } },
             x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } },
           } }),
         });
@@ -1930,8 +1930,8 @@ function app() {
         mk('stat-chart-ads', {
           type: 'bar',
           data: { labels: s.map(p => p.date), datasets: [
-            { type: 'bar', label: 'Ricavi €', data: s.map(p => p.revenue), backgroundColor: 'rgba(11,136,123,.5)', yAxisID: 'y' },
-            { type: 'line', label: 'Spesa €', data: s.map(p => p.spend), borderColor: INK, tension: .3, pointRadius: 0, yAxisID: 'y' },
+            { type: 'bar', label: 'Revenue €', data: s.map(p => p.revenue), backgroundColor: 'rgba(11,136,123,.5)', yAxisID: 'y' },
+            { type: 'line', label: 'Spend €', data: s.map(p => p.spend), borderColor: INK, tension: .3, pointRadius: 0, yAxisID: 'y' },
           ] },
           options: baseOpts({ scales: { y: { beginAtZero: true }, x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } } } }),
         });
@@ -2000,12 +2000,12 @@ function app() {
           body: JSON.stringify({ query, mode: this.research.mode }),
         });
         const d = await res.json();
-        if (!res.ok) throw new Error(d.detail || 'lancio fallito');
+        if (!res.ok) throw new Error(d.detail || 'launch failed');
         this.research.query = '';
-        this.research.message = 'Partita — il report arriva come notifica.';
+        this.research.message = 'Launched — the report will arrive as a notification.';
         await this.loadResearchTasks();
       } catch (e) {
-        this.research.message = 'Errore: ' + (e.message || e);
+        this.research.message = 'Error: ' + (e.message || e);
       } finally {
         this.research.launching = false;
       }
@@ -2018,7 +2018,7 @@ function app() {
       }
       const d = await this.fetchJson(`/api/research/deep/${encodeURIComponent(t.task_id)}/report`);
       if (!d) {
-        this.showToast('error', 'Report non disponibile', '');
+        this.showToast('error', 'Report not available', '');
         return;
       }
       this.research.current = { task_id: t.task_id, path: d.path, content: d.content };
@@ -2026,14 +2026,14 @@ function app() {
     },
 
     async deleteResearch(t) {
-      if (!confirm(`Eliminare la ricerca e il report?\n"${(t.query || '').slice(0, 80)}"`)) return;
+      if (!confirm(`Delete the research and its report?\n"${(t.query || '').slice(0, 80)}"`)) return;
       try {
         const r = await fetch(`/api/research/deep/${encodeURIComponent(t.task_id)}`, { method: 'DELETE' });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         if (this.research.current && this.research.current.task_id === t.task_id) this.research.current = null;
         await this.loadResearchTasks();
       } catch (e) {
-        this.showToast('error', 'Eliminazione fallita', e.message || '');
+        this.showToast('error', 'Delete failed', e.message || '');
       }
     },
 
@@ -2064,12 +2064,12 @@ function app() {
       const s = this.audit.summary;
       if (!s) return [];
       return [
-        { label: 'Prodotti', value: s.count },
-        { label: 'SEO medio', value: s.avg_seo },
-        { label: 'E-E-A-T medio', value: s.avg_eeat },
-        { label: 'GEO medio', value: s.avg_geo },
+        { label: 'Products', value: s.count },
+        { label: 'Avg SEO', value: s.avg_seo },
+        { label: 'Avg E-E-A-T', value: s.avg_eeat },
+        { label: 'Avg GEO', value: s.avg_geo },
         { label: 'Quick-win', value: s.quick_wins },
-        { label: 'Con dati GSC', value: s.with_gsc },
+        { label: 'With GSC data', value: s.with_gsc },
       ];
     },
 
@@ -2091,7 +2091,7 @@ function app() {
         });
         const d = await res.json().catch(() => ({}));
         if (!res.ok) {
-          this.audit.msg = '⚠️ ' + (d.detail || `Errore ${res.status}`);
+          this.audit.msg = '⚠️ ' + (d.detail || `Error ${res.status}`);
           this.audit.products = []; this.audit.summary = null;
           return;
         }
@@ -2109,9 +2109,9 @@ function app() {
     // pre-compilato (l'utente lo vede e invia). L'auto-route su seo/eeat smista.
     sendToSeoCopy(p) {
       const s = p.scores;
-      const prompt = `Sistema SEO / E-E-A-T / GEO di «${p.name}» (${p.permalink}).\n`
-        + `Score attuali — SEO ${s.seo}, E-E-A-T ${s.eeat}, GEO ${s.geo}.\n`
-        + `Analizza il contenuto e proponi i fix prioritari in bozza (read-back dopo ogni modifica).`;
+      const prompt = `Fix the SEO / E-E-A-T / GEO of «${p.name}» (${p.permalink}).\n`
+        + `Current scores — SEO ${s.seo}, E-E-A-T ${s.eeat}, GEO ${s.geo}.\n`
+        + `Analyze the content and propose the priority fixes as a draft (read-back after each change).`;
       this.view = 'chat';
       this.currentConversation = null;
       this.currentConvId = null;
@@ -2159,12 +2159,12 @@ function app() {
         const data = await res.json();
         this.hubConnectors = data.connectors || this.hubConnectors;
         this._initHubConnDraft();
-        this.hubConnMsg = '✓ Salvato nella cassaforte cifrata dell\'hub.';
+        this.hubConnMsg = '✓ Saved to the hub\'s encrypted vault.';
         this.refreshIcons();
         setTimeout(() => { this.hubConnMsg = ''; }, 4000);
       } catch (e) {
         console.error('[hub-connectors] save err', e);
-        this.hubConnMsg = '⚠️ Errore: ' + (e.message || e);
+        this.hubConnMsg = '⚠️ Error: ' + (e.message || e);
       } finally {
         this.hubConnSaving = false;
       }
@@ -2190,14 +2190,14 @@ function app() {
           body: JSON.stringify({ scope: scope || 'hub', prompt: this.mediaGen.prompt.trim(), model: this.mediaGen.model }),
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) { this.mediaGen.msg = '⚠️ ' + (data.detail || `Errore ${res.status}`); return; }
-        this.mediaGen.msg = `✓ Generata (${data.model}) · ${(data.files || []).length} file`;
+        if (!res.ok) { this.mediaGen.msg = '⚠️ ' + (data.detail || `Error ${res.status}`); return; }
+        this.mediaGen.msg = `✓ Generated (${data.model}) · ${(data.files || []).length} file(s)`;
         this.mediaGen.prompt = '';
         if (scope === 'hub') await this.loadMedia(); else await this.loadProjectMedia();
         this.refreshIcons();
         setTimeout(() => { this.mediaGen.msg = ''; }, 8000);
       } catch (e) {
-        this.mediaGen.msg = '⚠️ Errore: ' + (e.message || e);
+        this.mediaGen.msg = '⚠️ Error: ' + (e.message || e);
       } finally {
         this.mediaGen.busy = false;
       }
@@ -2244,12 +2244,12 @@ function app() {
         this.connectors = data.connectors || this.connectors;
         this.connMaterialized = !!data.materialized;
         this._initConnDraft();   // ripulisce gli input secret + aggiorna stato/plain
-        this.connMsg = 'Connettori salvati nella cassaforte cifrata.';
+        this.connMsg = 'Connectors saved to the encrypted vault.';
         this.refreshIcons();
         setTimeout(() => { this.connMsg = ''; }, 4000);
       } catch (e) {
         console.error('[connectors] save err', e);
-        alert('Errore salvataggio connettori: ' + (e.message || e));
+        alert('Error saving connectors: ' + (e.message || e));
       } finally {
         this.connSaving = false;
       }
@@ -2270,22 +2270,22 @@ function app() {
         const data = await res.json();
         this.connMaterialized = !!data.materialized;
         this.connMsg = turnOn
-          ? 'Segreti materializzati in chiaro per il runtime.'
-          : 'Segreti rimossi dal runtime (restano nella cassaforte cifrata).';
+          ? 'Secrets materialized in plaintext for the runtime.'
+          : 'Secrets removed from the runtime (they remain in the encrypted vault).';
         this.refreshIcons();
         setTimeout(() => { this.connMsg = ''; }, 4000);
       } catch (e) {
         console.error('[connectors] materialize err', e);
-        alert('Errore: ' + (e.message || e));
+        alert('Error: ' + (e.message || e));
       } finally {
         this.connSaving = false;
       }
     },
 
     connStatusLabel(con) {
-      if (con.status === 'connected') return 'connesso';
-      if (con.status === 'partial') return `parziale ${con.set_count}/${con.total}`;
-      return 'mancante';
+      if (con.status === 'connected') return 'connected';
+      if (con.status === 'partial') return `partial ${con.set_count}/${con.total}`;
+      return 'missing';
     },
 
     connStatusClass(status) {
@@ -2316,11 +2316,11 @@ function app() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ slug: (this.loginForm.slug || '').trim().toLowerCase(), password: this.loginForm.password }),
         });
-        if (res.status === 401) { this.loginForm.error = 'Credenziali non valide'; return; }
+        if (res.status === 401) { this.loginForm.error = 'Invalid credentials'; return; }
         if (!res.ok) throw new Error(await res.text());
         window.location.reload();   // ricarica con la sessione attiva
       } catch (e) {
-        this.loginForm.error = 'Errore: ' + (e.message || e);
+        this.loginForm.error = 'Error: ' + (e.message || e);
       } finally {
         this.loginForm.busy = false;
       }
@@ -2368,11 +2368,11 @@ function app() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ members: arr }),
         });
-        if (!res.ok) { this.showToast('error', '⚠️ ' + ((await res.json()).detail || 'Errore')); return; }
+        if (!res.ok) { this.showToast('error', '⚠️ ' + ((await res.json()).detail || 'Error')); return; }
         const d = await res.json();
         this.wsMembers = { ...this.wsMembers, [ws]: d.members || arr };
       } catch (e) {
-        this.showToast('error', 'Errore: ' + (e.message || e));
+        this.showToast('error', 'Error: ' + (e.message || e));
       }
     },
 
@@ -2421,14 +2421,14 @@ function app() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ project: proj }),
         });
-        if (!res.ok) { this.catalogoMsg = '⚠️ ' + ((await res.json()).detail || 'Sync fallito'); return; }
+        if (!res.ok) { this.catalogoMsg = '⚠️ ' + ((await res.json()).detail || 'Sync failed'); return; }
         const d = await res.json();
         const c = d.counts || {};
-        this.catalogoMsg = `Sincronizzato: ${Object.entries(c).map(([k, v]) => `${v ?? '—'} ${k}`).join(' · ')}`;
+        this.catalogoMsg = `Synced: ${Object.entries(c).map(([k, v]) => `${v ?? '—'} ${k}`).join(' · ')}`;
         await this.loadCatalogo();
         setTimeout(() => { this.catalogoMsg = ''; }, 6000);
       } catch (e) {
-        this.catalogoMsg = '⚠️ Errore: ' + (e.message || e);
+        this.catalogoMsg = '⚠️ Error: ' + (e.message || e);
       } finally {
         this.catalogoSyncing = false;
       }
@@ -2465,7 +2465,7 @@ function app() {
     async doActivate(bp) {
       if (this.catalogForm.busy) return;
       const brand = (this.catalogForm.brand || '').trim();
-      if (!brand) { this.catalogForm.error = 'Inserisci il nome del brand'; return; }
+      if (!brand) { this.catalogForm.error = 'Enter the brand name'; return; }
       this.catalogForm.busy = true; this.catalogForm.error = '';
       try {
         const res = await fetch('/api/workspaces/from-blueprint', {
@@ -2475,14 +2475,14 @@ function app() {
             backend: this.catalogForm.backend, ecommerce: this.catalogForm.ecommerce,
           }),
         });
-        if (!res.ok) { this.catalogForm.error = (await res.json()).detail || 'Errore creazione'; return; }
+        if (!res.ok) { this.catalogForm.error = (await res.json()).detail || 'Create failed'; return; }
         const data = await res.json();
         this.catalogActivating = null;
         await this.loadRegistry();
-        this.showToast('success', '✅ Workspace attivato', data.slug || brand);
+        this.showToast('success', '✅ Workspace activated', data.slug || brand);
         if (data.slug) this.switchToProject(data.slug);
       } catch (e) {
-        this.catalogForm.error = 'Errore: ' + (e.message || e);
+        this.catalogForm.error = 'Error: ' + (e.message || e);
       } finally {
         this.catalogForm.busy = false;
       }
@@ -2505,12 +2505,12 @@ function app() {
           body: JSON.stringify({ mode }),
         });
         if (res.status === 402) {
-          this.identitaMsg = '🔒 La modalità Concierge è l\'edizione Business. Attiva una license-key qui sotto per sbloccarla.';
+          this.identitaMsg = '🔒 Concierge mode is the Business edition. Activate a license key below to unlock it.';
           return;
         }
         if (!res.ok) {
           const j = await res.json().catch(() => ({}));
-          this.identitaMsg = (typeof j.detail === 'string' ? j.detail : 'Errore cambio modalità');
+          this.identitaMsg = (typeof j.detail === 'string' ? j.detail : 'Mode switch failed');
           return;
         }
         const d = await res.json();
@@ -2518,7 +2518,7 @@ function app() {
         // passare a concierge → ricarica per attivare il gate/login
         if (d.mode === 'concierge') window.location.reload();
       } catch (e) {
-        this.identitaMsg = 'Errore: ' + (e.message || e);
+        this.identitaMsg = 'Error: ' + (e.message || e);
       }
     },
 
@@ -2533,11 +2533,11 @@ function app() {
             password: this.newUser.password, role: this.identitaUsers.length ? this.newUser.role : undefined,
           }),
         });
-        if (!res.ok) { this.newUser.error = (await res.json()).detail || 'Errore'; return; }
+        if (!res.ok) { this.newUser.error = (await res.json()).detail || 'Error'; return; }
         this.newUser = { slug: '', name: '', password: '', role: 'member', error: '' };
         this.loadUsers();
       } catch (e) {
-        this.newUser.error = 'Errore: ' + (e.message || e);
+        this.newUser.error = 'Error: ' + (e.message || e);
       } finally {
         this.identitaBusy = false;
       }
@@ -2550,38 +2550,38 @@ function app() {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ role }),
         });
-        if (!res.ok) { this.showToast('error', '⚠️ ' + ((await res.json()).detail || 'Errore ruolo')); }
+        if (!res.ok) { this.showToast('error', '⚠️ ' + ((await res.json()).detail || 'Role error')); }
       } catch (e) {
-        this.showToast('error', 'Errore: ' + (e.message || e));
+        this.showToast('error', 'Error: ' + (e.message || e));
       } finally {
         this.loadUsers();   // riallinea la select allo stato reale (anche su rifiuto)
       }
     },
 
     async resetPassword(u) {
-      const pw = prompt(`Nuova password per @${u.slug} (min 8 caratteri):`);
+      const pw = prompt(`New password for @${u.slug} (min 8 characters):`);
       if (pw === null) return;
       try {
         const res = await fetch(`/api/auth/users/${encodeURIComponent(u.slug)}/password`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password: pw }),
         });
-        if (!res.ok) { this.showToast('error', '⚠️ ' + ((await res.json()).detail || 'Errore')); return; }
-        this.showToast('success', '✅ Password aggiornata', '@' + u.slug);
+        if (!res.ok) { this.showToast('error', '⚠️ ' + ((await res.json()).detail || 'Error')); return; }
+        this.showToast('success', '✅ Password updated', '@' + u.slug);
       } catch (e) {
-        this.showToast('error', 'Errore: ' + (e.message || e));
+        this.showToast('error', 'Error: ' + (e.message || e));
       }
     },
 
     async deleteUser(u) {
-      if (!confirm(`Eliminare l'utente @${u.slug}? L'azione è irreversibile.`)) return;
+      if (!confirm(`Delete user @${u.slug}? This action is irreversible.`)) return;
       try {
         const res = await fetch(`/api/auth/users/${encodeURIComponent(u.slug)}`, { method: 'DELETE' });
-        if (!res.ok) { this.showToast('error', '⚠️ ' + ((await res.json()).detail || 'Errore')); return; }
-        this.showToast('success', '🗑 Utente eliminato', '@' + u.slug);
+        if (!res.ok) { this.showToast('error', '⚠️ ' + ((await res.json()).detail || 'Error')); return; }
+        this.showToast('success', '🗑 User deleted', '@' + u.slug);
         this.loadUsers();
       } catch (e) {
-        this.showToast('error', 'Errore: ' + (e.message || e));
+        this.showToast('error', 'Error: ' + (e.message || e));
       }
     },
 
@@ -2685,14 +2685,14 @@ function app() {
         await this.openBrainNote(saved.slug);
       } catch (e) {
         console.error('[brain] save err', e);
-        alert('Errore salvataggio nota: ' + (e.message || e));
+        alert('Error saving note: ' + (e.message || e));
       } finally {
         this.brainSaving = false;
       }
     },
 
     async deleteBrainNote() {
-      if (!this.brainOpen?.slug || !confirm(`Eliminare la nota "${this.brainOpen.title}"?`)) return;
+      if (!this.brainOpen?.slug || !confirm(`Delete the note "${this.brainOpen.title}"?`)) return;
       try {
         await fetch('/api/brain/note/delete', {
           method: 'POST',
@@ -2715,10 +2715,10 @@ function app() {
           body: JSON.stringify({ user: this.brainUser, slug: this.brainOpen.slug }),
         });
         if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
-        this.showToast('success', '⬆️ Promossa al brain condiviso', this.brainOpen.title);
+        this.showToast('success', '⬆️ Promoted to the shared brain', this.brainOpen.title);
       } catch (e) {
         console.error('[brain] promote err', e);
-        alert('Errore promozione: ' + (e.message || e));
+        alert('Error promoting: ' + (e.message || e));
       }
     },
 
@@ -4334,7 +4334,7 @@ function app() {
       this.loading.page = true;
       this.currentPageContent = '';
       const text = await this.fetchText(`/api/project/${encodeURIComponent(this.currentProject)}/page/${encodeURIComponent(this.currentPage)}`);
-      const content = text || `# ${this.currentPage}\n\n*(Pagina non trovata o endpoint non disponibile.)*`;
+      const content = text || `# ${this.currentPage}\n\n*(Page not found or endpoint not available.)*`;
       this.pageCache[cacheKey] = content;
       this.currentPageContent = content;
       this.loading.page = false;
@@ -5402,7 +5402,7 @@ function app() {
     sendSecond() {
       const txt = (this.secondInput || '').trim();
       if (!txt || !this.secondConvId) return;
-      if (this.secondStreaming) { this.showToast('info', 'In corso', 'Attendi la risposta del 2° pane'); return; }
+      if (this.secondStreaming) { this.showToast('info', 'In progress', 'Wait for the 2nd pane response'); return; }
       if (!this.ws || !this.wsConnected) { this.connectWs(); this.secondInput = txt; setTimeout(() => this.sendSecond(), 500); return; }
       this.secondMessages.push({ role: 'user', content: txt });
       this.secondMessages.push({ role: 'claude', content: '' });  // bubble streaming
@@ -5644,20 +5644,20 @@ function app() {
       // Check output
       for (let i = 0; i < f.output.length; i++) {
         const o = f.output[i];
-        if (!o.type) return `Output #${i + 1}: type mancante.`;
+        if (!o.type) return `Output #${i + 1}: type missing.`;
         if (o.type === 'email') {
-          if (!o.to) return `Output #${i + 1} (email): "to" mancante.`;
+          if (!o.to) return `Output #${i + 1} (email): "to" missing.`;
           // SMTP: se almeno uno dei campi è valorizzato, host+user+password sono richiesti
           const s = o.smtp || {};
           const anySet = (s.host || s.user || (s.password && s.password !== '{{SMTP_PASS}}'));
           if (anySet) {
-            if (!s.host) return `Output #${i + 1} (email): smtp.host mancante.`;
-            if (!s.user) return `Output #${i + 1} (email): smtp.user mancante.`;
-            if (!s.password) return `Output #${i + 1} (email): smtp.password mancante.`;
+            if (!s.host) return `Output #${i + 1} (email): smtp.host missing.`;
+            if (!s.user) return `Output #${i + 1} (email): smtp.user missing.`;
+            if (!s.password) return `Output #${i + 1} (email): smtp.password missing.`;
           }
         }
-        if (o.type === 'wiki_ingest' && !o.target_project) return `Output #${i + 1} (wiki_ingest): target_project mancante.`;
-        if (o.type === 'file' && !o.path) return `Output #${i + 1} (file): path mancante.`;
+        if (o.type === 'wiki_ingest' && !o.target_project) return `Output #${i + 1} (wiki_ingest): target_project missing.`;
+        if (o.type === 'file' && !o.path) return `Output #${i + 1} (file): path missing.`;
       }
       return null;
     },
@@ -6269,7 +6269,7 @@ function app() {
       }
       if ((field === 'judge_cron' || field === 'pipeline_cron') && value) {
         if (!this._isValidCron(String(value))) {
-          return { ok: false, reason: `cron non valido — atteso "min hr dom mon dow"` };
+          return { ok: false, reason: `invalid cron — expected "min hr dom mon dow"` };
         }
       }
       if (field === 'autonomy_level') {
@@ -6942,8 +6942,8 @@ function app() {
           throw new Error(txt || `HTTP ${r.status}`);
         }
         this.openaiOauthState.message = this.openaiOauthState.anja_enabled
-          ? '✓ ChatGPT subscription attivato per anja'
-          : '✓ ChatGPT subscription disattivato';
+          ? '✓ ChatGPT subscription enabled for anja'
+          : '✓ ChatGPT subscription disabled';
       } catch (e) {
         this.openaiOauthState.error = true;
         this.openaiOauthState.message = `✗ ${e.message || 'save failed'}`;
@@ -8379,7 +8379,7 @@ function app() {
         msgs.splice(idx, 0, { role: 'claude', content: '', plan: {
           request_id: data.request_id, plan: data.plan || '', resolved: null,
         }});
-        if (!toSecond) this.showToast('info', 'Piano proposto', 'approva o chiedi revisione');
+        if (!toSecond) this.showToast('info', 'Plan proposed', 'approve or request a revision');
         setTimeout(() => this.scrollChatToBottom(true), 0);
       } else if (data.type === 'diff.ready') {
         const idx = (last && last.role === 'claude' && !last.content && this.chatStreaming)
@@ -8389,14 +8389,14 @@ function app() {
           additions: data.additions || 0, deletions: data.deletions || 0,
           commits: data.commits || 0, patch: null, showPatch: false, resolved: null,
         }});
-        if (!toSecond) this.showToast('info', 'Diff pronto',
+        if (!toSecond) this.showToast('info', 'Diff ready',
           `${(data.files || []).length} file (+${data.additions}/−${data.deletions})`);
         setTimeout(() => this.scrollChatToBottom(true), 0);
       } else if (data.type === 'merge.completed') {
         for (let k = msgs.length - 1; k >= 0; k--) {
           if (msgs[k].gitdiff && !msgs[k].gitdiff.resolved) {
             msgs[k].gitdiff.resolved = data.decision
-              + (data.ok === false ? ' (fallito)' : '');
+              + (data.ok === false ? ' (failed)' : '');
             break;
           }
         }
@@ -8661,10 +8661,10 @@ function app() {
     // Ogni specialista gira in sessione separata (contesto isolato), il lead sintetizza.
     async runPod(brief) {
       if (this.currentChatScope === 'hub' || !this.currentProject) {
-        this.showToast('error', 'Pod', 'Apri il workspace di un brand (scope progetto) per usare /pod');
+        this.showToast('error', 'Pod', 'Open a brand workspace (project scope) to use /pod');
         return;
       }
-      if (!brief) { this.showToast('info', 'Pod', 'Uso: /pod <brief>'); return; }
+      if (!brief) { this.showToast('info', 'Pod', 'Usage: /pod <brief>'); return; }
       const ws = this.currentProject;
       if (!this.currentConvId) this.currentConvId = `proj-${ws}-${Date.now()}`;
       this.messages.push({ role: 'user', content: '/pod ' + brief });
@@ -8682,18 +8682,18 @@ function app() {
         if (!res.ok || !data.ok) {
           bubble.content = '⚠️ Pod: ' + (data.error || data.detail || ('HTTP ' + res.status));
         } else {
-          let md = '### 🔀 Pod — deleghe\n';
+          let md = '### 🔀 Pod — delegations\n';
           (data.assignments || []).forEach(a => { md += `- **${a.role}** — ${a.task}\n`; });
           md += '\n';
           (data.results || []).forEach(r => {
             const u = r.usage || {};
-            md += `- ${r.ok ? '✓' : '✗'} **${r.role}** (${r.provider}/${r.model}, picco ${u.context_input_tokens || '?'} tok)\n`;
+            md += `- ${r.ok ? '✓' : '✗'} **${r.role}** (${r.provider}/${r.model}, peak ${u.context_input_tokens || '?'} tok)\n`;
           });
-          md += '\n---\n\n' + (data.synthesis || '_(nessuna sintesi)_');
+          md += '\n---\n\n' + (data.synthesis || '_(no synthesis)_');
           bubble.content = md;
         }
       } catch (e) {
-        bubble.content = '⚠️ Pod errore: ' + e;
+        bubble.content = '⚠️ Pod error: ' + e;
       } finally {
         this.chatStreaming = false;
         this.stopElapsedTimer();
@@ -8824,7 +8824,7 @@ function app() {
       try { localStorage.setItem('anja_asp_mode', this.aspMode || ''); } catch (e) {}
       const mode = this.aspMode || 'default';
       if (!this.currentConvId) {
-        this.showToast('info', 'Permessi', `mode → ${mode} (dalla prossima chat)`);
+        this.showToast('info', 'Permissions', `mode → ${mode} (from the next chat)`);
         return;
       }
       try {
@@ -8834,12 +8834,12 @@ function app() {
         });
         const d = await r.json().catch(() => ({}));
         if (r.ok && d.ok) {
-          this.showToast('info', 'Permessi', `mode → ${mode}`);
+          this.showToast('info', 'Permissions', `mode → ${mode}`);
         } else {
-          this.showToast('info', 'Permessi', `mode → ${mode} (si applica dal prossimo turno)`);
+          this.showToast('info', 'Permissions', `mode → ${mode} (applies from the next turn)`);
         }
       } catch (e) {
-        this.showToast('error', 'Permessi', String(e));
+        this.showToast('error', 'Permissions', String(e));
       }
     },
 
@@ -8852,7 +8852,7 @@ function app() {
         try {
           const r = await fetch(`/api/session/diff?conv_id=${encodeURIComponent(this.currentConvId)}`);
           const d = await r.json();
-          g.patch = r.ok ? (d.patch || '(diff vuoto)') : (d.detail || `HTTP ${r.status}`);
+          g.patch = r.ok ? (d.patch || '(empty diff)') : (d.detail || `HTTP ${r.status}`);
         } catch (e) { g.patch = String(e); }
       }
       g.showPatch = true;
@@ -8862,7 +8862,7 @@ function app() {
       const g = msg.gitdiff;
       if (!g || g.resolved) return;
       if (decision === 'discard'
-          && !confirm('Scartare il branch di sessione e tutte le modifiche?')) return;
+          && !confirm('Discard the session branch and all its changes?')) return;
       try {
         const r = await fetch('/api/session/merge', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -8871,13 +8871,13 @@ function app() {
         const d = await r.json().catch(() => ({}));
         if (r.ok && d.ok) {
           g.resolved = decision;   // l'evento WS conferma comunque
-          this.showToast('info', 'Git-sessione',
-            decision === 'merge' ? `merge in ${d.into} (${d.merged_commit})` : 'branch scartato');
+          this.showToast('info', 'Git session',
+            decision === 'merge' ? `merged into ${d.into} (${d.merged_commit})` : 'branch discarded');
         } else {
-          this.showToast('error', 'Git-sessione', d.error || d.detail || `HTTP ${r.status}`);
+          this.showToast('error', 'Git session', d.error || d.detail || `HTTP ${r.status}`);
         }
       } catch (e) {
-        this.showToast('error', 'Git-sessione', String(e));
+        this.showToast('error', 'Git session', String(e));
       }
     },
 
@@ -8885,7 +8885,7 @@ function app() {
     async respondPlan(msg, decision) {
       if (!msg.plan || msg.plan.resolved) return;
       const feedback = decision === 'replan'
-        ? (prompt('Feedback per la revisione del piano (opzionale):') || '') : '';
+        ? (prompt('Feedback for the plan revision (optional):') || '') : '';
       try {
         const r = await fetch('/api/session/plan', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -8893,9 +8893,9 @@ function app() {
         });
         if (r.ok) { msg.plan.resolved = decision; return; }
         const d = await r.json().catch(() => ({}));
-        this.showToast('error', 'Piano', d.detail || `HTTP ${r.status}`);
+        this.showToast('error', 'Plan', d.detail || `HTTP ${r.status}`);
       } catch (e) {
-        this.showToast('error', 'Piano', String(e));
+        this.showToast('error', 'Plan', String(e));
       }
     },
 
@@ -8914,7 +8914,7 @@ function app() {
             this.messages.splice(this.messages.length - 1, 0,
                                  { role: 'user', content: txt, steered: true });
             this.inputText = ''; this._resetChatInputHeight();
-            this.showToast('info', 'Steering', 'iniettato nel turno in corso');
+            this.showToast('info', 'Steering', 'injected into the current turn');
             return;
           }
         }
@@ -8934,7 +8934,7 @@ function app() {
         });
         if (r.ok) {
           const d = await r.json();
-          if (d.ok) { this.showToast('info', 'Stop', 'turno interrotto'); return; }
+          if (d.ok) { this.showToast('info', 'Stop', 'turn interrupted'); return; }
         }
       } catch (e) { /* fallthrough */ }
       try {
@@ -8942,7 +8942,7 @@ function app() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ conv_id: conv }),
         });
-        this.showToast('info', 'Stop', 'stream cancellato');
+        this.showToast('info', 'Stop', 'stream canceled');
       } catch (e) { /* già fermo o server irraggiungibile */ }
     },
 
@@ -8999,7 +8999,7 @@ function app() {
         /<code>(\/api\/media\/(images|videos)\/(\d{4}-\d{2}-\d{2})\/([\w.\-]+\.(?:png|jpg|jpeg|webp|gif|mp4|webm|mov)))<\/code>/gi,
         (m, url, kind, date, file) => {
           if (kind === 'videos') {
-            return `<video controls preload="metadata" style="max-width: 100%; max-height: 480px; border-radius: 8px; display: block; margin: 8px 0;"><source src="${url}" type="video/mp4">browser non supporta video</video>`;
+            return `<video controls preload="metadata" style="max-width: 100%; max-height: 480px; border-radius: 8px; display: block; margin: 8px 0;"><source src="${url}" type="video/mp4">your browser does not support video</video>`;
           }
           return `<a href="${url}" target="_blank"><img src="${url}" alt="${file}" style="max-width: 480px; max-height: 480px; border-radius: 6px; display: block; margin: 8px 0;"></a>`;
         }
@@ -9009,7 +9009,7 @@ function app() {
         /(?<![">])(\/api\/media\/(images|videos)\/(\d{4}-\d{2}-\d{2})\/([\w.\-]+\.(?:png|jpg|jpeg|webp|gif|mp4|webm|mov)))(?![<"])/gi,
         (m, url, kind) => {
           if (kind === 'videos') {
-            return `<video controls preload="metadata" style="max-width: 100%; max-height: 480px; border-radius: 8px; display: block; margin: 8px 0;"><source src="${url}" type="video/mp4">browser non supporta video</video>`;
+            return `<video controls preload="metadata" style="max-width: 100%; max-height: 480px; border-radius: 8px; display: block; margin: 8px 0;"><source src="${url}" type="video/mp4">your browser does not support video</video>`;
           }
           return `<a href="${url}" target="_blank"><img src="${url}" style="max-width: 480px; max-height: 480px; border-radius: 6px; display: block; margin: 8px 0;"></a>`;
         }
@@ -9020,7 +9020,7 @@ function app() {
         (m, full, kind, date, file) => {
           const url = `/api/media/${kind}/${date}/${file}`;
           if (kind === 'videos') {
-            return `<video controls preload="metadata" style="max-width: 100%; max-height: 480px; border-radius: 8px; display: block; margin: 8px 0;"><source src="${url}" type="video/mp4">browser non supporta video</video>`;
+            return `<video controls preload="metadata" style="max-width: 100%; max-height: 480px; border-radius: 8px; display: block; margin: 8px 0;"><source src="${url}" type="video/mp4">your browser does not support video</video>`;
           }
           return `<a href="${url}" target="_blank"><img src="${url}" alt="${file}" style="max-width: 480px; max-height: 480px; border-radius: 6px; display: block; margin: 8px 0;"></a>`;
         }
@@ -9377,10 +9377,10 @@ function app() {
         });
         const j = await r.json();
         if (!r.ok || j.ok === false) throw new Error(j.detail || j.error || `HTTP ${r.status}`);
-        this.showToast('success', '💾 Backup creato', j.archive ? j.archive.split('/').pop() : 'ok');
+        this.showToast('success', '💾 Backup created', j.archive ? j.archive.split('/').pop() : 'ok');
         await this.loadBackupDR();
       } catch (e) {
-        this.backupDR.message = `Backup fallito: ${e.message}`;
+        this.backupDR.message = `Backup failed: ${e.message}`;
         this.backupDR.error = true;
       } finally {
         this.backupDR.running = false;
@@ -9391,7 +9391,7 @@ function app() {
       const cmd = `python3 anja-hub/webapp/backup.py restore ${b.archive} <target-hub-dir>`;
       try {
         await navigator.clipboard.writeText(cmd);
-        this.showToast('success', 'Comando restore copiato', 'Incollalo in una shell sul server');
+        this.showToast('success', 'Restore command copied', 'Paste it in a shell on the server');
       } catch (e) {
         this.showToast('error', 'Copy failed', e.message);
       }
@@ -9416,14 +9416,14 @@ function app() {
         this.backupDR.previewDiff = j.diff || '';
         this.backupDR.previewChanged = !!j.changed;
       } catch (e) {
-        this.showToast('error', 'Preview fallita', e.message);
+        this.showToast('error', 'Preview failed', e.message);
       } finally {
         this.backupDR.previewBusy = false;
       }
     },
 
     async execMemoryUndo(sha) {
-      if (!confirm(`Ripristinare users/*.md al checkpoint ${sha.slice(0, 8)}?\n\nViene creato un checkpoint pre-undo: potrai tornare indietro.`)) return;
+      if (!confirm(`Restore users/*.md to checkpoint ${sha.slice(0, 8)}?\n\nA pre-undo checkpoint is created first: you can go back.`)) return;
       this.backupDR.undoBusy = true;
       try {
         const r = await fetch('/api/memory/undo/memory', {
@@ -9432,12 +9432,12 @@ function app() {
         });
         const j = await r.json();
         if (!r.ok || !j.ok) throw new Error(j.detail || j.error || `HTTP ${r.status}`);
-        this.showToast('success', '🧠 Memoria ripristinata', `checkpoint ${sha.slice(0, 8)} · pre-undo ${(j.pre_undo_checkpoint || '').slice(0, 8)}`);
+        this.showToast('success', '🧠 Memory restored', `checkpoint ${sha.slice(0, 8)} · pre-undo ${(j.pre_undo_checkpoint || '').slice(0, 8)}`);
         this.backupDR.previewRef = '';
         this.backupDR.previewDiff = null;
         await this.loadBackupDR();
       } catch (e) {
-        this.showToast('error', 'Undo fallito', e.message);
+        this.showToast('error', 'Undo failed', e.message);
       } finally {
         this.backupDR.undoBusy = false;
       }
@@ -9454,7 +9454,7 @@ function app() {
         if (!r.ok) throw new Error(j.detail || `HTTP ${r.status}`);
         this.backupDR.cardsPreview = j;
       } catch (e) {
-        this.showToast('error', 'Preview card fallita', e.message);
+        this.showToast('error', 'Card preview failed', e.message);
       } finally {
         this.backupDR.cardsBusy = false;
       }
@@ -9462,7 +9462,7 @@ function app() {
 
     async execCardsUndo() {
       const n = this.backupDR.cardsPreview?.count || 0;
-      if (!n || !confirm(`Archiviare ${n} card autonome? (reversibile: status='archived', mai delete)`)) return;
+      if (!n || !confirm(`Archive ${n} autonomous cards? (reversible: status='archived', never deleted)`)) return;
       this.backupDR.cardsBusy = true;
       try {
         const r = await fetch('/api/memory/undo/cards', {
@@ -9471,10 +9471,10 @@ function app() {
         });
         const j = await r.json();
         if (!r.ok) throw new Error(j.detail || `HTTP ${r.status}`);
-        this.showToast('success', '📦 Card archiviate', `${j.count} card (reversibile)`);
+        this.showToast('success', '📦 Cards archived', `${j.count} cards (reversible)`);
         this.backupDR.cardsPreview = null;
       } catch (e) {
-        this.showToast('error', 'Archiviazione fallita', e.message);
+        this.showToast('error', 'Archive failed', e.message);
       } finally {
         this.backupDR.cardsBusy = false;
       }
@@ -9482,17 +9482,17 @@ function app() {
 
     async runMigrate() {
       const v = this.backupDR.version || {};
-      if (!confirm(`Applicare l'update dei dati hub ${v.hub_version || '?'} → ${v.code_version}?\n\nPrima viene creato un backup pre-update.`)) return;
+      if (!confirm(`Apply the hub data update ${v.hub_version || '?'} → ${v.code_version}?\n\nA pre-update backup is created first.`)) return;
       this.backupDR.migrateBusy = true;
       try {
         const r = await fetch('/api/update/migrate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
         const j = await r.json();
         if (!r.ok || !j.ok) throw new Error(j.detail || j.error || `HTTP ${r.status}`);
         const n = (j.migrations?.applied || []).length;
-        this.showToast('success', '⬆️ Hub aggiornato', `${j.from || '—'} → ${j.to} · ${n} migrazioni · backup pre-update ok`);
+        this.showToast('success', '⬆️ Hub updated', `${j.from || '—'} → ${j.to} · ${n} migrations · pre-update backup ok`);
         await this.loadBackupDR();
       } catch (e) {
-        this.showToast('error', 'Migrate fallito', e.message);
+        this.showToast('error', 'Migrate failed', e.message);
       } finally {
         this.backupDR.migrateBusy = false;
       }

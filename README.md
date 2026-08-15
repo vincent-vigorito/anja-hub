@@ -8,8 +8,9 @@ isolation, and multi-LLM support — built on the
 [Model Context Protocol](https://modelcontextprotocol.io).
 
 > ⚠️ Status: **beta (v0.9)**. Battle-tested daily on real workloads by its
-> author, but the public API and setup flow are still stabilizing. UI and
-> agent prompts are currently Italian-first; i18n contributions welcome.
+> author, but the public API and setup flow are still stabilizing. The web UI
+> is English; agent prompts are currently Italian-first (agents reply in your
+> configured language) — i18n contributions welcome.
 
 ![Mission Control](docs/screenshots/mission-control.png)
 

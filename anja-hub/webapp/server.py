@@ -283,7 +283,7 @@ async def csrf_guard(request: Request, call_next):
             and request.url.path.startswith("/api/")
             and not _csrf_origin_ok(request)):
         return JSONResponse(status_code=403,
-                            content={"detail": "richiesta cross-origin rifiutata (CSRF guard)"})
+                            content={"detail": "cross-origin request rejected (CSRF guard)"})
     response = await call_next(request)
     # /static: revalidate sempre (no-cache) → niente app.js/style.css stantii dopo un edit
     if request.url.path.startswith("/static/"):
@@ -404,7 +404,7 @@ async def auth_gate(request: Request, call_next):
             path = request.url.path
             if path.startswith("/api/") and not path.startswith(_AUTH_OPEN_PREFIXES):
                 if not slug:
-                    return JSONResponse(status_code=401, content={"detail": "autenticazione richiesta"})
+                    return JSONResponse(status_code=401, content={"detail": "authentication required"})
                 # F4b slice 3b: enforcement membership per-workspace (path/query).
                 # FAIL-CLOSED: un errore nel calcolo membership nega, non lascia passare.
                 try:
@@ -413,7 +413,7 @@ async def auth_gate(request: Request, call_next):
                     print(f"[auth_gate] membership error: {e}")
                     denied = True
                 if denied:
-                    return JSONResponse(status_code=403, content={"detail": "accesso al workspace negato"})
+                    return JSONResponse(status_code=403, content={"detail": "workspace access denied"})
     return await call_next(request)
 
 
@@ -584,7 +584,7 @@ async def _run_dreaming() -> dict:
         np_, nd_, nc_ = len(report["promoted"]), len(report["decayed"]), len(report["cross"])
         try:
             notif_bus.publish(HUB_PATH, source="dreaming", category="info",
-                              title=f"Consolidamento memoria: +{np_} promosse · {nd_} decadute · {nc_} cross",
+                              title=f"Memory consolidation: +{np_} promoted · {nd_} decayed · {nc_} cross",
                               body=" · ".join((report["promoted"] + report["cross"])[:3]) or "-")
         except Exception:
             pass
@@ -665,9 +665,9 @@ async def _run_backup(reason: str = "nightly") -> dict:
         off = res.get("mirrored_to")
         try:
             notif_bus.publish(HUB_PATH, source="backup", category="info",
-                              title=f"Backup hub {mb:.1f} MB ({reason})",
-                              body=f"{comp['hub_files']} file · {comp['dbs']} db · {comp['secrets']} secret"
-                                   + (" · mirror off-site ✓" if off else ""))
+                              title=f"Hub backup {mb:.1f} MB ({reason})",
+                              body=f"{comp['hub_files']} files · {comp['dbs']} dbs · {comp['secrets']} secrets"
+                                   + (" · off-site mirror ✓" if off else ""))
         except Exception:
             pass
         decision_trail.record(HUB_PATH, actor="backup", trigger=f"backup {reason}",
@@ -678,9 +678,9 @@ async def _run_backup(reason: str = "nightly") -> dict:
         if res.get("backup_key_generated"):
             try:
                 notif_bus.publish(HUB_PATH, source="backup", category="warn",
-                                  title="Nuova chiave di backup generata",
-                                  body="Conserva <hub>/config/backup.key OFF-SITE: senza, i secrets nei backup "
-                                       "sono irrecuperabili.")
+                                  title="New backup key generated",
+                                  body="Keep <hub>/config/backup.key OFF-SITE: without it, the secrets in "
+                                       "backups are unrecoverable.")
             except Exception:
                 pass
     return res
@@ -824,8 +824,8 @@ async def api_update_migrate(request: Request):
                               scope="hub")
         try:
             notif_bus.publish(HUB_PATH, source="updater", category="info",
-                              title=f"Hub aggiornato a {res.get('to')}",
-                              body=f"{n} migrazioni applicate, backup pre-update creato")
+                              title=f"Hub updated to {res.get('to')}",
+                              body=f"{n} migrations applied, pre-update backup created")
         except Exception:
             pass
     return JSONResponse(res)
@@ -986,7 +986,7 @@ async def api_blueprint_validate(request: Request, name: str):
         raise HTTPException(400, "hub not configured")
     _require_admin(request)
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", name):
-        raise HTTPException(400, "nome blueprint non valido")
+        raise HTTPException(400, "invalid blueprint name")
     try:
         import blueprint_scaffold
     except Exception as e:
@@ -1010,7 +1010,7 @@ async def api_workspaces_from_blueprint(request: Request, payload: dict = Body(.
     # brand/lead passano da _slugify (neutralizza ../) — blueprint finisce diretto in path → valida.
     blueprint = payload.get("blueprint") or "marketing-site"
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", blueprint):
-        raise HTTPException(400, "blueprint non valido")
+        raise HTTPException(400, "invalid blueprint")
     try:
         import blueprint_scaffold
     except Exception as e:
@@ -1041,7 +1041,7 @@ async def api_pod_run(request: Request, payload: dict = Body(...)):
     if not ws or not brief:
         raise HTTPException(400, "workspace e brief required")
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", ws):
-        raise HTTPException(400, "workspace slug non valido")
+        raise HTTPException(400, "invalid workspace slug")
     _require_ws_access(request, ws)   # ws è nel body → gate esplicito (il middleware non lo vede)
     try:
         import pod_orchestrator
@@ -1062,7 +1062,7 @@ async def api_workspace_query(request: Request, payload: dict = Body(...)):
     if not project or not question:
         raise HTTPException(400, "project + question required")
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", project):
-        raise HTTPException(400, "project slug non valido")
+        raise HTTPException(400, "invalid project slug")
     _require_ws_access(request, project)   # project è nel body → gate esplicito
     try:
         import pod_orchestrator
@@ -1083,7 +1083,7 @@ async def api_workspaces_onboard(request: Request, payload: dict = Body(...)):
     if not ws:
         raise HTTPException(400, "workspace required")
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", ws):
-        raise HTTPException(400, "workspace slug non valido")
+        raise HTTPException(400, "invalid workspace slug")
     try:
         import onboarding
     except Exception as e:
@@ -1153,7 +1153,7 @@ async def api_workspaces_delete(name: str, request: Request):
 
     name = (name or "").strip()
     if not name or "/" in name or "\\" in name or ".." in name:
-        raise HTTPException(400, "nome workspace non valido")   # no traversal → rmtree confinato
+        raise HTTPException(400, "invalid workspace name")   # no traversal → rmtree confinato
     ws_dir = HUB_PATH / "workspaces" / name
     if not ws_dir.exists() and not ws_dir.is_symlink():
         raise HTTPException(404, f"workspace '{name}' not found")
@@ -1269,19 +1269,19 @@ async def api_project_page(project: str, page: str):
             # Aggiungi link agli altri file di memoria nella stessa dir
             other_files = sorted([f for f in cc_memory_dir.glob("*.md") if f.name != "MEMORY.md"])
             if other_files:
-                content += "\n\n---\n\n## Altri file di memoria\n\n"
+                content += "\n\n---\n\n## Other memory files\n\n"
                 for f in other_files:
                     content += f"- `{f.name}`\n"
             return PlainTextResponse(content)
-        return PlainTextResponse(f"# Memory CC\n\n*(Nessuna memoria Claude Code trovata in `{memory_md}`)*")
+        return PlainTextResponse(f"# Memory CC\n\n*(No Claude Code memory found in `{memory_md}`)*")
 
     if page == "sessions":
         sessions_dir = HUB_PATH / "workspaces" / project / "wiki" / "sessions"
         if not sessions_dir.is_dir():
-            return PlainTextResponse("# Sessions\n\n*(Nessuna sessione registrata.)*")
+            return PlainTextResponse("# Sessions\n\n*(No sessions recorded.)*")
         files = sorted(sessions_dir.glob("*.md"), reverse=True)
         if not files:
-            return PlainTextResponse("# Sessions\n\n*(Nessuna sessione registrata.)*")
+            return PlainTextResponse("# Sessions\n\n*(No sessions recorded.)*")
         # Concatenate all sessions, most recent first
         out = ["# Sessions"]
         for f in files:
@@ -1295,10 +1295,10 @@ async def api_project_page(project: str, page: str):
         sec_dir = HUB_PATH / "workspaces" / project / "wiki" / page
         section_label = page.capitalize()
         if not sec_dir.is_dir():
-            return PlainTextResponse(f"# {section_label}\n\n*(Sezione vuota.)*")
+            return PlainTextResponse(f"# {section_label}\n\n*(Empty section.)*")
         files = sorted(sec_dir.glob("*.md"))
         if not files:
-            return PlainTextResponse(f"# {section_label}\n\n*(Nessuna pagina in questa sezione.)*")
+            return PlainTextResponse(f"# {section_label}\n\n*(No pages in this section.)*")
         lines = [f"# {section_label}", "", f"_{len(files)} pagine in `wiki/{page}/`_", ""]
         for f in files:
             slug = f.stem
@@ -2194,21 +2194,21 @@ def _ssrf_check(url: str):
     import socket
     host = urlsplit(url).hostname
     if not host:
-        return None, "URL senza host"
+        return None, "URL without a host"
     try:
         infos = socket.getaddrinfo(host, None)
     except Exception as e:
-        return None, f"host non risolvibile: {e}"
+        return None, f"unresolvable host: {e}"
     chosen = None
     for info in infos:
         ip = info[4][0]
         try:
             addr = ipaddress.ip_address(ip)
         except ValueError:
-            return None, f"IP non valido: {ip}"
+            return None, f"invalid IP: {ip}"
         if (addr.is_private or addr.is_loopback or addr.is_link_local
                 or addr.is_reserved or addr.is_multicast or addr.is_unspecified):
-            return None, f"destinazione interna non consentita ({addr}): SSRF guard"
+            return None, f"internal destination not allowed ({addr}): SSRF guard"
         if chosen is None:
             chosen = ip
     return (host, chosen), None
@@ -2346,14 +2346,14 @@ async def api_skill_import(request: Request):
 
     final_name = name_override or parsed_name or ""
     if not final_name:
-        raise HTTPException(400, "skill SKILL.md non ha 'name:' nel frontmatter — fornisci 'name' override nella request")
+        raise HTTPException(400, "skill SKILL.md has no 'name:' in the frontmatter — provide a 'name' override in the request")
     if not SKILL_NAME_RE.match(final_name):
-        raise HTTPException(400, f"name '{final_name}' non valido (kebab-case richiesto)")
+        raise HTTPException(400, f"name '{final_name}' is invalid (kebab-case required)")
 
     sc = _skills_catalog()
     skill_dir = sc.resolve_writable_skill_dir(scope, final_name, HUB_PATH if HUB_PATH else None)
     if not skill_dir:
-        raise HTTPException(400, "cannot resolve target dir (scope writable richiesto)")
+        raise HTTPException(400, "cannot resolve target dir (writable scope required)")
     if skill_dir.exists():
         raise HTTPException(409, f"skill already exists: {scope}/{final_name}")
     skill_dir.mkdir(parents=True, exist_ok=True)
@@ -3042,8 +3042,8 @@ async def api_agent_update(name: str, request: Request):
         if not cands:
             raise HTTPException(404, "agent not found")
         if len(cands) > 1:
-            raise HTTPException(409, f"agent '{name}' esiste in più workspace "
-                                     f"({[w for w, _ in cands]}): passa ?project=<workspace>")
+            raise HTTPException(409, f"agent '{name}' exists in multiple workspaces "
+                                     f"({[w for w, _ in cands]}): pass ?project=<workspace>")
         agent_dir = cands[0][1]
     try:
         body = await request.json()
@@ -3353,7 +3353,7 @@ def _safe_user_slug(slug: str) -> str:
     HUB_PATH/users/<slug>.md → leggere/scrivere .md arbitrari altrimenti)."""
     slug = (slug or "").strip()
     if not slug or "/" in slug or "\\" in slug or ".." in slug or slug.startswith("."):
-        raise HTTPException(400, "slug non valido")
+        raise HTTPException(400, "invalid slug")
     return slug
 
 
@@ -4427,7 +4427,7 @@ async def api_hub_files(path: str = ""):
 
     if target.is_file():
         if target.name.startswith(".secrets"):
-            raise HTTPException(403, "file riservato (vault) non leggibile")
+            raise HTTPException(403, "restricted file (vault) not readable")
         size = target.stat().st_size
         if size > 500_000:
             return JSONResponse({
@@ -5468,7 +5468,7 @@ async def api_project_files(project: str = "", path: str = ""):
 
     if target.is_file():
         if target.name.startswith(".secrets"):
-            raise HTTPException(403, "file riservato (vault) non leggibile")
+            raise HTTPException(403, "restricted file (vault) not readable")
         # File content
         size = target.stat().st_size
         if size > 500_000:
@@ -5719,7 +5719,7 @@ async def api_project_audit(request: Request, payload: dict = Body(...)):
     res = await asyncio.get_event_loop().run_in_executor(
         None, lambda: audit_io.audit(vals, proj_root / "data" / "metrics.db", kind=kind))
     if not res.get("ok"):
-        raise HTTPException(400, res.get("error") or "audit fallito")
+        raise HTTPException(400, res.get("error") or "audit failed")
     res["project"] = project
     return JSONResponse(res)
 
@@ -6034,7 +6034,7 @@ async def api_media_generate(request: Request, payload: dict = Body(...)):
         None, lambda: image_gen.generate(HUB_PATH, secrets_dir, media_dir, prompt, model=model, engine=engine, **opts))
     res["scope"] = scope
     if not res.get("ok"):
-        raise HTTPException(400, res.get("error") or "generazione fallita")
+        raise HTTPException(400, res.get("error") or "generation failed")
     return JSONResponse(res)
 
 
@@ -6066,7 +6066,7 @@ async def api_google_resources(request: Request, scope: str = "hub"):
     secrets_dir, _ = _media_scope_dirs(scope)
     token = google_collect.find_token(secrets_dir, HUB_PATH / ".anjawiki")
     if not token:
-        raise HTTPException(400, "Google non collegato per questo scope")
+        raise HTTPException(400, "Google not connected for this scope")
     try:
         session, _creds = google_collect._session(token)
         r = session.get("https://www.googleapis.com/webmasters/v3/sites", timeout=20)
@@ -6095,7 +6095,7 @@ async def api_google_resources(request: Request, scope: str = "hub"):
         return JSONResponse({"gsc_sites": sites, "ga4_properties": props,
                              "merchant_accounts": merchant})
     except Exception as e:
-        raise HTTPException(502, f"listing risorse Google fallito: {e}")
+        raise HTTPException(502, f"Google resources listing failed: {e}")
 
 
 @app.get("/api/google/oauth/start")
@@ -6109,8 +6109,8 @@ async def api_google_oauth_start(request: Request, scope: str = "hub"):
     secrets_dir, _ = _media_scope_dirs(scope)
     url = google_oauth.start(HUB_PATH / ".anjawiki", _oauth_redirect_uri(request), secrets_dir)
     if not url:
-        raise HTTPException(400, "OAuth client Google non configurato: carica "
-                                 "google-oauth-client.json a livello hub (.anjawiki/).")
+        raise HTTPException(400, "Google OAuth client not configured: upload "
+                                 "google-oauth-client.json at hub level (.anjawiki/).")
     return RedirectResponse(url)
 
 
@@ -6241,7 +6241,7 @@ def _require_admin(request: Request) -> None:
         return
     u = auth_io.get_user(HUB_PATH, request.state.user) if getattr(request.state, "user", None) else None
     if not u or u["role"] not in ("owner", "admin"):
-        raise HTTPException(403, "permesso negato (richiede admin/owner)")
+        raise HTTPException(403, "permission denied (requires admin/owner)")
 
 
 def _acting_role(request: Request) -> str | None:
@@ -6265,7 +6265,7 @@ def _require_ws_access(request: Request, ws_name: str) -> None:
     u = auth_io.get_user(HUB_PATH, me) if me else None
     role = u["role"] if u else None
     if not membership_io.can_access(HUB_PATH, ws_name, me, role):
-        raise HTTPException(403, "accesso al workspace negato")
+        raise HTTPException(403, "workspace access denied")
 
 
 @app.get("/api/auth/me")
@@ -6299,7 +6299,7 @@ def _login_throttle(key: str) -> None:
     fails = [t for t in _LOGIN_ATTEMPTS.get(key, []) if now - t < _LOGIN_WINDOW]
     _LOGIN_ATTEMPTS[key] = fails
     if len(fails) >= _LOGIN_MAX_FAILS:
-        raise HTTPException(429, "troppi tentativi falliti, riprova tra qualche minuto")
+        raise HTTPException(429, "too many failed attempts, try again in a few minutes")
 
 
 @app.post("/api/auth/login")
@@ -6310,7 +6310,7 @@ async def api_auth_login(request: Request, payload: dict = Body(...)):
     u = auth_io.verify(HUB_PATH, payload.get("slug", ""), payload.get("password", ""))
     if not u:
         _LOGIN_ATTEMPTS.setdefault(key, []).append(time.time())
-        raise HTTPException(401, "credenziali non valide")
+        raise HTTPException(401, "invalid credentials")
     _LOGIN_ATTEMPTS.pop(key, None)   # login riuscito → azzera il contatore
     token = auth_io.make_session(HUB_PATH, u["slug"])
     resp = JSONResponse({"ok": True, "user": u})
@@ -6365,7 +6365,7 @@ async def api_auth_set_mode(request: Request, payload: dict = Body(...)):
     if auth_io.get_mode(HUB_PATH) == "concierge":
         u = auth_io.get_user(HUB_PATH, request.state.user) if getattr(request.state, "user", None) else None
         if not u or u["role"] != "owner":
-            raise HTTPException(403, "solo un owner può cambiare modalità")
+            raise HTTPException(403, "only an owner can change mode")
     try:
         new_mode = auth_io.set_mode(HUB_PATH, payload.get("mode", ""))
     except ValueError as e:
@@ -6381,7 +6381,7 @@ async def api_auth_set_password(slug: str, request: Request, payload: dict = Bod
     me = getattr(request.state, "user", None)
     if auth_io.get_mode(HUB_PATH) == "concierge" and slug == me:
         if not auth_io.verify(HUB_PATH, slug, payload.get("current", "")):
-            raise HTTPException(403, "password attuale errata")
+            raise HTTPException(403, "current password is incorrect")
         actor = None   # self-service: nessun vincolo gerarchico
     else:
         _require_admin(request)
@@ -6413,7 +6413,7 @@ async def api_auth_delete_user(slug: str, request: Request):
     import auth_io
     _require_admin(request)
     if auth_io.get_mode(HUB_PATH) == "concierge" and slug == getattr(request.state, "user", None):
-        raise HTTPException(400, "non puoi eliminare te stesso")
+        raise HTTPException(400, "you cannot delete yourself")
     try:
         auth_io.delete_user(HUB_PATH, slug, actor_role=_acting_role(request))
     except ValueError as e:
@@ -6437,11 +6437,11 @@ async def api_ws_members_set(name: str, request: Request, payload: dict = Body(.
     _require_admin(request)
     members = payload.get("members")
     if not isinstance(members, list):
-        raise HTTPException(400, "members deve essere una lista di slug")
+        raise HTTPException(400, "members must be a list of slugs")
     valid = {u["slug"] for u in auth_io.list_users(HUB_PATH)}
     unknown = [str(m) for m in members if str(m).strip().lower() not in valid]
     if unknown:
-        raise HTTPException(400, f"utenti inesistenti: {', '.join(unknown)}")
+        raise HTTPException(400, f"unknown users: {', '.join(unknown)}")
     try:
         saved = membership_io.set_workspace_members(HUB_PATH, name, members)
     except ValueError as e:
@@ -6729,10 +6729,10 @@ async def api_session_set(request: Request, payload: dict = Body(...)):
     model = (payload.get("model") or "").strip()
     pmode = (payload.get("permission_mode") or "").strip()
     if not conv_id or (not model and not pmode):
-        raise HTTPException(400, "conv_id + model e/o permission_mode required")
+        raise HTTPException(400, "conv_id + model and/or permission_mode required")
     if pmode:
         if os.environ.get("ANJA_ASP_PERMISSIONS") != "1":
-            raise HTTPException(400, "permission_mode richiede ANJA_ASP_PERMISSIONS=1")
+            raise HTTPException(400, "permission_mode requires ANJA_ASP_PERMISSIONS=1")
         if pmode not in ("default", "acceptEdits", "plan", "auto"):
             raise HTTPException(400, "permission_mode: default|acceptEdits|plan|auto")
         if pmode == "auto":
@@ -6757,7 +6757,7 @@ def _asp_require_approver(request: Request) -> str:
             u = auth_io.get_user(HUB_PATH, slug) if slug else None
             role = (u or {}).get("role", "member")
             if role not in ("owner", "admin"):
-                raise HTTPException(403, "approvazione riservata a owner/admin")
+                raise HTTPException(403, "approval restricted to owner/admin")
             return slug or "concierge"
     except HTTPException:
         raise
@@ -6779,7 +6779,7 @@ async def api_session_permission(request: Request, payload: dict = Body(...)):
     meta = asp_permissions.pending.resolve(
         request_id, decision, message=(payload.get("message") or ""), by=by)
     if meta is None:
-        raise HTTPException(404, "richiesta non trovata o già risolta")
+        raise HTTPException(404, "request not found or already resolved")
     return {"ok": True, "request_id": request_id, "decision": decision,
             "tool": meta["tool"]}
 
@@ -6798,7 +6798,7 @@ async def api_session_plan(request: Request, payload: dict = Body(...)):
         request_id, "approve" if decision == "approve" else "deny",
         message=(payload.get("feedback") or ""), by=by)
     if meta is None:
-        raise HTTPException(404, "piano non trovato o già risolto")
+        raise HTTPException(404, "plan not found or already resolved")
     return {"ok": True, "request_id": request_id, "decision": decision}
 
 
@@ -6817,7 +6817,7 @@ async def api_session_diff(conv_id: str):
     import asp_git
     ctx = asp_git.get_ctx(conv_id.strip())
     if ctx is None:
-        raise HTTPException(404, "nessuna git-sessione per questa conversazione")
+        raise HTTPException(404, "no git session for this conversation")
     summary = await asyncio.to_thread(asp_git.finalize_turn, ctx)
     patch = await asyncio.to_thread(asp_git.full_patch, ctx) if summary else ""
     return {"conv_id": conv_id, "summary": summary, "patch": patch}
@@ -6836,7 +6836,7 @@ async def api_session_merge(request: Request, payload: dict = Body(...)):
     import asp_git
     ctx = asp_git.get_ctx(conv_id)
     if ctx is None:
-        raise HTTPException(404, "nessuna git-sessione per questa conversazione")
+        raise HTTPException(404, "no git session for this conversation")
     if decision == "merge":
         res = await asyncio.to_thread(asp_git.merge, ctx)
     else:
@@ -6974,12 +6974,12 @@ async def ws_chat(websocket: WebSocket):
 
     chat = _get_chat_module()
     if not chat:
-        await websocket.send_json({"type": "error", "message": "claude-agent-sdk non disponibile sul server"})
+        await websocket.send_json({"type": "error", "message": "claude-agent-sdk not available on the server"})
         await websocket.close()
         return
 
     if not HUB_PATH:
-        await websocket.send_json({"type": "error", "message": "hub non configurato"})
+        await websocket.send_json({"type": "error", "message": "hub not configured"})
         await websocket.close()
         return
 
@@ -7137,9 +7137,9 @@ async def ws_chat(websocket: WebSocket):
                 await websocket.send_json({
                     "type": "error",
                     "message": (
-                        f"Il model '{model}' non è chat-compatible (è per image/video/audio). "
-                        f"Scegli un model conversazionale (es. 'grok-4.3', 'sonnet', 'gpt-5.5'). "
-                        f"Per generare immagini chiedi all'AI 'genera un'immagine di...' — userà la CLI giv automaticamente."
+                        f"Model '{model}' is not chat-compatible (it's for image/video/audio). "
+                        f"Pick a conversational model (e.g. 'grok-4.3', 'sonnet', 'gpt-5.5'). "
+                        f"To generate images, ask the AI 'generate an image of...' — it will use the giv CLI automatically."
                     ),
                 })
                 continue
@@ -9173,7 +9173,7 @@ async def api_goal_judge_per_agent(scope_kind: str, scope_target: str, goal_id: 
                 llm_cfg = a.get("llm") or {}
                 break
     if llm_cfg is None:
-        raise HTTPException(404, f"agent '{agent_name}' non trovato nel team del goal")
+        raise HTTPException(404, f"agent '{agent_name}' not found in the goal team")
     provider = llm_cfg.get("provider") if isinstance(llm_cfg, dict) else None
     model = llm_cfg.get("model") if isinstance(llm_cfg, dict) else None
     res = await run_judge_async(
@@ -9841,7 +9841,7 @@ async def _dr_poll_loop(task_id: str, interaction_id: str, api_key: str) -> None
                 _dr_update(task_id, status="failed", error=err,
                            completed=datetime.now().isoformat(timespec="seconds"))
                 notif_bus.publish(HUB_PATH, source="webapp", category="error",
-                                  title="Deep Research fallita",
+                                  title="Deep Research failed",
                                   body=f"{_dr_load().get(task_id, {}).get('query', '')[:120]} — {err}")
                 return
             # completed
@@ -9854,12 +9854,12 @@ async def _dr_poll_loop(task_id: str, interaction_id: str, api_key: str) -> None
             dest = dest_dir / f"{slug}-{datetime.now().strftime('%H%M')}.md"
             header = (f"# Deep Research — {task.get('query', '')}\n\n"
                       f"> agent: {task.get('agent', '')} · interaction: {interaction_id} · {day}\n\n")
-            dest.write_text(header + (report or "(report vuoto)"), encoding="utf-8")
+            dest.write_text(header + (report or "(empty report)"), encoding="utf-8")
             _dr_update(task_id, status="completed", report_path=str(dest),
                        report_chars=len(report),
                        completed=datetime.now().isoformat(timespec="seconds"))
             notif_bus.publish(HUB_PATH, source="webapp", category="success",
-                              title="Deep Research completata",
+                              title="Deep Research completed",
                               body=f"{task.get('query', '')[:120]} — report in {dest}",
                               payload={"report_path": str(dest), "task_id": task_id})
             print(f"[deep-research] {task_id} completed → {dest}", flush=True)
@@ -9888,7 +9888,7 @@ async def api_research_deep_start(request: Request, payload: dict = Body(...)):
         raise HTTPException(400, f"mode must be one of {sorted(_DR_AGENTS)}")
     api_key = (_load_hub_secrets().get("GEMINI_API_KEY") or "").strip()
     if not api_key:
-        raise HTTPException(400, "GEMINI_API_KEY non configurata (Settings → Integrations)")
+        raise HTTPException(400, "GEMINI_API_KEY not configured (Settings → Integrations)")
 
     import httpx
     try:
@@ -9907,7 +9907,7 @@ async def api_research_deep_start(request: Request, payload: dict = Body(...)):
 
     interaction_id = data.get("id", "")
     if not interaction_id:
-        raise HTTPException(502, f"risposta senza id: {str(data)[:200]}")
+        raise HTTPException(502, f"response without id: {str(data)[:200]}")
     task_id = f"dr-{int(time.time())}"
     _dr_update(task_id, interaction_id=interaction_id, query=query, mode=mode,
                agent=agent, status="in_progress",
@@ -9915,7 +9915,7 @@ async def api_research_deep_start(request: Request, payload: dict = Body(...)):
     asyncio.create_task(_dr_poll_loop(task_id, interaction_id, api_key))
     return JSONResponse({"ok": True, "task_id": task_id,
                          "interaction_id": interaction_id, "status": "in_progress",
-                         "eta": "~20 min (standard) / ~40 min (max) — report via notifica"})
+                         "eta": "~20 min (standard) / ~40 min (max) — report via notification"})
 
 
 @app.get("/api/research/deep")
@@ -11091,13 +11091,13 @@ async def api_coding_run(request: Request, payload: dict = Body(...)):
     workspace = (payload.get("workspace") or "").strip()
     task = payload.get("task") or {}
     if not workspace or not task.get("title"):
-        raise HTTPException(400, "workspace + task.title richiesti")
+        raise HTTPException(400, "workspace + task.title required")
     # workspace arriva dal BODY → il middleware membership non lo vede: gate esplicito.
     # PRIMA del check di esistenza → un member non-autorizzato riceve 403, non un 404
     # che rivelerebbe quali workspace esistono (existence oracle).
     _require_ws_access(request, workspace)
     if not coding_worker.resolve_workspace_dir(HUB_PATH, workspace):
-        raise HTTPException(404, f"workspace non trovato: {workspace}")
+        raise HTTPException(404, f"workspace not found: {workspace}")
     caps = payload.get("capabilities") or {"tools": ["Read", "Write", "Edit", "Bash"]}
     # backend 'local' = NESSUN container: `sandbox` abiliterebbe --dangerously-skip-permissions
     # sull'host. Mai fidarsi del client su questo → forzato off (lo skip è ammesso solo
@@ -11175,7 +11175,7 @@ def _check_webhook_auth(request: Request) -> None:
     auth = request.headers.get("Authorization", "")
     presented = auth[7:].strip() if auth.startswith("Bearer ") else ""
     if not presented or not hmac.compare_digest(presented, token):
-        raise HTTPException(401, "bearer token mancante o non valido")
+        raise HTTPException(401, "bearer token missing or invalid")
 
 
 @app.post("/hooks/wake")
@@ -11211,10 +11211,10 @@ async def hooks_agent(request: Request, payload: dict = Body(...)):
     _check_webhook_auth(request)
     prompt = (payload.get("prompt") or payload.get("text") or "").strip()
     if not prompt:
-        raise HTTPException(400, "prompt richiesto")
+        raise HTTPException(400, "prompt required")
     kio = _kanban_io()
     if not kio:
-        raise HTTPException(500, "kanban non disponibile")
+        raise HTTPException(500, "kanban not available")
     task = kio.create_task(
         HUB_PATH, title=prompt[:120], body=prompt, status="ready",
         assignee=(payload.get("agent") or ""), scope=(payload.get("scope") or "hub"),
@@ -13246,7 +13246,7 @@ async def api_sources_add(request: Request):
         # (follow_redirects=False) — un URL pubblico può rimbalzare su un IP interno.
         ok, err = _ssrf_check(url)
         if err:
-            raise HTTPException(400, f"URL rifiutato: {err}")
+            raise HTTPException(400, f"URL rejected: {err}")
         try:
             import httpx
             with httpx.Client(follow_redirects=False, timeout=60) as cli:
@@ -13259,7 +13259,7 @@ async def api_sources_add(request: Request):
                         cur = str(r.next_request.url) if r.next_request else r.headers["location"]
                         ok, err = _ssrf_check(cur)
                         if err:
-                            raise HTTPException(400, f"redirect rifiutato: {err}")
+                            raise HTTPException(400, f"redirect rejected: {err}")
                         continue
                     break
                 r.raise_for_status()

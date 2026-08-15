@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -58,7 +58,7 @@
         <div class="nav-section-label">Team &amp; flows</div>
         <a href="#" class="nav-item"><i data-lucide="bot"></i><span>Agents</span><span class="count">5</span></a>
         <a href="#" class="nav-item"><i data-lucide="layout-grid"></i><span>Kanban</span></a>
-        <a href="#" class="nav-item"><i data-lucide="calendar-days"></i><span>Calendario</span></a>
+        <a href="#" class="nav-item"><i data-lucide="calendar-days"></i><span>Calendar</span></a>
         <a href="#" class="nav-item"><i data-lucide="target"></i><span>Goals</span></a>
         <a href="#" class="nav-item"><i data-lucide="clock"></i><span>Routines</span><span class="count">2</span></a>
         <a href="#" class="nav-item"><i data-lucide="brain"></i><span>Memory</span></a>
@@ -76,16 +76,16 @@
     <header class="topbar">
       <!-- Switcher workspace: elemento primario, al posto della ricerca. Apre la lista
            (Hub + tutti i workspace) → selezionando si ENTRA nello scope. -->
-      <button class="ws-switcher" type="button" aria-label="Cambia workspace">
+      <button class="ws-switcher" type="button" aria-label="Switch workspace">
         <span class="ws-ico"><i data-lucide="folder"></i></span>
         <span>demo-brand</span>
         <span class="ws-chev"><i data-lucide="chevrons-up-down"></i></span>
       </button>
       <div class="topbar-actions" style="margin-left:auto;display:flex;align-items:center;gap:8px;">
         <span class="status-badge success"><span>all healthy</span></span>
-        <button class="ws-kbd" aria-label="Cerca"><i data-lucide="search" style="width:14px;height:14px;opacity:.6"></i><kbd>⌘K</kbd></button>
-        <button class="topbar-icon-btn" aria-label="Tema"><i data-lucide="moon"></i></button>
-        <button class="topbar-icon-btn" aria-label="Notifiche"><i data-lucide="bell"></i></button>
+        <button class="ws-kbd" aria-label="Search"><i data-lucide="search" style="width:14px;height:14px;opacity:.6"></i><kbd>⌘K</kbd></button>
+        <button class="topbar-icon-btn" aria-label="Theme"><i data-lucide="moon"></i></button>
+        <button class="topbar-icon-btn" aria-label="Notifications"><i data-lucide="bell"></i></button>
       </div>
     </header>
 
@@ -100,23 +100,23 @@
         <div class="dash-greeting">
           <span class="dash-greeting-avatar" style="display:inline-flex;align-items:center;justify-content:center;background:#0b887b;color:#fff;font-weight:600;">VV</span>
           <div>
-            <h1 class="dash-greeting-name">Buongiorno, Vincent</h1>
+            <h1 class="dash-greeting-name">Good morning, Vincent</h1>
             <p class="dash-greeting-sub">demo@example.com · Example Srl</p>
           </div>
         </div>
 
         <!-- Stat cards -->
-        <div class="dash-section"><div class="dash-section-title">Panoramica</div></div>
+        <div class="dash-section"><div class="dash-section-title">Overview</div></div>
         <div class="stat-card-grid">
           <div class="stat-card stat-card-primary">
-            <div class="stat-card-label">Piano editoriale</div>
+            <div class="stat-card-label">Editorial plan</div>
             <div class="stat-card-value"><div class="stat-card-num">7</div></div>
-            <div class="stat-card-sub">3 programmati · 5 kit social</div>
+            <div class="stat-card-sub">3 scheduled · 5 social kits</div>
           </div>
           <div class="stat-card">
             <div class="stat-card-label">Health</div>
             <div class="stat-card-value"><div class="stat-card-icon"><i data-lucide="shield-check"></i></div><div class="stat-card-num">OK</div></div>
-            <div class="stat-card-sub">6 daemon attivi</div>
+            <div class="stat-card-sub">6 daemons active</div>
           </div>
           <div class="stat-card">
             <div class="stat-card-label">Routines</div>
@@ -124,7 +124,7 @@
             <div class="stat-card-sub">weekly-report · marketing-alert</div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-label">Costi (30gg)</div>
+            <div class="stat-card-label">Costs (30d)</div>
             <div class="stat-card-value"><div class="stat-card-icon"><i data-lucide="trending-up"></i></div><div class="stat-card-num">€0,19</div></div>
             <div class="stat-card-sub">marketing-pod</div>
           </div>
@@ -132,7 +132,7 @@
 
         <!-- Products -->
         <div class="dash-section"><div class="dash-section-title">Workspaces</div>
-          <button class="btn btn-primary btn-sm" type="button"><i data-lucide="plus"></i> Nuovo workspace</button>
+          <button class="btn btn-primary btn-sm" type="button"><i data-lucide="plus"></i> New workspace</button>
         </div>
         <div class="product-grid">
           <div class="product-card">
@@ -141,31 +141,31 @@
                 <div class="product-card-icon"><i data-lucide="globe"></i></div>
                 <span class="product-card-title">example.com</span>
               </div>
-              <a class="product-card-link" href="#">Apri <i data-lucide="arrow-right"></i></a>
+              <a class="product-card-link" href="#">Open <i data-lucide="arrow-right"></i></a>
             </div>
-            <p class="product-card-lead">Pod marketing · 5 agenti specializzati:</p>
+            <p class="product-card-lead">Marketing pod · 5 specialized agents:</p>
             <div class="stat-card-list">
               <div class="stat-card-list-row"><span class="dot success"></span><span class="label">analyst · seo-copy</span><span class="val">2</span></div>
               <div class="stat-card-list-row"><span class="dot neutral"></span><span class="label">social · dev</span><span class="val">2</span></div>
               <div class="stat-card-list-row"><span class="dot warn"></span><span class="label">lead</span><span class="val">1</span></div>
             </div>
-            <p class="product-card-note">Kit social pronto in files/social/</p>
+            <p class="product-card-note">Social kit ready in files/social/</p>
           </div>
 
           <div class="product-card">
             <div class="product-card-head">
               <div class="product-card-head-left">
                 <div class="product-card-icon"><i data-lucide="calendar"></i></div>
-                <span class="product-card-title">Piano editoriale</span>
+                <span class="product-card-title">Editorial plan</span>
               </div>
               <a class="product-card-link" href="#">Kanban <i data-lucide="arrow-right"></i></a>
             </div>
             <table class="data-table" style="margin-top:8px;">
-              <thead><tr><th>Data</th><th>Articolo</th><th>Stato</th></tr></thead>
+              <thead><tr><th>Date</th><th>Article</th><th>Status</th></tr></thead>
               <tbody>
-                <tr><td>20/06</td><td>Blog 4580 — costo sito web</td><td><span class="status-badge neutral"><span>todo</span></span></td></tr>
+                <tr><td>20/06</td><td>Blog 4580 — website cost</td><td><span class="status-badge neutral"><span>todo</span></span></td></tr>
                 <tr><td>24/06</td><td>Blog 4581 — refresh copyw.</td><td><span class="status-badge neutral"><span>todo</span></span></td></tr>
-                <tr><td>17/06</td><td>Blog 4579 — refresh minacce</td><td><span class="status-badge success"><span>done</span></span></td></tr>
+                <tr><td>17/06</td><td>Blog 4579 — threats refresh</td><td><span class="status-badge success"><span>done</span></span></td></tr>
               </tbody>
             </table>
           </div>
@@ -174,23 +174,23 @@
             <div class="product-card-head">
               <div class="product-card-head-left">
                 <div class="product-card-icon"><i data-lucide="activity"></i></div>
-                <span class="product-card-title">Attività recente</span>
+                <span class="product-card-title">Recent activity</span>
               </div>
             </div>
             <div class="stat-card-list">
-              <div class="stat-card-list-row"><span class="dot success"></span><span class="label">Kit social generato</span><span class="val">oggi</span></div>
-              <div class="stat-card-list-row"><span class="dot neutral"></span><span class="label">Report settimanale</span><span class="val">lun</span></div>
-              <div class="stat-card-list-row"><span class="dot warn"></span><span class="label">Alert marketing</span><span class="val">2g</span></div>
+              <div class="stat-card-list-row"><span class="dot success"></span><span class="label">Social kit generated</span><span class="val">today</span></div>
+              <div class="stat-card-list-row"><span class="dot neutral"></span><span class="label">Weekly report</span><span class="val">Mon</span></div>
+              <div class="stat-card-list-row"><span class="dot warn"></span><span class="label">Marketing alert</span><span class="val">2d</span></div>
             </div>
             <div style="margin-top:12px;display:flex;gap:8px;">
-              <button class="btn btn-sm">Vedi tutto</button>
-              <button class="btn btn-primary btn-sm"><i data-lucide="play"></i> Esegui pod</button>
+              <button class="btn btn-sm">View all</button>
+              <button class="btn btn-primary btn-sm"><i data-lucide="play"></i> Run pod</button>
             </div>
           </div>
         </div>
 
         <p style="margin-top:24px;color:var(--ink-400);font-size:12px;">
-          Slice 0 — schermata AnjaHub costruita sul CSS reale di swebify-ui-kit (app-shell + dashboard), logo Mannaz + icone lucide nostri. Blueprint per il port della SPA.
+          Slice 0 — AnjaHub screen built on the real swebify-ui-kit CSS (app-shell + dashboard), with our Mannaz logo + lucide icons. Blueprint for the SPA port.
         </p>
       </div>
     </main>

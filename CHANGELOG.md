@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ## [Unreleased]
 
+### Changed
+
+- Web UI language is now fully English (labels, hints, toasts, API error
+  messages, notifications). Telegram bot strings and agent prompts are
+  unchanged for now.
+
 ### Added
 
 - **Blueprint authoring (Forge, step 1)**: agents can now design and create

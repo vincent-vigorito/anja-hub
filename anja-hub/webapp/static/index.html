@@ -70,12 +70,12 @@
   <div class="login-box">
     <div class="login-logo">ᛗ</div>
     <div class="login-title">Anja Hub</div>
-    <div class="login-sub" x-text="auth.has_users ? 'Accedi per continuare' : 'Crea il primo accesso (owner)'"></div>
-    <input type="text" placeholder="utente" x-model="loginForm.slug" @keydown.enter="doLogin()" class="form-input login-input" autocomplete="username">
+    <div class="login-sub" x-text="auth.has_users ? 'Sign in to continue' : 'Create the first account (owner)'"></div>
+    <input type="text" placeholder="username" x-model="loginForm.slug" @keydown.enter="doLogin()" class="form-input login-input" autocomplete="username">
     <input type="password" placeholder="password" x-model="loginForm.password" @keydown.enter="doLogin()" class="form-input login-input" autocomplete="current-password">
     <div x-show="loginForm.error" x-text="loginForm.error" class="login-error"></div>
     <button class="btn btn-primary login-btn" @click="doLogin()" :disabled="loginForm.busy">
-      <span x-text="loginForm.busy ? 'Accesso…' : 'Accedi'"></span>
+      <span x-text="loginForm.busy ? 'Signing in…' : 'Sign in'"></span>
     </button>
   </div>
 </div>
@@ -215,28 +215,28 @@
               </div>
               <div class="sidebar__item" :class="{ 'is-active': view === 'piano-editoriale' }" @click="openPianoEditoriale()" x-show="isMarketingWorkspace">
                 <i data-lucide="calendar-check" class="icon"></i>
-                <span class="sidebar__item-text">Piano editoriale</span>
+                <span class="sidebar__item-text">Editorial plan</span>
               </div>
               <div class="sidebar__item" :class="{ 'is-active': view === 'catalogo' }" @click="openCatalogo()" x-show="isMarketingWorkspace">
                 <i data-lucide="library-big" class="icon"></i>
-                <span class="sidebar__item-text">Catalogo</span>
+                <span class="sidebar__item-text">Catalog</span>
               </div>
               <div class="sidebar__item" :class="{ 'is-active': view === 'statistiche' }" @click="openStatistiche()" x-show="isMarketingWorkspace">
                 <i data-lucide="bar-chart-3" class="icon"></i>
-                <span class="sidebar__item-text">Statistiche</span>
+                <span class="sidebar__item-text">Statistics</span>
               </div>
               <div class="sidebar__item" :class="{ 'is-active': view === 'audit' }" @click="openAudit()" x-show="isMarketingWorkspace">
                 <i data-lucide="clipboard-check" class="icon"></i>
-                <span class="sidebar__item-text">Audit contenuti</span>
+                <span class="sidebar__item-text">Content audit</span>
               </div>
               <div class="sidebar__item" :class="{ 'is-active': view === 'connettori' }" @click="openConnettori()" x-show="isMarketingWorkspace">
                 <i data-lucide="plug" class="icon"></i>
-                <span class="sidebar__item-text">Connettori</span>
+                <span class="sidebar__item-text">Connectors</span>
               </div>
 
               <!-- Operatività -->
               <div class="sidebar__item sidebar__item--label" style="margin-top: var(--s-2);">
-                <span class="text-mono" style="font-size: 9px; text-transform: uppercase; color: var(--text-3); letter-spacing: 0.05em;">Operatività</span>
+                <span class="text-mono" style="font-size: 9px; text-transform: uppercase; color: var(--text-3); letter-spacing: 0.05em;">Operations</span>
               </div>
               <div class="sidebar__item" :class="{ 'is-active': view === 'kanban' }" @click="openKanban()">
                 <i data-lucide="layout-grid" class="icon"></i>
@@ -270,7 +270,7 @@
 
               <!-- Risorse -->
               <div class="sidebar__item sidebar__item--label" style="margin-top: var(--s-2);">
-                <span class="text-mono" style="font-size: 9px; text-transform: uppercase; color: var(--text-3); letter-spacing: 0.05em;">Risorse</span>
+                <span class="text-mono" style="font-size: 9px; text-transform: uppercase; color: var(--text-3); letter-spacing: 0.05em;">Resources</span>
               </div>
               <div class="sidebar__item" :class="{ 'is-active': view === 'project-files' }" @click="openProjectFiles(currentProjectScopeName)">
                 <i data-lucide="folder-tree" class="icon"></i>
@@ -387,7 +387,7 @@
 
               <!-- Sistema -->
               <div class="sidebar__item sidebar__item--label" style="margin-top: var(--s-2);">
-                <span class="text-mono" style="font-size: 9px; text-transform: uppercase; color: var(--text-3); letter-spacing: 0.05em;">Sistema</span>
+                <span class="text-mono" style="font-size: 9px; text-transform: uppercase; color: var(--text-3); letter-spacing: 0.05em;">System</span>
               </div>
               <div class="sidebar__item" :class="{ 'is-active': view === 'marketplace' }" @click="openMarketplace()">
                 <i data-lucide="store" class="icon"></i>
@@ -491,13 +491,13 @@
         <div class="sidebar__user-avatar">VV</div>
         <span class="sidebar__user-email" x-text="(auth.authenticated && auth.user) ? auth.user.name : (hubInfo.user || 'user')"></span>
         <div class="sidebar__footer-actions">
-          <button class="sidebar__brand-toggle" :class="{ 'is-active': view === 'identita' }" title="Identità & accessi" @click="openIdentita()">
+          <button class="sidebar__brand-toggle" :class="{ 'is-active': view === 'identita' }" title="Identity & access" @click="openIdentita()">
             <i data-lucide="users" class="icon icon--sm"></i>
           </button>
           <button class="sidebar__brand-toggle" :class="{ 'is-active': view === 'settings' }" title="Settings" @click="openSettings()">
             <i data-lucide="settings" class="icon icon--sm"></i>
           </button>
-          <button class="sidebar__brand-toggle" title="Esci" @click="doLogout()" x-show="auth.authenticated">
+          <button class="sidebar__brand-toggle" title="Sign out" @click="doLogout()" x-show="auth.authenticated">
             <i data-lucide="log-out" class="icon icon--sm"></i>
           </button>
         </div>
@@ -749,7 +749,7 @@
             <div class="stat-card">
               <div class="stat-card-label">Routines</div>
               <div class="stat-card-value"><div class="stat-card-icon"><i data-lucide="clock"></i></div><div class="stat-card-num" x-text="routines.length"></div></div>
-              <div class="stat-card-sub">attive nell'hub</div>
+              <div class="stat-card-sub">active in the hub</div>
             </div>
             <div class="stat-card">
               <div class="stat-card-label">Goals</div>
@@ -1079,24 +1079,24 @@
           <!-- Stat cards del brand -->
           <div class="stat-card-grid">
             <div class="stat-card stat-card-primary">
-              <div class="stat-card-label">Piano editoriale</div>
+              <div class="stat-card-label">Editorial plan</div>
               <div class="stat-card-value"><div class="stat-card-num" x-text="wsPlanCount"></div></div>
-              <div class="stat-card-sub" x-text="`${kanbanScheduled.length} programmati`"></div>
+              <div class="stat-card-sub" x-text="`${kanbanScheduled.length} scheduled`"></div>
             </div>
             <div class="stat-card">
               <div class="stat-card-label">Pod</div>
               <div class="stat-card-value"><div class="stat-card-icon"><i data-lucide="bot"></i></div><div class="stat-card-num" x-text="projectAgents.length"></div></div>
-              <div class="stat-card-sub">agenti specializzati</div>
+              <div class="stat-card-sub">specialized agents</div>
             </div>
             <div class="stat-card">
               <div class="stat-card-label">Media</div>
               <div class="stat-card-value"><div class="stat-card-icon"><i data-lucide="image"></i></div><div class="stat-card-num" x-text="(projectMedia.items && projectMedia.items.length) || 0"></div></div>
-              <div class="stat-card-sub">deliverable in files/</div>
+              <div class="stat-card-sub">deliverables in files/</div>
             </div>
             <div class="stat-card">
               <div class="stat-card-label">Routines</div>
               <div class="stat-card-value"><div class="stat-card-icon"><i data-lucide="clock"></i></div><div class="stat-card-num" x-text="filteredRoutines.length"></div></div>
-              <div class="stat-card-sub">automazioni attive</div>
+              <div class="stat-card-sub">active automations</div>
             </div>
           </div>
 
@@ -1112,7 +1112,7 @@
                 <a class="product-card-link" @click="view = 'agents'; refreshIcons()" style="cursor:pointer;">Agents <i data-lucide="arrow-right"></i></a>
               </div>
               <template x-if="projectAgents.length === 0">
-                <p class="product-card-empty">Nessun agente nel workspace.</p>
+                <p class="product-card-empty">No agents in this workspace yet.</p>
               </template>
               <div class="stat-card-list">
                 <template x-for="a in projectAgents.slice(0, 6)" :key="a.name">
@@ -1130,12 +1130,12 @@
               <div class="product-card-head">
                 <div class="product-card-head-left">
                   <div class="product-card-icon"><i data-lucide="calendar"></i></div>
-                  <span class="product-card-title">Piano editoriale</span>
+                  <span class="product-card-title">Editorial plan</span>
                 </div>
                 <a class="product-card-link" @click="openKanban()" style="cursor:pointer;">Kanban <i data-lucide="arrow-right"></i></a>
               </div>
               <template x-if="kanbanScheduled.length === 0">
-                <p class="product-card-empty">Nessun contenuto programmato.</p>
+                <p class="product-card-empty">No scheduled content yet.</p>
               </template>
               <table class="data-table" x-show="kanbanScheduled.length > 0" style="margin-top:4px;">
                 <tbody>
@@ -1154,12 +1154,12 @@
               <div class="product-card-head">
                 <div class="product-card-head-left">
                   <div class="product-card-icon"><i data-lucide="image"></i></div>
-                  <span class="product-card-title">Media recenti</span>
+                  <span class="product-card-title">Recent media</span>
                 </div>
                 <a class="product-card-link" @click="openProjectMedia()" style="cursor:pointer;">Media <i data-lucide="arrow-right"></i></a>
               </div>
               <template x-if="!projectMedia.items || projectMedia.items.length === 0">
-                <p class="product-card-empty">Nessun media. Genera un kit social.</p>
+                <p class="product-card-empty">No media yet. Generate a social kit.</p>
               </template>
               <div class="stat-card-list">
                 <template x-for="m in (projectMedia.items || []).slice(0, 5)" :key="m.path">
@@ -1217,13 +1217,13 @@
             <div style="display: flex; align-items: center; gap: 8px; padding: var(--s-2) var(--s-3); background: var(--bg-2); border-bottom: 1px solid var(--border-1);">
               <i data-lucide="columns-2" class="icon icon--sm" style="color: var(--accent);"></i>
               <select @change="openSecond($event.target.value)" style="flex: 1; background: var(--bg-1); border: 1px solid var(--border-1); border-radius: 6px; padding: 4px 8px; color: var(--text-1); font-size: var(--t-sm);">
-                <option value="">— scegli una chat da seguire —</option>
+                <option value="">— pick a chat to follow —</option>
                 <template x-for="conv in filteredConversations.filter(c => c.id && !c.id.startsWith('.'))" :key="'sec-' + conv.id">
                   <option :value="conv.id" :selected="conv.id === secondConvId" x-text="conv.title || conv.id"></option>
                 </template>
               </select>
               <span x-show="secondConvId && chatActiveStreams.has(secondConvId)" class="text-mono" style="font-size: var(--t-xs); color: var(--accent);">● live</span>
-              <button class="btn btn--ghost btn--xs" @click="closeSplit()" title="Chiudi split">
+              <button class="btn btn--ghost btn--xs" @click="closeSplit()" title="Close split">
                 <i data-lucide="x" class="icon icon--sm"></i>
               </button>
             </div>
@@ -1234,14 +1234,14 @@
                   <div class="chat__bubble md"><div x-html="renderMarkdown(msg.content)"></div></div>
                 </div>
               </template>
-              <div x-show="!secondConvId" class="text-muted" style="padding: var(--s-4); text-align: center; font-size: var(--t-sm);">Scegli una chat dal menu per seguirla — e portarla avanti — qui in parallelo (live).</div>
+              <div x-show="!secondConvId" class="text-muted" style="padding: var(--s-4); text-align: center; font-size: var(--t-sm);">Pick a chat from the menu to follow it — and keep it moving — here in parallel (live).</div>
             </div>
             <div x-show="secondConvId" style="padding: var(--s-2) var(--s-3); border-top: 1px solid var(--border-1); display: flex; gap: 6px; align-items: flex-end;">
-              <textarea x-model="secondInput" rows="1" placeholder="Scrivi nel 2° pane…"
+              <textarea x-model="secondInput" rows="1" placeholder="Write in the 2nd pane…"
                         @keydown.enter="if(!$event.shiftKey){ $event.preventDefault(); sendSecond(); }"
                         :disabled="secondStreaming"
                         style="flex: 1; resize: none; max-height: 120px; background: var(--bg-1); border: 1px solid var(--border-1); border-radius: 8px; padding: 8px; color: var(--text-1); font: inherit;"></textarea>
-              <button class="btn btn--primary" @click="sendSecond()" :disabled="!secondInput.trim() || secondStreaming" title="Invia nel 2° pane">
+              <button class="btn btn--primary" @click="sendSecond()" :disabled="!secondInput.trim() || secondStreaming" title="Send in the 2nd pane">
                 <span class="spinner" x-show="secondStreaming"></span>
                 <i data-lucide="send" class="icon icon--sm" x-show="!secondStreaming"></i>
               </button>
@@ -1264,7 +1264,7 @@
               <i data-lucide="plus" class="icon icon--sm"></i>
               <span>New</span>
             </button>
-            <button class="btn btn--ghost btn--xs" @click="toggleSplit()" :class="{ 'is-active': splitView }" title="Split view: segui 2 chat in parallelo">
+            <button class="btn btn--ghost btn--xs" @click="toggleSplit()" :class="{ 'is-active': splitView }" title="Split view: follow 2 chats in parallel">
               <i data-lucide="columns-2" class="icon icon--sm"></i>
               <span x-text="splitView ? 'Unsplit' : 'Split'"></span>
             </button>
@@ -1407,9 +1407,9 @@
                         </div>
                         <code style="font-size: 11px; word-break: break-all;" x-text="msg.perm.target"></code>
                         <div style="display: flex; gap: 6px;" x-show="!msg.perm.resolved">
-                          <button class="btn btn--primary btn--xs" @click="respondPermission(msg, 'allow')">Consenti</button>
-                          <button class="btn btn--ghost btn--xs" @click="respondPermission(msg, 'always_allow')">Sempre</button>
-                          <button class="btn btn--ghost btn--xs" @click="respondPermission(msg, 'deny')">Nega</button>
+                          <button class="btn btn--primary btn--xs" @click="respondPermission(msg, 'allow')">Allow</button>
+                          <button class="btn btn--ghost btn--xs" @click="respondPermission(msg, 'always_allow')">Always</button>
+                          <button class="btn btn--ghost btn--xs" @click="respondPermission(msg, 'deny')">Deny</button>
                         </div>
                       </div>
                     </template>
@@ -1417,15 +1417,15 @@
                     <template x-if="msg.plan">
                       <div style="display: flex; flex-direction: column; gap: 6px; min-width: 280px;">
                         <div style="display: flex; align-items: center; gap: 6px;">
-                          <span>📋</span><strong>Piano proposto</strong>
+                          <span>📋</span><strong>Proposed plan</strong>
                           <span class="text-muted" style="font-size: 11px;" x-show="msg.plan.resolved"
-                                x-text="'— ' + (msg.plan.resolved === 'approve' ? 'approvato' : 'in revisione')"></span>
+                                x-text="'— ' + (msg.plan.resolved === 'approve' ? 'approved' : 'in review')"></span>
                         </div>
                         <div class="md" style="font-size: 13px; max-height: 260px; overflow-y: auto;"
                              x-html="renderMarkdown(msg.plan.plan)"></div>
                         <div style="display: flex; gap: 6px;" x-show="!msg.plan.resolved">
-                          <button class="btn btn--primary btn--xs" @click="respondPlan(msg, 'approve')">Approva</button>
-                          <button class="btn btn--ghost btn--xs" @click="respondPlan(msg, 'replan')">Chiedi revisione</button>
+                          <button class="btn btn--primary btn--xs" @click="respondPlan(msg, 'approve')">Approve</button>
+                          <button class="btn btn--ghost btn--xs" @click="respondPlan(msg, 'replan')">Request changes</button>
                         </div>
                       </div>
                     </template>
@@ -1448,17 +1448,17 @@
                             </div>
                           </template>
                           <div class="text-muted" x-show="msg.gitdiff.files.length > 12"
-                               x-text="'… e altri ' + (msg.gitdiff.files.length - 12) + ' file'"></div>
+                               x-text="'… and ' + (msg.gitdiff.files.length - 12) + ' more files'"></div>
                         </div>
                         <pre x-show="msg.gitdiff.showPatch" x-text="msg.gitdiff.patch"
                              style="font-size: 10px; max-height: 300px; overflow: auto; background: var(--bg-2); padding: 8px; border-radius: 4px; white-space: pre-wrap; word-break: break-all;"></pre>
                         <div style="display: flex; gap: 6px;">
                           <button class="btn btn--ghost btn--xs" @click="toggleDiffPatch(msg)"
-                                  x-text="msg.gitdiff.showPatch ? 'Nascondi diff' : 'Vedi diff'"></button>
+                                  x-text="msg.gitdiff.showPatch ? 'Hide diff' : 'Show diff'"></button>
                           <button class="btn btn--primary btn--xs" x-show="!msg.gitdiff.resolved"
                                   @click="respondMerge(msg, 'merge')">Merge</button>
                           <button class="btn btn--ghost btn--xs" x-show="!msg.gitdiff.resolved"
-                                  @click="respondMerge(msg, 'discard')">Scarta</button>
+                                  @click="respondMerge(msg, 'discard')">Discard</button>
                         </div>
                       </div>
                     </template>
@@ -1476,7 +1476,7 @@
                     <template x-if="msg.role === 'claude' && !msg.content && chatStreaming && i === messages.length - 1">
                       <div class="typing">
                         <span class="typing-dots"><span></span><span></span><span></span></span>
-                        <span x-text="(thinkingActive ? '🧠 ragionando · ' : '') + (selectedProvider !== 'claude' ? selectedProvider + '/' + selectedModel : selectedModel) + ' is thinking... ' + elapsedSec + 's'"></span>
+                        <span x-text="(thinkingActive ? '🧠 reasoning · ' : '') + (selectedProvider !== 'claude' ? selectedProvider + '/' + selectedModel : selectedModel) + ' is thinking... ' + elapsedSec + 's'"></span>
                       </div>
                     </template>
                     <!-- Contenuto reale -->
@@ -1537,7 +1537,7 @@
                         @keydown.enter="if (!slashAutocomplete.open && !$event.shiftKey && !$event.metaKey && !$event.altKey) { $event.preventDefault(); sendMessage(); }"
                         @paste="handlePaste($event)"
                         @input="$event.target.style.height='auto'; $event.target.style.height=Math.min($event.target.scrollHeight, window.innerHeight*0.5)+'px'; onInputTextChanged()"
-                        :placeholder="chatStreaming ? 'turno in corso — scrivi per indirizzarlo (steering)...' : 'Ask the hub... (Shift+Enter = newline, /skill or /bundle for workflows)'"
+                        :placeholder="chatStreaming ? 'turn in progress — type to steer it...' : 'Ask the hub... (Shift+Enter = newline, /skill or /bundle for workflows)'"
                         rows="3" class="chat__input" style="width: 100%;"></textarea>
               <div x-show="slashAutocomplete.open"
                    x-cloak
@@ -1559,7 +1559,7 @@
                 <i data-lucide="send" class="icon icon--sm"></i>
               </button>
               <button class="btn btn--primary" x-show="chatStreaming" x-cloak
-                      :title="inputText.trim() ? 'Invia come steering' : 'Interrompi il turno'"
+                      :title="inputText.trim() ? 'Send as steering' : 'Stop the turn'"
                       @click="inputText.trim() ? sendMessage() : stopTurn()">
                 <i data-lucide="square" class="icon icon--sm" x-show="!inputText.trim()"></i>
                 <i data-lucide="send" class="icon icon--sm" x-show="inputText.trim()"></i>
@@ -1638,12 +1638,12 @@
               </select>
               <!-- F-ASP — permission mode della sessione (auto = consenti tutto) -->
               <select x-model="aspMode" @change="setAspMode()"
-                      title="Permessi sessione agente: default chiede sui tool mutanti; auto consente tutto"
+                      title="Agent session permissions: default asks on mutating tools; auto allows everything"
                       x-show="selectedProvider === 'claude'">
-                <option value="">permessi: chiedi</option>
-                <option value="acceptEdits">permessi: edit liberi</option>
-                <option value="plan">permessi: plan mode</option>
-                <option value="auto">permessi: auto (tutto)</option>
+                <option value="">permissions: ask</option>
+                <option value="acceptEdits">permissions: free edits</option>
+                <option value="plan">permissions: plan mode</option>
+                <option value="auto">permissions: auto (all)</option>
               </select>
               <label title="Enables media generation (images + videos). Persists across chats. Off = MCPScoper excludes anja_images and anja_videos for safety/cost."
                      style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-size: var(--t-xs); color: var(--text-2);">
@@ -1718,7 +1718,7 @@
               </div>
               <!-- /F23.b -->
               <span class="pulse-dot" :style="`background: ${wsConnected ? 'var(--success)' : 'var(--error)'}; margin-left: auto;`"
-                    :title="wsConnected ? 'WebSocket connesso' : 'WebSocket offline'"></span>
+                    :title="wsConnected ? 'WebSocket connected' : 'WebSocket offline'"></span>
             </div>
           </div>
           </div><!-- /.chat -->
@@ -1984,7 +1984,7 @@
                                     @keydown.ctrl.enter.prevent="sendFileChat()"
                                     rows="2"></textarea>
                           <div class="pfile-chat__input-actions">
-                            <button class="btn btn--ghost btn--xs" @click="includeSelectionInChat()" title="Includi selezione">
+                            <button class="btn btn--ghost btn--xs" @click="includeSelectionInChat()" title="Include selection">
                               <i data-lucide="text-cursor" class="icon icon--sm"></i>
                             </button>
                             <span class="text-muted" style="font-size: var(--t-xs); margin-left: auto;"
@@ -2019,30 +2019,30 @@
             </button>
           </div>
           <p class="text-secondary" style="margin-bottom: var(--s-3); font-size: var(--t-sm);">
-            Deliverable del workspace in <code>files/</code> — kit social, report, output del pod. Le immagini sono cliccabili, i PDF si aprono in una tab.
+            Workspace deliverables in <code>files/</code> — social kits, reports, pod output. Images are clickable, PDFs open in a tab.
           </p>
 
           <!-- Genera immagine (credenziali ws→hub) -->
           <div class="card" style="padding:14px 18px;margin-bottom:var(--s-3)">
             <div style="font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:10px">
-              <i data-lucide="sparkles" style="width:16px;height:16px"></i> Genera immagine
+              <i data-lucide="sparkles" style="width:16px;height:16px"></i> Generate image
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-              <input class="form-input" style="flex:1;min-width:240px" placeholder="Descrivi l'immagine…"
+              <input class="form-input" style="flex:1;min-width:240px" placeholder="Describe the image…"
                      x-model="mediaGen.prompt" @keydown.enter="generateMedia(currentProjectScopeName)" :disabled="mediaGen.busy">
               <select class="form-input" style="width:auto" x-model="mediaGen.model">
                 <template x-for="m in mediaGen.models" :key="m.id">
-                  <option :value="m.id" :disabled="!m.ready" x-text="m.ready ? m.label : (m.label + ' — manca ' + m.needs)"></option>
+                  <option :value="m.id" :disabled="!m.ready" x-text="m.ready ? m.label : (m.label + ' — missing ' + m.needs)"></option>
                 </template>
               </select>
               <button class="btn btn-primary" @click="generateMedia(currentProjectScopeName)" :disabled="mediaGen.busy || !mediaGen.prompt.trim()">
                 <i data-lucide="sparkles" style="width:14px;height:14px"></i>
-                <span x-text="mediaGen.busy ? 'Genero…' : 'Genera'"></span>
+                <span x-text="mediaGen.busy ? 'Generating…' : 'Generate'"></span>
               </button>
             </div>
             <div x-show="mediaGen.msg" x-text="mediaGen.msg" x-transition style="margin-top:8px;font-size:12.5px;color:var(--text-2)"></div>
             <div x-show="mediaGen.models.length && !mediaGen.models.some(m => m.ready)" class="text-muted" style="margin-top:8px;font-size:11.5px">
-              Nessun modello pronto — aggiungi le key dei provider (OpenAI, Google AI Studio, xAI…) in <b>Settings → Integrations → Generazione immagini</b>.
+              No models ready — add provider keys (OpenAI, Google AI Studio, xAI…) in <b>Settings → Integrations → Image generation</b>.
             </div>
           </div>
 
@@ -2050,8 +2050,8 @@
           <div x-show="!projectMedia.loading && (!projectMedia.items || projectMedia.items.length === 0)"
                class="card" style="padding: var(--s-6); text-align: center; color: var(--text-3);">
             <i data-lucide="image-off" style="width: 48px; height: 48px; opacity: 0.3; margin-bottom: var(--s-3);"></i>
-            <p style="margin: 0 0 var(--s-2) 0;">Nessun media in <code>files/</code>.</p>
-            <p style="margin: 0; font-size: var(--t-sm);">Genera un kit social (es. via <code>/pod</code> o l'agente social) e i media compaiono qui.</p>
+            <p style="margin: 0 0 var(--s-2) 0;">No media in <code>files/</code> yet.</p>
+            <p style="margin: 0; font-size: var(--t-sm);">Generate a social kit (e.g. via <code>/pod</code> or the social agent) and media will show up here.</p>
           </div>
           <div x-show="projectMedia.loading" style="text-align: center; padding: var(--s-6); color: var(--text-3);">
             <span class="spinner"></span> Loading media…
@@ -2078,7 +2078,7 @@
                       <template x-if="item.kind === 'pdf'">
                         <a :href="item.web_url" target="_blank" style="display: flex; flex-direction: column; align-items: center; gap: var(--s-2); color: var(--text-2); text-decoration: none;">
                           <i data-lucide="file-text" style="width: 48px; height: 48px; color: var(--magenta, #f00069);"></i>
-                          <span style="font-size: var(--t-xs);">Apri PDF →</span>
+                          <span style="font-size: var(--t-xs);">Open PDF →</span>
                         </a>
                       </template>
                     </div>
@@ -2391,9 +2391,9 @@
                         </div>
                         <code style="font-size: 11px; word-break: break-all;" x-text="msg.perm.target"></code>
                         <div style="display: flex; gap: 6px;" x-show="!msg.perm.resolved">
-                          <button class="btn btn--primary btn--xs" @click="respondPermission(msg, 'allow')">Consenti</button>
-                          <button class="btn btn--ghost btn--xs" @click="respondPermission(msg, 'always_allow')">Sempre</button>
-                          <button class="btn btn--ghost btn--xs" @click="respondPermission(msg, 'deny')">Nega</button>
+                          <button class="btn btn--primary btn--xs" @click="respondPermission(msg, 'allow')">Allow</button>
+                          <button class="btn btn--ghost btn--xs" @click="respondPermission(msg, 'always_allow')">Always</button>
+                          <button class="btn btn--ghost btn--xs" @click="respondPermission(msg, 'deny')">Deny</button>
                         </div>
                       </div>
                     </template>
@@ -2401,15 +2401,15 @@
                     <template x-if="msg.plan">
                       <div style="display: flex; flex-direction: column; gap: 6px; min-width: 280px;">
                         <div style="display: flex; align-items: center; gap: 6px;">
-                          <span>📋</span><strong>Piano proposto</strong>
+                          <span>📋</span><strong>Proposed plan</strong>
                           <span class="text-muted" style="font-size: 11px;" x-show="msg.plan.resolved"
-                                x-text="'— ' + (msg.plan.resolved === 'approve' ? 'approvato' : 'in revisione')"></span>
+                                x-text="'— ' + (msg.plan.resolved === 'approve' ? 'approved' : 'in review')"></span>
                         </div>
                         <div class="md" style="font-size: 13px; max-height: 260px; overflow-y: auto;"
                              x-html="renderMarkdown(msg.plan.plan)"></div>
                         <div style="display: flex; gap: 6px;" x-show="!msg.plan.resolved">
-                          <button class="btn btn--primary btn--xs" @click="respondPlan(msg, 'approve')">Approva</button>
-                          <button class="btn btn--ghost btn--xs" @click="respondPlan(msg, 'replan')">Chiedi revisione</button>
+                          <button class="btn btn--primary btn--xs" @click="respondPlan(msg, 'approve')">Approve</button>
+                          <button class="btn btn--ghost btn--xs" @click="respondPlan(msg, 'replan')">Request changes</button>
                         </div>
                       </div>
                     </template>
@@ -2432,24 +2432,24 @@
                             </div>
                           </template>
                           <div class="text-muted" x-show="msg.gitdiff.files.length > 12"
-                               x-text="'… e altri ' + (msg.gitdiff.files.length - 12) + ' file'"></div>
+                               x-text="'… and ' + (msg.gitdiff.files.length - 12) + ' more files'"></div>
                         </div>
                         <pre x-show="msg.gitdiff.showPatch" x-text="msg.gitdiff.patch"
                              style="font-size: 10px; max-height: 300px; overflow: auto; background: var(--bg-2); padding: 8px; border-radius: 4px; white-space: pre-wrap; word-break: break-all;"></pre>
                         <div style="display: flex; gap: 6px;">
                           <button class="btn btn--ghost btn--xs" @click="toggleDiffPatch(msg)"
-                                  x-text="msg.gitdiff.showPatch ? 'Nascondi diff' : 'Vedi diff'"></button>
+                                  x-text="msg.gitdiff.showPatch ? 'Hide diff' : 'Show diff'"></button>
                           <button class="btn btn--primary btn--xs" x-show="!msg.gitdiff.resolved"
                                   @click="respondMerge(msg, 'merge')">Merge</button>
                           <button class="btn btn--ghost btn--xs" x-show="!msg.gitdiff.resolved"
-                                  @click="respondMerge(msg, 'discard')">Scarta</button>
+                                  @click="respondMerge(msg, 'discard')">Discard</button>
                         </div>
                       </div>
                     </template>
                         <template x-if="msg.role === 'claude' && !msg.content && chatStreaming && i === messages.length - 1">
                           <div class="typing">
                             <span class="typing-dots"><span></span><span></span><span></span></span>
-                            <span x-text="(thinkingActive ? '🧠 ragionando · ' : '') + (selectedProvider !== 'claude' ? selectedProvider + '/' + selectedModel : selectedModel) + ' is thinking... ' + elapsedSec + 's'"></span>
+                            <span x-text="(thinkingActive ? '🧠 reasoning · ' : '') + (selectedProvider !== 'claude' ? selectedProvider + '/' + selectedModel : selectedModel) + ' is thinking... ' + elapsedSec + 's'"></span>
                           </div>
                         </template>
                         <div x-html="renderMarkdown(msg.content)" x-show="msg.content"></div>
@@ -2484,12 +2484,12 @@
                     <i data-lucide="paperclip" class="icon icon--sm"></i>
                   </button>
                   <input type="file" x-ref="fileInputProj" @change="handleFileSelect($event)" multiple style="display: none;">
-                  <textarea x-model="inputText" @keydown.enter="if (!$event.shiftKey && !$event.metaKey && !$event.altKey) { $event.preventDefault(); sendMessage(); }" @paste="handlePaste($event)" :placeholder="chatStreaming ? 'turno in corso — scrivi per indirizzarlo (steering)...' : `Ask ${currentProject}... (Shift+Enter = newline, drop file here)`" rows="1" class="chat__input"></textarea>
+                  <textarea x-model="inputText" @keydown.enter="if (!$event.shiftKey && !$event.metaKey && !$event.altKey) { $event.preventDefault(); sendMessage(); }" @paste="handlePaste($event)" :placeholder="chatStreaming ? 'turn in progress — type to steer it...' : `Ask ${currentProject}... (Shift+Enter = newline, drop file here)`" rows="1" class="chat__input"></textarea>
                   <button class="btn btn--primary" x-show="!chatStreaming" :disabled="(!inputText.trim() && attachments.length === 0) || attachmentsUploading > 0" @click="sendMessage()">
                     <i data-lucide="send" class="icon icon--sm"></i>
                   </button>
                   <button class="btn btn--primary" x-show="chatStreaming" x-cloak
-                          :title="inputText.trim() ? 'Invia come steering' : 'Interrompi il turno'"
+                          :title="inputText.trim() ? 'Send as steering' : 'Stop the turn'"
                           @click="inputText.trim() ? sendMessage() : stopTurn()">
                     <i data-lucide="square" class="icon icon--sm" x-show="!inputText.trim()"></i>
                     <i data-lucide="send" class="icon icon--sm" x-show="inputText.trim()"></i>
@@ -2858,18 +2858,18 @@
           <div x-show="kanban.mode === 'calendar'" class="kanban-cal-wrap">
             <div>
               <div class="kanban-cal-nav">
-                <button class="btn btn--ghost btn--sm" @click="calShift(-1)" title="Mese precedente">
+                <button class="btn btn--ghost btn--sm" @click="calShift(-1)" title="Previous month">
                   <i data-lucide="chevron-left" class="icon icon--sm"></i>
                 </button>
                 <strong class="kanban-cal-month" x-text="kanbanCalLabel"></strong>
-                <button class="btn btn--ghost btn--sm" @click="calShift(1)" title="Mese successivo">
+                <button class="btn btn--ghost btn--sm" @click="calShift(1)" title="Next month">
                   <i data-lucide="chevron-right" class="icon icon--sm"></i>
                 </button>
-                <button class="btn btn--ghost btn--xs" @click="calToday()">Oggi</button>
+                <button class="btn btn--ghost btn--xs" @click="calToday()">Today</button>
               </div>
               <div class="kanban-cal">
                 <div class="kanban-cal__row kanban-cal__head">
-                  <template x-for="wd in ['Lun','Mar','Mer','Gio','Ven','Sab','Dom']" :key="wd">
+                  <template x-for="wd in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']" :key="wd">
                     <div class="kanban-cal__wd" x-text="wd"></div>
                   </template>
                 </div>
@@ -2892,11 +2892,11 @@
             <div class="card kanban-agenda">
               <div class="kanban-agenda__head">
                 <i data-lucide="calendar-clock" class="icon icon--sm"></i>
-                <strong>Programmati</strong>
+                <strong>Scheduled</strong>
                 <span class="text-muted" style="font-size: var(--t-xs); margin-left: auto;" x-text="kanbanScheduled.length"></span>
               </div>
               <template x-if="kanbanScheduled.length === 0">
-                <div class="text-muted" style="font-size: var(--t-xs); padding: var(--s-2) 0;">Nessun task con data attiva.</div>
+                <div class="text-muted" style="font-size: var(--t-xs); padding: var(--s-2) 0;">No tasks with an active date.</div>
               </template>
               <template x-for="t in kanbanScheduled" :key="t.id">
                 <div class="kanban-agenda__item" @click="openKanbanTask(t.id)">
@@ -2916,7 +2916,7 @@
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s-2);">
             <h1 style="font-size: var(--t-2xl); font-weight: 600; margin: 0;">
               <i data-lucide="calendar-check" class="icon"></i>
-              Piano editoriale
+              Editorial plan
               <span class="text-mono text-muted" style="font-size: var(--t-sm); font-weight: 400; margin-left: var(--s-2);">
                 <span x-show="isProjectScope" x-text="`(workspace ${currentProjectScopeName})`"></span>
                 <span x-show="!isProjectScope">(hub)</span>
@@ -2931,16 +2931,16 @@
 
           <!-- Toolbar settimana (‹ / label / › / Oggi) -->
           <div class="ed-toolbar">
-            <div class="section-title">Calendario</div>
+            <div class="section-title">Calendar</div>
             <div class="ed-week-nav">
-              <button class="btn btn--ghost btn--sm" @click="pianoShift(-1)" title="Settimana precedente">
+              <button class="btn btn--ghost btn--sm" @click="pianoShift(-1)" title="Previous week">
                 <i data-lucide="chevron-left" class="icon icon--sm"></i>
               </button>
               <span class="ed-week-label" x-text="pianoWeekLabel"></span>
-              <button class="btn btn--ghost btn--sm" @click="pianoShift(1)" title="Settimana successiva">
+              <button class="btn btn--ghost btn--sm" @click="pianoShift(1)" title="Next week">
                 <i data-lucide="chevron-right" class="icon icon--sm"></i>
               </button>
-              <button class="btn btn--primary btn--sm" @click="pianoToday()">Oggi</button>
+              <button class="btn btn--primary btn--sm" @click="pianoToday()">Today</button>
             </div>
           </div>
 
@@ -2979,8 +2979,8 @@
           <!-- Stato vuoto -->
           <template x-if="!pianoLoading && (pianoItems || []).length === 0">
             <div class="text-muted" style="text-align:center; padding: var(--s-6) 0; font-size: var(--t-sm);">
-              Nessuna voce nel piano editoriale. La fonte è <code>data/PIANO.md</code> di questo workspace
-              (sezioni «Piano editoriale blog» e «Social»).
+              No editorial plan entries yet. The source is <code>data/PIANO.md</code> in this workspace
+              («Piano editoriale blog» and «Social» sections).
             </div>
           </template>
 
@@ -2988,15 +2988,15 @@
           <template x-if="(pianoItems || []).length > 0">
             <div>
               <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:28px;flex-wrap:wrap">
-                <div class="section-title">Piano editoriale · <span x-text="pianoList.length"></span> voci</div>
+                <div class="section-title">Editorial plan · <span x-text="pianoList.length"></span> entries</div>
                 <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-600);cursor:pointer" x-show="pianoPublishedCount">
                   <input type="checkbox" x-model="pianoShowPublished">
-                  Mostra pubblicati (<span x-text="pianoPublishedCount"></span>)
+                  Show published (<span x-text="pianoPublishedCount"></span>)
                 </label>
               </div>
               <div class="plan-list">
                 <div class="plan-row plan-head">
-                  <div>Contenuto</div><div>Stato</div><div>Canale</div><div>Programmato</div><div></div>
+                  <div>Content</div><div>Status</div><div>Channel</div><div>Scheduled</div><div></div>
                 </div>
                 <template x-for="item in pianoList" :key="item.id">
                   <div class="plan-row">
@@ -3006,7 +3006,7 @@
                     </div>
                     <div>
                       <select class="ed-badge ed-badge-select" :class="`ed-badge-${item.stato}`"
-                              @change="setPianoStatus(item, $event.target.value)" title="Cambia stato → PIANO.md">
+                              @change="setPianoStatus(item, $event.target.value)" title="Change status → PIANO.md">
                         <template x-for="s in _PIANO_STATI" :key="s">
                           <option :value="s" :selected="s === item.stato" x-text="_pianoStatoLabel(s)"></option>
                         </template>
@@ -3028,7 +3028,7 @@
           <!-- Quick-view voce calendario (modal) -->
           <div class="ev-modal" :hidden="!pianoEvent" @click.self="closePianoEvent()" @keydown.escape.window="closePianoEvent()">
             <div class="ev-modal-box" x-show="pianoEvent">
-              <button class="ev-modal-x" type="button" aria-label="Chiudi" @click="closePianoEvent()">&times;</button>
+              <button class="ev-modal-x" type="button" aria-label="Close" @click="closePianoEvent()">&times;</button>
               <div class="ev-modal-kind" x-text="pianoEvent && pianoEvent.kind"></div>
               <h3 style="margin:6px 0 10px;font-size:16px;line-height:1.3" x-text="pianoEvent && pianoEvent.title"></h3>
               <div style="color:var(--ink-500);font-size:13px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -3049,17 +3049,17 @@
         <div class="content__inner">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px">
             <h1 style="font-size:var(--t-2xl);font-weight:600;margin:0;display:flex;align-items:center;gap:8px">
-              <i data-lucide="bar-chart-3" class="icon"></i> Statistiche
+              <i data-lucide="bar-chart-3" class="icon"></i> Statistics
               <span class="text-muted" style="font-size:var(--t-sm);font-weight:400" x-text="currentProjectScopeName"></span>
             </h1>
             <div style="display:flex;align-items:center;gap:10px">
               <div class="tabs-filter" x-show="statsData && statsData.exists">
-                <button :class="{ active: statsRange === 28 }" @click="setStatsRange(28)">28 giorni</button>
-                <button :class="{ active: statsRange === 90 }" @click="setStatsRange(90)">90 giorni</button>
+                <button :class="{ active: statsRange === 28 }" @click="setStatsRange(28)">28 days</button>
+                <button :class="{ active: statsRange === 90 }" @click="setStatsRange(90)">90 days</button>
               </div>
-              <button class="btn btn--xs" @click="refreshMetrics()" :disabled="statsRefreshing" title="Aggiorna le metriche dal collegamento dati">
+              <button class="btn btn--xs" @click="refreshMetrics()" :disabled="statsRefreshing" title="Refresh metrics from the data connection">
                 <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
-                <span x-text="statsRefreshing ? 'Aggiorno…' : 'Aggiorna'"></span>
+                <span x-text="statsRefreshing ? 'Refreshing…' : 'Refresh'"></span>
               </button>
             </div>
           </div>
@@ -3069,18 +3069,18 @@
           <!-- Contenuti del sito (dal Catalogo) — visibile anche senza metriche -->
           <template x-if="statsData && statsData.content && statsData.content.total">
             <div style="margin-bottom:24px">
-              <div class="dash-section-title" style="margin-bottom:10px">Contenuti del sito</div>
+              <div class="dash-section-title" style="margin-bottom:10px">Site content</div>
               <div class="stat-card-grid">
                 <div class="stat-card stat-card-primary">
-                  <div class="stat-card-label">Pubblicati</div>
+                  <div class="stat-card-label">Published</div>
                   <div class="stat-card-value"><div class="stat-card-num" x-text="statsData.content.published"></div></div>
-                  <div class="stat-card-sub">su <span x-text="statsData.content.total"></span> contenuti · <span x-text="statsData.content.draft"></span> bozze</div>
+                  <div class="stat-card-sub">of <span x-text="statsData.content.total"></span> items · <span x-text="statsData.content.draft"></span> drafts</div>
                 </div>
                 <template x-for="entry in Object.entries(statsData.content.by_kind || {})" :key="entry[0]">
                   <div class="stat-card">
                     <div class="stat-card-label" x-text="entry[0].charAt(0).toUpperCase()+entry[0].slice(1)"></div>
                     <div class="stat-card-value"><div class="stat-card-num" x-text="entry[1].published"></div></div>
-                    <div class="stat-card-sub"><span x-text="entry[1].total"></span> totali · <span x-text="entry[1].total - entry[1].published"></span> bozze</div>
+                    <div class="stat-card-sub"><span x-text="entry[1].total"></span> total · <span x-text="entry[1].total - entry[1].published"></span> drafts</div>
                   </div>
                 </template>
               </div>
@@ -3088,16 +3088,16 @@
           </template>
 
           <!-- loading -->
-          <div x-show="statsLoading" class="text-muted" style="padding:40px;text-align:center">Carico le metriche…</div>
+          <div x-show="statsLoading" class="text-muted" style="padding:40px;text-align:center">Loading metrics…</div>
 
           <!-- empty state (db assente/vuoto) -->
           <div x-show="!statsLoading && (!statsData || !statsData.exists)" class="card" style="padding:32px;text-align:center;max-width:560px">
             <i data-lucide="line-chart" style="width:32px;height:32px;color:var(--ink-400)"></i>
-            <div style="font-size:15px;font-weight:600;margin-top:10px">Nessun dato ancora</div>
+            <div style="font-size:15px;font-weight:600;margin-top:10px">No data yet</div>
             <div class="text-muted" style="font-size:13px;margin-top:6px;line-height:1.5">
-              Le statistiche leggono <code>data/metrics.db</code>. Collega le fonti (GSC / GA4 / Ads)
-              dai <b>Connettori</b> del workspace — oppure importa un report. Finché non c'è il
-              collector, puoi popolare dati demo con <code>python3 metrics_io.py &lt;ws&gt;/data/metrics.db</code>.
+              Statistics read from <code>data/metrics.db</code>. Connect the sources (GSC / GA4 / Ads)
+              from the workspace <b>Connectors</b> — or import a report. Until the collector
+              is in place, you can populate demo data with <code>python3 metrics_io.py &lt;ws&gt;/data/metrics.db</code>.
             </div>
           </div>
 
@@ -3105,7 +3105,7 @@
           <template x-if="!statsLoading && statsData && statsData.exists">
            <div>
             <div class="tabs-filter" style="margin-bottom:18px">
-              <button :class="{ active: statsTab==='overview' }" @click="setStatsTab('overview')">Panoramica</button>
+              <button :class="{ active: statsTab==='overview' }" @click="setStatsTab('overview')">Overview</button>
               <button :class="{ active: statsTab==='seo' }" @click="setStatsTab('seo')">SEO</button>
               <button :class="{ active: statsTab==='analytics' }" @click="setStatsTab('analytics')">Analytics</button>
               <button :class="{ active: statsTab==='ads' }" @click="setStatsTab('ads')">Ads</button>
@@ -3113,7 +3113,7 @@
               <button :class="{ active: statsTab==='social' }" @click="setStatsTab('social')" x-show="socialPerf.posts.length || statsData?.social">Social <span class="count" x-show="socialPerf.posts.length" x-text="socialPerf.posts.length"></span></button>
             </div>
             <div class="text-muted" style="font-size:12px;margin-bottom:14px">
-              Ultimo dato: <span class="text-mono" x-text="statsData.anchor"></span> · periodo: <span x-text="statsRange"></span> giorni
+              Latest data: <span class="text-mono" x-text="statsData.anchor"></span> · period: <span x-text="statsRange"></span> days
             </div>
 
             <!-- TAB: Panoramica -->
@@ -3133,13 +3133,13 @@
                 </template>
               </div>
               <div class="card" style="padding:18px;margin-top:6px">
-                <div class="dash-section-title" style="margin-bottom:12px">Andamento organico (GSC · 90gg)</div>
+                <div class="dash-section-title" style="margin-bottom:12px">Organic trend (GSC · 90d)</div>
                 <div class="stat-chart-wrap"><canvas id="stat-chart-gsc"></canvas></div>
               </div>
               <div style="margin-top:18px" x-show="statsData.quick_wins.length">
                 <div class="dash-section-title" style="margin-bottom:10px">Quick-win SEO (pos 8–20)</div>
                 <table class="data-table">
-                  <thead><tr><th>Query</th><th>Posizione</th><th>Impr.</th><th>Click</th></tr></thead>
+                  <thead><tr><th>Query</th><th>Position</th><th>Impr.</th><th>Clicks</th></tr></thead>
                   <tbody>
                     <template x-for="r in statsData.quick_wins.slice(0,6)" :key="r.query">
                       <tr><td x-text="r.query"></td><td x-text="r.position.toFixed(1)"></td><td x-text="r.impressions"></td><td x-text="r.clicks"></td></tr>
@@ -3154,10 +3154,10 @@
               <template x-if="statsData.merchant">
                 <div>
                   <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:13px;margin-bottom:14px" x-show="statsData.merchant.feed">
-                    <span><b x-text="statsData.merchant.feed?.products"></b>&nbsp;prodotti nel feed</span>
+                    <span><b x-text="statsData.merchant.feed?.products"></b>&nbsp;products in the feed</span>
                     <span class="tag success" x-text="'✓ ' + (statsData.merchant.feed?.ok ?? 0) + ' ok'"></span>
                     <span class="tag warn" x-show="statsData.merchant.feed?.demoted" x-text="'⚠ ' + statsData.merchant.feed.demoted + ' demoted'"></span>
-                    <span class="tag" style="background:#fee2e2;color:#b91c1c" x-show="statsData.merchant.feed?.disapproved" x-text="'⛔ ' + statsData.merchant.feed.disapproved + ' disapprovati'"></span>
+                    <span class="tag" style="background:#fee2e2;color:#b91c1c" x-show="statsData.merchant.feed?.disapproved" x-text="'⛔ ' + statsData.merchant.feed.disapproved + ' disapproved'"></span>
                     <span class="text-muted" style="font-size:12px" x-text="'snapshot feed ' + (statsData.merchant.feed?.date || '')"></span>
                   </div>
                   <div class="stat-card-grid" style="margin-bottom:14px">
@@ -3176,30 +3176,30 @@
                   </div>
                   <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin-bottom:14px" x-show="statsData.merchant.by_method?.length">
                     <template x-for="m in statsData.merchant.by_method" :key="m.method">
-                      <span class="tag neutral" x-text="(m.method === 'organic' ? '🌱 organico' : m.method === 'ads' ? '💰 ads' : m.method) + ': ' + m.clicks + ' click · €' + m.value"></span>
+                      <span class="tag neutral" x-text="(m.method === 'organic' ? '🌱 organic' : m.method === 'ads' ? '💰 ads' : m.method) + ': ' + m.clicks + ' clicks · €' + m.value"></span>
                     </template>
                   </div>
                   <div class="card" style="padding:18px;margin-bottom:18px">
-                    <div class="dash-section-title" style="margin-bottom:12px">Andamento listing Shopping (90gg)</div>
+                    <div class="dash-section-title" style="margin-bottom:12px">Shopping listing trend (90d)</div>
                     <div class="stat-chart-wrap"><canvas id="stat-chart-merchant"></canvas></div>
                   </div>
                   <div class="stats-grid-2">
                     <div>
-                      <div class="dash-section-title" style="margin-bottom:10px">🏆 Top prodotti per valore (finestra 90gg)</div>
+                      <div class="dash-section-title" style="margin-bottom:10px">🏆 Top products by value (90d window)</div>
                       <table class="data-table" x-show="statsData.merchant.top_products?.length">
-                        <thead><tr><th>Prodotto</th><th>Click</th><th>Conv.</th><th>Valore</th></tr></thead>
+                        <thead><tr><th>Product</th><th>Clicks</th><th>Conv.</th><th>Value</th></tr></thead>
                         <tbody>
                           <template x-for="p in statsData.merchant.top_products" :key="p.offer_id">
                             <tr><td x-text="p.title || p.offer_id"></td><td x-text="p.clicks"></td><td x-text="p.conversions"></td><td x-text="'€' + p.value"></td></tr>
                           </template>
                         </tbody>
                       </table>
-                      <div class="text-muted" x-show="!statsData.merchant.top_products?.length" style="font-size:13px">Nessun traffico listing nel periodo.</div>
+                      <div class="text-muted" x-show="!statsData.merchant.top_products?.length" style="font-size:13px">No listing traffic in this period.</div>
                     </div>
                     <div>
-                      <div class="dash-section-title" style="margin-bottom:10px">⛔ Prodotti disapprovati</div>
+                      <div class="dash-section-title" style="margin-bottom:10px">⛔ Disapproved products</div>
                       <table class="data-table" x-show="statsData.merchant.feed?.disapproved_products?.length">
-                        <thead><tr><th>Prodotto</th><th>Motivo</th></tr></thead>
+                        <thead><tr><th>Product</th><th>Reason</th></tr></thead>
                         <tbody>
                           <template x-for="p in statsData.merchant.feed.disapproved_products" :key="p.offer_id">
                             <tr>
@@ -3209,13 +3209,13 @@
                           </template>
                         </tbody>
                       </table>
-                      <div class="text-muted" x-show="!statsData.merchant.feed?.disapproved_products?.length" style="font-size:13px">Nessun prodotto disapprovato ✓</div>
+                      <div class="text-muted" x-show="!statsData.merchant.feed?.disapproved_products?.length" style="font-size:13px">No disapproved products ✓</div>
                     </div>
                   </div>
                   <div style="margin-top:18px" x-show="statsData.merchant.feed?.top_issues?.length">
-                    <div class="dash-section-title" style="margin-bottom:10px">Issues del feed (per frequenza)</div>
+                    <div class="dash-section-title" style="margin-bottom:10px">Feed issues (by frequency)</div>
                     <table class="data-table">
-                      <thead><tr><th>Issue</th><th>Gravità</th><th>Prodotti</th></tr></thead>
+                      <thead><tr><th>Issue</th><th>Severity</th><th>Products</th></tr></thead>
                       <tbody>
                         <template x-for="i in statsData.merchant.feed.top_issues" :key="i.code + i.severity">
                           <tr>
@@ -3235,7 +3235,7 @@
             <div x-show="statsTab==='seo'">
               <div class="stats-grid-2">
                 <div>
-                  <div class="dash-section-title" style="margin-bottom:10px">Quick-win — da spingere (pos 8–20)</div>
+                  <div class="dash-section-title" style="margin-bottom:10px">Quick wins — worth pushing (pos 8–20)</div>
                   <table class="data-table" x-show="statsData.quick_wins.length">
                     <thead><tr><th>Query</th><th>Pos.</th><th>Impr.</th></tr></thead>
                     <tbody>
@@ -3244,10 +3244,10 @@
                       </template>
                     </tbody>
                   </table>
-                  <div class="text-muted" x-show="!statsData.quick_wins.length" style="font-size:13px">Nessuna quick-win nel periodo.</div>
+                  <div class="text-muted" x-show="!statsData.quick_wins.length" style="font-size:13px">No quick wins in this period.</div>
                 </div>
                 <div>
-                  <div class="dash-section-title" style="margin-bottom:10px">Anomalie CTR — ben posizionate, 0 click</div>
+                  <div class="dash-section-title" style="margin-bottom:10px">CTR anomalies — well ranked, 0 clicks</div>
                   <table class="data-table" x-show="statsData.ctr_anomalies.length">
                     <thead><tr><th>Query</th><th>Pos.</th><th>Impr.</th></tr></thead>
                     <tbody>
@@ -3256,12 +3256,12 @@
                       </template>
                     </tbody>
                   </table>
-                  <div class="text-muted" x-show="!statsData.ctr_anomalies.length" style="font-size:13px">Nessuna anomalia: i meta lavorano.</div>
+                  <div class="text-muted" x-show="!statsData.ctr_anomalies.length" style="font-size:13px">No anomalies: the meta tags are doing their job.</div>
                 </div>
               </div>
               <div class="stats-grid-2" style="margin-top:20px">
                 <div>
-                  <div class="dash-section-title" style="margin-bottom:10px">📈 In salita</div>
+                  <div class="dash-section-title" style="margin-bottom:10px">📈 Rising</div>
                   <table class="data-table" x-show="statsData.movers_up.length">
                     <thead><tr><th>Query</th><th>Pos.</th><th>Δ</th></tr></thead>
                     <tbody>
@@ -3273,7 +3273,7 @@
                   <div class="text-muted" x-show="!statsData.movers_up.length" style="font-size:13px">—</div>
                 </div>
                 <div>
-                  <div class="dash-section-title" style="margin-bottom:10px">📉 In calo</div>
+                  <div class="dash-section-title" style="margin-bottom:10px">📉 Falling</div>
                   <table class="data-table" x-show="statsData.movers_down.length">
                     <thead><tr><th>Query</th><th>Pos.</th><th>Δ</th></tr></thead>
                     <tbody>
@@ -3304,13 +3304,13 @@
                 </template>
               </div>
               <div class="card" style="padding:18px;margin-top:6px">
-                <div class="dash-section-title" style="margin-bottom:12px">Sessioni (GA4 · 90gg)</div>
+                <div class="dash-section-title" style="margin-bottom:12px">Sessions (GA4 · 90d)</div>
                 <div class="stat-chart-wrap"><canvas id="stat-chart-ga"></canvas></div>
               </div>
               <div style="margin-top:18px" x-show="statsData.ga_channels.length">
-                <div class="dash-section-title" style="margin-bottom:10px">Per canale</div>
+                <div class="dash-section-title" style="margin-bottom:10px">By channel</div>
                 <table class="data-table">
-                  <thead><tr><th>Canale</th><th>Sessioni</th><th>Utenti</th><th>Conversioni</th></tr></thead>
+                  <thead><tr><th>Channel</th><th>Sessions</th><th>Users</th><th>Conversions</th></tr></thead>
                   <tbody>
                     <template x-for="r in statsData.ga_channels" :key="r.channel">
                       <tr><td x-text="r.channel"></td><td x-text="r.sessions"></td><td x-text="r.users"></td><td x-text="r.conversions"></td></tr>
@@ -3333,24 +3333,24 @@
                   </template>
                 </div>
                 <div class="card" style="padding:18px;margin-top:6px">
-                  <div class="dash-section-title" style="margin-bottom:12px">Spesa vs ricavi (90gg)</div>
+                  <div class="dash-section-title" style="margin-bottom:12px">Spend vs revenue (90d)</div>
                   <div class="stat-chart-wrap"><canvas id="stat-chart-ads"></canvas></div>
                 </div>
               </div>
               <div x-show="!statsData.has_ads" class="card" style="padding:28px;text-align:center;max-width:520px">
                 <i data-lucide="megaphone" style="width:28px;height:28px;color:var(--ink-400)"></i>
-                <div style="font-size:14px;font-weight:600;margin-top:8px">Nessuna campagna attiva</div>
-                <div class="text-muted" style="font-size:13px;margin-top:6px">Quando colleghi Google/Meta Ads, qui vedrai spesa, conversioni e ROAS.</div>
+                <div style="font-size:14px;font-weight:600;margin-top:8px">No active campaigns</div>
+                <div class="text-muted" style="font-size:13px;margin-top:6px">Once you connect Google/Meta Ads, you'll see spend, conversions and ROAS here.</div>
               </div>
             </div>
 
             <!-- TAB: Social (Performance organica) -->
             <div x-show="statsTab==='social'">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-                <div class="dash-section-title">Performance social organica</div>
-                <button class="btn btn--xs" @click="refreshSocialPerf()" :disabled="socialPerfRefreshing" title="Scarica engagement (like, commenti, clic) e reach IG da Meta Insights">
+                <div class="dash-section-title">Organic social performance</div>
+                <button class="btn btn--xs" @click="refreshSocialPerf()" :disabled="socialPerfRefreshing" title="Fetch engagement (likes, comments, clicks) and IG reach from Meta Insights">
                   <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
-                  <span x-text="socialPerfRefreshing ? 'Scarico…' : 'Aggiorna engagement'"></span>
+                  <span x-text="socialPerfRefreshing ? 'Fetching…' : 'Refresh engagement'"></span>
                 </button>
               </div>
               <div x-show="socialPerfMsg" x-text="socialPerfMsg" x-transition style="margin-bottom:10px;padding:9px 13px;border-radius:8px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-size:12.5px"></div>
@@ -3372,17 +3372,17 @@
                     </template>
                   </div>
                   <div class="card" style="padding:18px;margin-bottom:14px">
-                    <div class="dash-section-title" style="margin-bottom:12px">Reach account (90gg)</div>
+                    <div class="dash-section-title" style="margin-bottom:12px">Account reach (90d)</div>
                     <div class="stat-chart-wrap"><canvas id="stat-chart-social"></canvas></div>
                   </div>
                   <div class="stats-grid-2" x-show="statsData.social.audience?.age?.length || statsData.social.audience?.city?.length">
                     <div class="card" style="padding:16px">
                       <div class="dash-section-title" style="margin-bottom:10px;font-size:12px">
-                        Demografia follower IG — età
-                        <span class="text-muted" style="font-weight:400" x-show="statsData.social.audience_date" x-text="'· al ' + statsData.social.audience_date"></span>
+                        IG follower demographics — age
+                        <span class="text-muted" style="font-weight:400" x-show="statsData.social.audience_date" x-text="'· as of ' + statsData.social.audience_date"></span>
                       </div>
                       <table class="data-table">
-                        <thead><tr><th>Fascia</th><th style="width:80px">Follower</th></tr></thead>
+                        <thead><tr><th>Age range</th><th style="width:80px">Followers</th></tr></thead>
                         <tbody>
                           <template x-for="a in (statsData.social.audience?.age || [])" :key="'a'+a.value">
                             <tr><td x-text="a.value"></td><td x-text="a.count"></td></tr>
@@ -3391,14 +3391,14 @@
                       </table>
                       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px" x-show="statsData.social.audience?.gender?.length">
                         <template x-for="g in (statsData.social.audience?.gender || [])" :key="'g'+g.value">
-                          <span class="tag neutral" x-text="(g.value === 'F' ? '♀ Donne' : g.value === 'M' ? '♂ Uomini' : 'Non specificato') + ': ' + g.count"></span>
+                          <span class="tag neutral" x-text="(g.value === 'F' ? '♀ Women' : g.value === 'M' ? '♂ Men' : 'Not specified') + ': ' + g.count"></span>
                         </template>
                       </div>
                     </div>
                     <div class="card" style="padding:16px">
-                      <div class="dash-section-title" style="margin-bottom:10px;font-size:12px">Demografia follower IG — città</div>
+                      <div class="dash-section-title" style="margin-bottom:10px;font-size:12px">IG follower demographics — city</div>
                       <table class="data-table">
-                        <thead><tr><th>Città</th><th style="width:80px">Follower</th></tr></thead>
+                        <thead><tr><th>City</th><th style="width:80px">Followers</th></tr></thead>
                         <tbody>
                           <template x-for="ci in (statsData.social.audience?.city || [])" :key="'c'+ci.value">
                             <tr><td x-text="ci.value"></td><td x-text="ci.count"></td></tr>
@@ -3411,28 +3411,28 @@
               </template>
               <div class="dash-section-title" style="margin:22px 0 10px">Engagement per post</div>
               <table class="data-table">
-                <thead><tr><th style="width:96px">Data</th><th style="width:110px">Canale</th><th>Post</th><th style="width:80px">Reach</th><th style="width:70px">Like</th><th style="width:90px">Commenti</th><th style="width:80px">Salvat.</th><th style="width:70px">Clic</th></tr></thead>
+                <thead><tr><th style="width:96px">Date</th><th style="width:110px">Channel</th><th>Post</th><th style="width:80px">Reach</th><th style="width:70px">Likes</th><th style="width:90px">Comments</th><th style="width:80px">Saves</th><th style="width:70px">Clicks</th></tr></thead>
                 <tbody>
                   <template x-for="(p, i) in socialPerf.posts" :key="i">
                     <tr>
                       <td class="text-mono" style="font-size:12px" x-text="p.date || '—'"></td>
                       <td><span class="tag" :class="p.channel === 'instagram' ? 'brand' : 'neutral'" x-text="_socialChannelLabel(p.channel)"></span></td>
                       <td><a x-show="/^https?:/.test(p.ref)" :href="p.ref" target="_blank" rel="noopener" style="color:var(--ink-900);text-decoration:none" x-text="p.title"></a><span x-show="!/^https?:/.test(p.ref)" x-text="p.title"></span></td>
-                      <td><span x-text="p.channel === 'facebook' ? 'n/d' : (p.reach ?? '—')"
+                      <td><span x-text="p.channel === 'facebook' ? 'n/a' : (p.reach ?? '—')"
                                 :class="p.channel === 'facebook' ? 'text-muted' : ''"
-                                :title="p.channel === 'facebook' ? 'Reach FB deprecato dall’API Meta → consultalo in Business Suite' : ''"
+                                :title="p.channel === 'facebook' ? 'FB reach deprecated by the Meta API → check it in Business Suite' : ''"
                                 :style="p.channel === 'facebook' ? 'border-bottom:1px dotted currentColor;cursor:help' : ''"></span></td>
                       <td x-text="p.likes ?? '—'"></td>
                       <td x-text="p.comments ?? '—'"></td>
-                      <td x-text="p.channel === 'facebook' ? 'n/d' : (p.saves ?? '—')" :class="p.channel === 'facebook' ? 'text-muted' : ''"></td>
+                      <td x-text="p.channel === 'facebook' ? 'n/a' : (p.saves ?? '—')" :class="p.channel === 'facebook' ? 'text-muted' : ''"></td>
                       <td x-text="p.clicks ?? '—'"></td>
                     </tr>
                   </template>
                 </tbody>
               </table>
               <div class="text-muted" style="font-size:11px;margin-top:8px">
-                Engagement (like, commenti, clic) da Meta Insights, token dal vault. Su Facebook il <b>reach è «n/d»</b>: Meta l'ha deprecato dall'API — consultalo in Business Suite. Il reach reale è quello di Instagram.
-                <span x-show="socialPerf.updated_at">· aggiornato <span class="text-mono" x-text="socialPerf.updated_at"></span></span>
+                Engagement (likes, comments, clicks) from Meta Insights, token from the vault. On Facebook <b>reach is «n/a»</b>: Meta deprecated it in the API — check it in Business Suite. The real reach is Instagram's.
+                <span x-show="socialPerf.updated_at">· updated <span class="text-mono" x-text="socialPerf.updated_at"></span></span>
               </div>
             </div>
            </div>
@@ -3445,12 +3445,12 @@
         <div class="content__inner" style="max-width:720px">
           <div style="margin-bottom:18px">
             <h1 style="font-size:var(--t-2xl);font-weight:600;margin:0;display:flex;align-items:center;gap:8px">
-              <i data-lucide="plug" class="icon"></i> Connettori
+              <i data-lucide="plug" class="icon"></i> Connectors
               <span class="text-muted" style="font-size:var(--t-sm);font-weight:400" x-text="currentProjectScopeName"></span>
             </h1>
             <div class="text-muted" style="font-size:13px;margin-top:6px">
-              Credenziali dei backend del sito, in <b>cassaforte cifrata</b> (Fernet) in <code>.anjawiki/.secrets.vault</code>.
-              I segreti non vengono mai mostrati: lascia vuoto per non cambiarli.
+              Site backend credentials, kept in an <b>encrypted vault</b> (Fernet) at <code>.anjawiki/.secrets.vault</code>.
+              Secrets are never shown: leave a field empty to keep it unchanged.
             </div>
           </div>
 
@@ -3460,36 +3460,36 @@
               <div>
                 <div style="font-weight:600;display:flex;align-items:center;gap:8px">
                   <i data-lucide="line-chart" style="width:16px;height:16px;color:var(--ink-500)"></i>
-                  Collegamento Google
-                  <span class="tag" :class="googleOauth.connected ? 'success' : 'neutral'" x-text="googleOauth.connected ? ('collegato · ' + googleOauth.token_scope) : 'non collegato'"></span>
+                  Google connection
+                  <span class="tag" :class="googleOauth.connected ? 'success' : 'neutral'" x-text="googleOauth.connected ? ('connected · ' + googleOauth.token_scope) : 'not connected'"></span>
                 </div>
                 <div class="text-muted" style="font-size:12.5px;margin-top:5px">
-                  <span x-show="googleOauth.connected">Search Console + Analytics autorizzati: le Statistiche raccolgono dati reali.</span>
-                  <span x-show="!googleOauth.connected && googleOauth.client_configured">Autorizza l'accesso a GSC/GA per questo workspace.</span>
-                  <span x-show="!googleOauth.client_configured">OAuth client non configurato: carica <code>google-oauth-client.json</code> nell'hub (<code>.anjawiki/</code>).</span>
+                  <span x-show="googleOauth.connected">Search Console + Analytics authorized: Statistics collect real data.</span>
+                  <span x-show="!googleOauth.connected && googleOauth.client_configured">Authorize GSC/GA access for this workspace.</span>
+                  <span x-show="!googleOauth.client_configured">OAuth client not configured: upload <code>google-oauth-client.json</code> to the hub (<code>.anjawiki/</code>).</span>
                 </div>
               </div>
               <button class="btn" :class="googleOauth.connected ? '' : 'btn-primary'" @click="connectGoogle()" :disabled="!googleOauth.client_configured">
                 <i :data-lucide="googleOauth.connected ? 'refresh-cw' : 'link'" style="width:15px;height:15px"></i>
-                <span x-text="googleOauth.connected ? 'Ricollega' : 'Collega Google'"></span>
+                <span x-text="googleOauth.connected ? 'Reconnect' : 'Connect Google'"></span>
               </button>
             </div>
           </div>
 
-          <div x-show="connLoading" class="text-muted" style="padding:30px;text-align:center">Carico i connettori…</div>
+          <div x-show="connLoading" class="text-muted" style="padding:30px;text-align:center">Loading connectors…</div>
 
           <!-- stato cassaforte + materializzazione runtime (F2) -->
           <div x-show="!connLoading && connectors" class="card" style="padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-              <span class="tag success"><i data-lucide="lock" style="width:12px;height:12px"></i> Cifrato a riposo</span>
+              <span class="tag success"><i data-lucide="lock" style="width:12px;height:12px"></i> Encrypted at rest</span>
               <span style="font-size:13px;color:var(--ink-600)">
                 Runtime:
-                <span class="tag" :class="connMaterialized ? 'warn' : 'neutral'" x-text="connMaterialized ? 'materializzato (in chiaro)' : 'non materializzato'"></span>
+                <span class="tag" :class="connMaterialized ? 'warn' : 'neutral'" x-text="connMaterialized ? 'materialized (plaintext)' : 'not materialized'"></span>
               </span>
             </div>
             <button class="btn btn--xs" :class="connMaterialized ? '' : 'btn-primary'" @click="toggleMaterialize()" :disabled="connSaving">
               <i :data-lucide="connMaterialized ? 'eye-off' : 'play'" style="width:14px;height:14px"></i>
-              <span x-text="connMaterialized ? 'Rimuovi dal runtime' : 'Applica al runtime'"></span>
+              <span x-text="connMaterialized ? 'Remove from runtime' : 'Apply to runtime'"></span>
             </button>
           </div>
 
@@ -3511,12 +3511,12 @@
                   <div style="margin-bottom:12px">
                     <label class="form-label">
                       <span x-text="f.label"></span>
-                      <span class="tag success" x-show="f.secret && f.set" style="margin-left:6px">impostato</span>
+                      <span class="tag success" x-show="f.secret && f.set" style="margin-left:6px">set</span>
                     </label>
                     <template x-if="connFieldOptions(f.key)">
                       <select class="form-input" style="width:100%" x-model="connDraft[f.key]"
                               x-effect="googleResources; $nextTick(() => { $el.value = connDraft[f.key] ?? '' })">
-                        <option value="">— seleziona —</option>
+                        <option value="">— select —</option>
                         <template x-for="o in connFieldOptions(f.key)" :key="o.value">
                           <option :value="o.value" x-text="o.label"></option>
                         </template>
@@ -3526,7 +3526,7 @@
                       <input class="form-input" style="width:100%"
                              :type="f.secret ? 'password' : 'text'"
                              :autocomplete="f.secret ? 'new-password' : 'off'"
-                             :placeholder="f.secret ? (f.set ? '•••• (lascia vuoto per non cambiare)' : f.placeholder) : f.placeholder"
+                             :placeholder="f.secret ? (f.set ? '•••• (leave empty to keep unchanged)' : f.placeholder) : f.placeholder"
                              x-model="connDraft[f.key]">
                     </template>
                   </div>
@@ -3536,7 +3536,7 @@
             <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px">
               <button class="btn btn-primary" @click="saveConnectors()" :disabled="connSaving">
                 <i data-lucide="save" style="width:15px;height:15px"></i>
-                <span x-text="connSaving ? 'Salvo…' : 'Salva connettori'"></span>
+                <span x-text="connSaving ? 'Saving…' : 'Save connectors'"></span>
               </button>
             </div>
            </div>
@@ -3549,32 +3549,32 @@
         <div class="content__inner">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px">
             <h1 style="font-size:var(--t-2xl);font-weight:600;margin:0;display:flex;align-items:center;gap:8px">
-              <i data-lucide="clipboard-check" class="icon"></i> Audit contenuti
+              <i data-lucide="clipboard-check" class="icon"></i> Content audit
               <span class="text-muted" style="font-size:var(--t-sm);font-weight:400" x-show="audit.summary" x-text="'· ' + (audit.summary?.count || 0)"></span>
             </h1>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
               <div class="tabs-filter">
-                <button :class="{ active: audit.kind==='products' }" @click="runAudit('products')">Prodotti</button>
-                <button :class="{ active: audit.kind==='posts' }" @click="runAudit('posts')">Articoli</button>
-                <button :class="{ active: audit.kind==='pages' }" @click="runAudit('pages')">Pagine</button>
+                <button :class="{ active: audit.kind==='products' }" @click="runAudit('products')">Products</button>
+                <button :class="{ active: audit.kind==='posts' }" @click="runAudit('posts')">Posts</button>
+                <button :class="{ active: audit.kind==='pages' }" @click="runAudit('pages')">Pages</button>
               </div>
               <button class="btn btn-primary" @click="runAudit()" :disabled="audit.loading">
                 <i data-lucide="play" style="width:15px;height:15px"></i>
-                <span x-text="audit.loading ? 'Analizzo…' : 'Esegui'"></span>
+                <span x-text="audit.loading ? 'Analyzing…' : 'Run'"></span>
               </button>
             </div>
           </div>
           <p class="text-secondary" style="font-size:13px;margin-bottom:14px">
-            Score <b>SEO / E-E-A-T / GEO</b> di ogni contenuto (prodotti, articoli o pagine), incrociato con Search
-            Console → <b>priority</b> (potenziale × gap) e <b>quick-win</b> (posizione alta ma CTR basso). Ordinati per priority.
+            <b>SEO / E-E-A-T / GEO</b> score for each content item (products, posts or pages), cross-referenced with Search
+            Console → <b>priority</b> (potential × gap) and <b>quick wins</b> (high position but low CTR). Sorted by priority.
           </p>
           <div x-show="audit.msg" x-text="audit.msg" x-transition style="margin-bottom:12px;padding:9px 13px;border-radius:8px;background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:12.5px"></div>
 
           <div x-show="!audit.loading && !audit.products.length && !audit.msg" class="card" style="padding:40px;text-align:center;color:var(--text-3)">
             <i data-lucide="clipboard-list" style="width:42px;height:42px;opacity:.3;margin-bottom:10px"></i>
-            <p style="margin:0">Nessun audit ancora. Scegli <b>Prodotti / Articoli / Pagine</b> per analizzare i contenuti pubblicati.</p>
+            <p style="margin:0">No audit yet. Pick <b>Products / Posts / Pages</b> to analyze the published content.</p>
           </div>
-          <div x-show="audit.loading" style="text-align:center;padding:40px;color:var(--text-3)"><span class="spinner"></span> Analizzo i prodotti…</div>
+          <div x-show="audit.loading" style="text-align:center;padding:40px;color:var(--text-3)"><span class="spinner"></span> Analyzing products…</div>
 
           <div x-show="audit.summary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
             <template x-for="card in auditSummaryCards()" :key="card.label">
@@ -3587,7 +3587,7 @@
 
           <table class="data-table" x-show="audit.products.length">
             <thead><tr>
-              <th>Contenuto</th>
+              <th>Content</th>
               <th style="width:56px">SEO</th><th style="width:64px">E-E-A-T</th><th style="width:56px">GEO</th>
               <th style="width:72px">Impr.</th><th style="width:56px">Pos.</th>
               <th style="width:72px">Priority</th><th style="width:96px"></th>
@@ -3603,8 +3603,8 @@
                   <td class="text-mono" style="font-size:12px" x-text="p.gsc.position || '—'"></td>
                   <td><b x-text="p.priority"></b></td>
                   <td style="white-space:nowrap">
-                    <span x-show="p.quick_win" class="tag success" title="Quick-win: posizione top ma CTR basso">QW</span>
-                    <button class="btn btn--xs" @click="sendToSeoCopy(p)" title="Manda al seo-copy per sistemarlo in bozza">
+                    <span x-show="p.quick_win" class="tag success" title="Quick win: top position but low CTR">QW</span>
+                    <button class="btn btn--xs" @click="sendToSeoCopy(p)" title="Send to seo-copy to fix it as a draft">
                       <i data-lucide="wand-2" style="width:13px;height:13px"></i>
                     </button>
                   </td>
@@ -3622,19 +3622,19 @@
             <h1 style="font-size:var(--t-2xl);font-weight:600;margin:0;display:flex;align-items:center;gap:8px">
               <i data-lucide="notebook-pen" class="icon"></i> Brain
               <span class="text-muted" style="font-size:var(--t-sm);font-weight:400"
-                    x-text="brainScope==='user' ? ('personale · ' + brainUser) : 'condiviso (hub)'"></span>
+                    x-text="brainScope==='user' ? ('personal · ' + brainUser) : 'shared (hub)'"></span>
             </h1>
             <div style="display:flex;align-items:center;gap:10px">
               <div class="tabs-filter">
-                <button :class="{ active: brainScope==='user' }" @click="setBrainScope('user')">Personale</button>
-                <button :class="{ active: brainScope==='hub' }" @click="setBrainScope('hub')">Condiviso</button>
+                <button :class="{ active: brainScope==='user' }" @click="setBrainScope('user')">Personal</button>
+                <button :class="{ active: brainScope==='hub' }" @click="setBrainScope('hub')">Shared</button>
               </div>
               <button class="btn" @click="brainGraphOpen ? (brainGraphOpen=false) : openBrainGraph()" :class="{ 'btn-primary': brainGraphOpen }">
                 <i :data-lucide="brainGraphOpen ? 'list' : 'share-2'" style="width:15px;height:15px"></i>
-                <span x-text="brainGraphOpen ? 'Lista' : 'Graph'"></span>
+                <span x-text="brainGraphOpen ? 'List' : 'Graph'"></span>
               </button>
               <button class="btn btn-primary" @click="newBrainNote()" x-show="!brainGraphOpen">
-                <i data-lucide="plus" style="width:15px;height:15px"></i> Nuova nota
+                <i data-lucide="plus" style="width:15px;height:15px"></i> New note
               </button>
             </div>
           </div>
@@ -3643,7 +3643,7 @@
                SVG costruito come stringa + x-html (Alpine x-for non funziona dentro <svg>),
                click delegato sui nodi. -->
           <div x-show="brainGraphOpen" class="brain-graph-canvas">
-            <div x-show="!brainGraph.nodes.length" class="text-muted" style="padding:40px;text-align:center">Nessuna nota da mostrare nel graph.</div>
+            <div x-show="!brainGraph.nodes.length" class="text-muted" style="padding:40px;text-align:center">No notes to show in the graph.</div>
             <div x-show="brainGraph.nodes.length" x-html="brainGraphSvg()" @click="brainGraphClick($event)"></div>
           </div>
 
@@ -3652,11 +3652,11 @@
             <div class="brain-list">
               <div class="brain-search">
                 <i data-lucide="search" style="width:14px;height:14px;color:var(--ink-400)"></i>
-                <input type="text" placeholder="Cerca nelle note…" x-model="brainQuery"
+                <input type="text" placeholder="Search notes…" x-model="brainQuery"
                        @input.debounce.300ms="loadBrainNotes()">
               </div>
               <div x-show="!brainNotes.length" class="text-muted" style="font-size:13px;padding:16px;text-align:center">
-                Nessuna nota. Crea la prima con “Nuova nota”.
+                No notes yet. Create the first with “New note”.
               </div>
               <template x-for="n in brainNotes" :key="n.slug">
                 <div class="brain-note-item" :class="{ 'is-active': brainOpen && brainOpen.slug === n.slug }"
@@ -3676,47 +3676,47 @@
             <!-- colonna destra: editor / reader -->
             <div class="brain-detail">
               <div x-show="!brainOpen" class="text-muted" style="padding:40px;text-align:center;font-size:14px">
-                Seleziona una nota o creane una nuova.
+                Select a note or create a new one.
               </div>
 
               <template x-if="brainOpen">
                <div>
                 <div class="brain-detail-head">
-                  <input x-show="brainEditMode" class="form-input brain-title-input" placeholder="Titolo nota"
+                  <input x-show="brainEditMode" class="form-input brain-title-input" placeholder="Note title"
                          x-model="brainDraftTitle">
                   <div x-show="!brainEditMode" class="brain-detail-title" x-text="brainOpen.title"></div>
                   <div class="brain-detail-actions">
                     <button x-show="!brainEditMode" class="btn btn--ghost btn--xs" @click="editBrainNote()">
-                      <i data-lucide="pencil" style="width:14px;height:14px"></i> Modifica
+                      <i data-lucide="pencil" style="width:14px;height:14px"></i> Edit
                     </button>
                     <button x-show="!brainEditMode && brainScope==='user' && brainOpen.slug" class="btn btn--ghost btn--xs" @click="promoteBrainNote()">
-                      <i data-lucide="arrow-up-from-line" style="width:14px;height:14px"></i> Promuovi
+                      <i data-lucide="arrow-up-from-line" style="width:14px;height:14px"></i> Promote
                     </button>
                     <button x-show="!brainEditMode && brainOpen.slug" class="btn btn--ghost btn--xs" @click="deleteBrainNote()">
                       <i data-lucide="trash-2" style="width:14px;height:14px"></i>
                     </button>
-                    <button x-show="brainEditMode" class="btn btn--ghost btn--xs" @click="cancelBrainEdit()">Annulla</button>
+                    <button x-show="brainEditMode" class="btn btn--ghost btn--xs" @click="cancelBrainEdit()">Cancel</button>
                     <button x-show="brainEditMode" class="btn btn-primary btn--xs" @click="saveBrainNote()" :disabled="brainSaving">
-                      <span x-text="brainSaving ? 'Salvo…' : 'Salva'"></span>
+                      <span x-text="brainSaving ? 'Saving…' : 'Save'"></span>
                     </button>
                   </div>
                 </div>
 
                 <textarea x-show="brainEditMode" class="brain-editor text-mono" x-model="brainDraftBody"
-                          placeholder="Scrivi in markdown. Collega altre note con [[titolo]]."></textarea>
+                          placeholder="Write in markdown. Link other notes with [[title]]."></textarea>
 
                 <div x-show="!brainEditMode" class="brain-render markdown-body" x-html="brainPreview()" @click="brainRenderClick($event)"></div>
 
                 <!-- link uscenti + backlink -->
                 <div x-show="!brainEditMode && (brainOpen.links.length || brainOpen.backlinks.length)" class="brain-graph">
                   <div x-show="brainOpen.links.length">
-                    <div class="brain-graph-label">Collega a</div>
+                    <div class="brain-graph-label">Links to</div>
                     <template x-for="l in brainOpen.links" :key="l">
                       <span class="brain-link" @click="openBrainNote(l)" x-text="l"></span>
                     </template>
                   </div>
                   <div x-show="brainOpen.backlinks.length">
-                    <div class="brain-graph-label">Citata da (backlink)</div>
+                    <div class="brain-graph-label">Cited by (backlinks)</div>
                     <template x-for="b in brainOpen.backlinks" :key="b.slug">
                       <span class="brain-link" @click="openBrainNote(b.slug)" x-text="b.title"></span>
                     </template>
@@ -3734,24 +3734,24 @@
         <div class="content__inner">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
             <h1 style="font-size:var(--t-2xl);font-weight:600;margin:0;display:flex;align-items:center;gap:8px">
-              <i data-lucide="library-big" class="icon"></i> Catalogo
+              <i data-lucide="library-big" class="icon"></i> Catalog
               <span class="text-muted" style="font-size:var(--t-sm);font-weight:400" x-text="currentProjectScopeName"></span>
             </h1>
             <div style="display:flex;align-items:center;gap:12px">
-              <span class="text-muted" style="font-size:12px" x-show="siteCatalog.generated">aggiornato: <span class="text-mono" x-text="siteCatalog.generated"></span></span>
-              <button class="btn btn--xs" @click="syncCatalogo()" :disabled="catalogoSyncing" title="Rigenera dal CMS (WordPress)">
+              <span class="text-muted" style="font-size:12px" x-show="siteCatalog.generated">updated: <span class="text-mono" x-text="siteCatalog.generated"></span></span>
+              <button class="btn btn--xs" @click="syncCatalogo()" :disabled="catalogoSyncing" title="Regenerate from the CMS (WordPress)">
                 <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
-                <span x-text="catalogoSyncing ? 'Sincronizzo…' : 'Sincronizza'"></span>
+                <span x-text="catalogoSyncing ? 'Syncing…' : 'Sync'"></span>
               </button>
             </div>
           </div>
           <div x-show="catalogoMsg" x-text="catalogoMsg" x-transition style="margin-bottom:12px;padding:9px 13px;border-radius:8px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-size:13px"></div>
 
-          <div x-show="catalogoLoading" class="text-muted" style="padding:30px;text-align:center">Carico il catalogo…</div>
+          <div x-show="catalogoLoading" class="text-muted" style="padding:30px;text-align:center">Loading catalog…</div>
           <div x-show="!catalogoLoading && !catalogoKinds.length" class="card" style="padding:28px;text-align:center;max-width:520px">
             <i data-lucide="library-big" style="width:28px;height:28px;color:var(--ink-400)"></i>
-            <div style="font-size:14px;font-weight:600;margin-top:8px">Nessun contenuto sincronizzato</div>
-            <div class="text-muted" style="font-size:13px;margin-top:6px">Il catalogo legge <code>data/catalogo/{articoli,pagine,prodotti}.md</code> (rigenerati dal sync col CMS).</div>
+            <div style="font-size:14px;font-weight:600;margin-top:8px">No synced content yet</div>
+            <div class="text-muted" style="font-size:13px;margin-top:6px">The catalog reads <code>data/catalogo/{articoli,pagine,prodotti}.md</code> (regenerated by the CMS sync).</div>
           </div>
 
           <template x-if="!catalogoLoading && catalogoKinds.length">
@@ -3767,24 +3767,24 @@
               </div>
               <div class="brain-search" style="max-width:260px;border:1px solid var(--border-soft);border-radius:8px">
                 <i data-lucide="search" style="width:14px;height:14px;color:var(--ink-400)"></i>
-                <input type="text" placeholder="Cerca titolo/slug…" x-model="catalogoQuery">
+                <input type="text" placeholder="Search title/slug…" x-model="catalogoQuery">
               </div>
             </div>
 
             <table class="data-table">
-              <thead><tr><th style="width:64px">ID</th><th>Titolo</th><th>Slug</th><th style="width:96px">Stato</th></tr></thead>
+              <thead><tr><th style="width:64px">ID</th><th>Title</th><th>Slug</th><th style="width:96px">Status</th></tr></thead>
               <tbody>
                 <template x-for="r in catalogoRows" :key="r.id">
                   <tr>
                     <td class="text-mono" style="font-size:12px" x-text="r.id"></td>
                     <td><a :href="r.url" target="_blank" rel="noopener" style="color:var(--ink-900);text-decoration:none" x-text="r.title"></a></td>
                     <td class="text-mono" style="font-size:11.5px;color:var(--ink-500)" x-text="r.slug || '—'"></td>
-                    <td><span class="tag" :class="r.status==='publish' ? 'success' : 'neutral'" x-text="r.status==='publish' ? 'pubblicato' : (r.status||'—')"></span></td>
+                    <td><span class="tag" :class="r.status==='publish' ? 'success' : 'neutral'" x-text="r.status==='publish' ? 'published' : (r.status||'—')"></span></td>
                   </tr>
                 </template>
               </tbody>
             </table>
-            <div class="text-muted" x-show="!catalogoRows.length" style="font-size:13px;padding:14px;text-align:center">Nessun risultato.</div>
+            <div class="text-muted" x-show="!catalogoRows.length" style="font-size:13px;padding:14px;text-align:center">No results.</div>
            </div>
           </template>
         </div>
@@ -3798,12 +3798,12 @@
               <i data-lucide="store" class="icon"></i> Marketplace
             </h1>
             <div class="text-muted" style="font-size:13px;margin-top:6px">
-              Attiva un nuovo workspace da un blueprint: pod di agenti + routine + struttura, pronti all'uso.
+              Activate a new workspace from a blueprint: agent pod + routines + structure, ready to use.
             </div>
           </div>
 
-          <div x-show="catalogLoading" class="text-muted" style="padding:30px;text-align:center">Carico il catalogo…</div>
-          <div x-show="!catalogLoading && !catalogBlueprints.length" class="text-muted" style="padding:30px;text-align:center;font-size:13px">Nessun blueprint disponibile.</div>
+          <div x-show="catalogLoading" class="text-muted" style="padding:30px;text-align:center">Loading catalog…</div>
+          <div x-show="!catalogLoading && !catalogBlueprints.length" class="text-muted" style="padding:30px;text-align:center;font-size:13px">No blueprints available.</div>
 
           <div class="catalog-grid">
             <template x-for="bp in catalogBlueprints" :key="bp.name">
@@ -3818,7 +3818,7 @@
                 </div>
                 <div class="catalog-card-desc" x-text="bp.description"></div>
                 <div class="catalog-card-meta">
-                  <span x-show="bp.pod.length"><i data-lucide="users" style="width:12px;height:12px"></i> <span x-text="bp.pod.length"></span> agenti</span>
+                  <span x-show="bp.pod.length"><i data-lucide="users" style="width:12px;height:12px"></i> <span x-text="bp.pod.length"></span> agents</span>
                   <span x-show="bp.backends.length"><i data-lucide="plug" style="width:12px;height:12px"></i> <span x-text="bp.backends.join(', ')"></span></span>
                   <span x-show="bp.shared_skill"><i data-lucide="sparkles" style="width:12px;height:12px"></i> <span x-text="bp.shared_skill"></span></span>
                 </div>
@@ -3826,11 +3826,11 @@
                 <!-- form di attivazione inline -->
                 <div x-show="catalogActivating !== bp.name">
                   <button class="btn btn-primary" style="width:100%;justify-content:center" @click="startActivate(bp)">
-                    <i data-lucide="plus" style="width:15px;height:15px"></i> Attiva
+                    <i data-lucide="plus" style="width:15px;height:15px"></i> Activate
                   </button>
                 </div>
                 <div x-show="catalogActivating === bp.name" class="catalog-activate">
-                  <input class="form-input" placeholder="nome brand (es. example.com)" x-model="catalogForm.brand" @keydown.enter="doActivate(bp)">
+                  <input class="form-input" placeholder="brand name (e.g. example.com)" x-model="catalogForm.brand" @keydown.enter="doActivate(bp)">
                   <div style="display:flex;gap:8px">
                     <select class="form-input" x-model="catalogForm.backend" style="flex:1" x-show="bp.backends.length">
                       <template x-for="b in bp.backends" :key="b"><option :value="b" x-text="b"></option></template>
@@ -3841,9 +3841,9 @@
                   </div>
                   <div x-show="catalogForm.error" x-text="catalogForm.error" style="font-size:12px;color:#dc2626"></div>
                   <div style="display:flex;gap:8px">
-                    <button class="btn btn--ghost btn--xs" @click="catalogActivating=null" :disabled="catalogForm.busy">Annulla</button>
+                    <button class="btn btn--ghost btn--xs" @click="catalogActivating=null" :disabled="catalogForm.busy">Cancel</button>
                     <button class="btn btn-primary btn--xs" style="flex:1;justify-content:center" @click="doActivate(bp)" :disabled="catalogForm.busy">
-                      <span x-text="catalogForm.busy ? 'Creo…' : 'Crea workspace'"></span>
+                      <span x-text="catalogForm.busy ? 'Creating…' : 'Create workspace'"></span>
                     </button>
                   </div>
                 </div>
@@ -3857,34 +3857,34 @@
       <template x-if="view === 'identita'">
         <div class="content__inner" style="max-width:680px">
           <h1 style="font-size:var(--t-2xl);font-weight:600;margin:0 0 16px;display:flex;align-items:center;gap:8px">
-            <i data-lucide="users" class="icon"></i> Identità & accessi
+            <i data-lucide="users" class="icon"></i> Identity & access
           </h1>
 
           <!-- member: sezione riservata (le azioni sono comunque enforced lato server) -->
           <div x-show="!isAdmin()" class="card" style="padding:20px">
-            <div class="text-muted" style="font-size:13px">Questa sezione è riservata a <b>owner</b>/<b>admin</b>.</div>
+            <div class="text-muted" style="font-size:13px">This section is restricted to <b>owner</b>/<b>admin</b>.</div>
           </div>
 
           <!-- master-switch personal/concierge -->
           <div class="card" style="padding:20px;margin-bottom:16px" x-show="isAdmin()">
-            <div style="font-weight:600;margin-bottom:6px">Modalità dell'hub</div>
+            <div style="font-weight:600;margin-bottom:6px">Hub mode</div>
             <div class="text-muted" style="font-size:13px;margin-bottom:14px">
-              <b>Personale</b>: single-user, nessun login. <b>Concierge</b>: multi-utente con accessi
-              e ruoli — serve almeno un utente owner.
+              <b>Personal</b>: single-user, no login. <b>Concierge</b>: multi-user with accounts
+              and roles — requires at least one owner user.
             </div>
             <div style="display:flex;align-items:center;gap:12px">
               <div class="tabs-filter">
-                <button :class="{ active: auth.mode==='personal' }" @click="setMode('personal')">Personale</button>
+                <button :class="{ active: auth.mode==='personal' }" @click="setMode('personal')">Personal</button>
                 <button :class="{ active: auth.mode==='concierge' }" @click="setMode('concierge')">Concierge</button>
               </div>
-              <span class="tag" :class="auth.mode==='concierge' ? 'warn' : 'neutral'" x-text="auth.mode==='concierge' ? 'multi-utente attivo' : 'single-user'"></span>
+              <span class="tag" :class="auth.mode==='concierge' ? 'warn' : 'neutral'" x-text="auth.mode==='concierge' ? 'multi-user active' : 'single-user'"></span>
             </div>
             <div x-show="identitaMsg" x-text="identitaMsg" style="margin-top:10px;font-size:13px;color:#b45309"></div>
           </div>
 
           <!-- utenti -->
           <div class="card" style="padding:20px" x-show="isAdmin()">
-            <div style="font-weight:600;margin-bottom:12px">Utenti</div>
+            <div style="font-weight:600;margin-bottom:12px">Users</div>
             <div class="plan-list" style="margin-bottom:16px" x-show="identitaUsers.length">
               <template x-for="u in identitaUsers" :key="u.slug">
                 <div class="plan-row" style="grid-template-columns:1fr 120px auto;align-items:center;gap:8px">
@@ -3897,21 +3897,21 @@
                     </select>
                   </div>
                   <div style="display:flex;gap:6px;justify-content:flex-end">
-                    <button class="btn btn--ghost btn--xs" @click="resetPassword(u)" title="Reimposta password">
+                    <button class="btn btn--ghost btn--xs" @click="resetPassword(u)" title="Reset password">
                       <i data-lucide="key-round" style="width:14px;height:14px"></i>
                     </button>
-                    <button class="btn btn--ghost btn--xs" @click="deleteUser(u)" title="Elimina utente" style="color:#dc2626">
+                    <button class="btn btn--ghost btn--xs" @click="deleteUser(u)" title="Delete user" style="color:#dc2626">
                       <i data-lucide="trash-2" style="width:14px;height:14px"></i>
                     </button>
                   </div>
                 </div>
               </template>
             </div>
-            <div class="text-muted" x-show="!identitaUsers.length" style="font-size:13px;margin-bottom:12px">Nessun utente ancora. Il primo creato sarà owner.</div>
+            <div class="text-muted" x-show="!identitaUsers.length" style="font-size:13px;margin-bottom:12px">No users yet. The first one created will be the owner.</div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              <input class="form-input" placeholder="slug (es. mario)" x-model="newUser.slug">
-              <input class="form-input" placeholder="nome" x-model="newUser.name">
+              <input class="form-input" placeholder="slug (e.g. mario)" x-model="newUser.slug">
+              <input class="form-input" placeholder="name" x-model="newUser.name">
               <input class="form-input" type="password" placeholder="password (min 8)" x-model="newUser.password">
               <select class="form-input" x-model="newUser.role" x-show="identitaUsers.length">
                 <option value="member">member</option>
@@ -3921,7 +3921,7 @@
             </div>
             <div style="display:flex;justify-content:flex-end;margin-top:12px">
               <button class="btn btn-primary" @click="createUser()" :disabled="identitaBusy">
-                <i data-lucide="user-plus" style="width:15px;height:15px"></i> Crea utente
+                <i data-lucide="user-plus" style="width:15px;height:15px"></i> Create user
               </button>
             </div>
             <div x-show="newUser.error" x-text="newUser.error" style="margin-top:8px;font-size:13px;color:#dc2626"></div>
@@ -3929,10 +3929,10 @@
 
           <!-- accesso ai workspace (membership F4b) -->
           <div class="card" style="padding:20px;margin-top:16px" x-show="auth.mode==='concierge' && isAdmin()">
-            <div style="font-weight:600;margin-bottom:6px">Accesso ai workspace</div>
+            <div style="font-weight:600;margin-bottom:6px">Workspace access</div>
             <div class="text-muted" style="font-size:13px;margin-bottom:14px">
-              owner e admin accedono a <b>tutti</b> i workspace. Spunta gli utenti <b>member</b>
-              che possono accedere a ciascun workspace.
+              owner and admin can access <b>all</b> workspaces. Check the <b>member</b> users
+              who can access each workspace.
             </div>
             <template x-for="w in wsAccessList" :key="w.name">
               <div class="plan-row" style="grid-template-columns:1fr auto;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border-1)">
@@ -3944,11 +3944,11 @@
                       <span x-text="'@'+u.slug"></span>
                     </label>
                   </template>
-                  <span x-show="!identitaUsers.filter(x => x.role==='member').length" class="text-muted" style="font-size:12px">nessun utente member</span>
+                  <span x-show="!identitaUsers.filter(x => x.role==='member').length" class="text-muted" style="font-size:12px">no member users</span>
                 </div>
               </div>
             </template>
-            <div x-show="!wsAccessList.length" class="text-muted" style="font-size:13px">Nessun workspace interno.</div>
+            <div x-show="!wsAccessList.length" class="text-muted" style="font-size:13px">No internal workspaces.</div>
           </div>
         </div>
       </template>
@@ -5122,25 +5122,25 @@
               <i data-lucide="telescope" class="icon"></i> Research
             </h1>
             <button class="btn btn--ghost btn--xs" @click="loadResearchTasks()">
-              <i data-lucide="refresh-cw" class="icon icon--sm"></i> Aggiorna
+              <i data-lucide="refresh-cw" class="icon icon--sm"></i> Refresh
             </button>
           </div>
           <p class="text-secondary" style="margin-bottom: var(--s-4); font-size: var(--t-sm);">
-            Ricerche approfondite via Gemini Deep Research: report citato in ~5-20 min, notifica a completamento. Anche gli agent possono lanciarle (skill <code>deep-research</code>).
+            In-depth research via Gemini Deep Research: cited report in ~5-20 min, notification on completion. Agents can launch them too (<code>deep-research</code> skill).
           </p>
 
           <!-- Nuova ricerca -->
           <div class="card" style="padding: var(--s-4); margin-bottom: var(--s-4);">
             <textarea class="form-input" rows="3" x-model="research.query" style="width: 100%; resize: vertical;"
-                      placeholder="Domanda di ricerca dettagliata: obiettivo, contesto, perimetro, formato atteso. Più è precisa, migliore (e più economico) il report."></textarea>
+                      placeholder="Detailed research question: goal, context, scope, expected format. The more precise it is, the better (and cheaper) the report."></textarea>
             <div style="display: flex; align-items: center; gap: var(--s-3); margin-top: var(--s-2); flex-wrap: wrap;">
               <select x-model="research.mode">
                 <option value="standard">standard (~$1-3, ~10 min)</option>
-                <option value="max">max (~$3-7, più completo)</option>
+                <option value="max">max (~$3-7, more thorough)</option>
               </select>
               <button class="btn btn--primary" @click="startResearch()" :disabled="research.launching || !research.query.trim()">
                 <span class="spinner" x-show="research.launching"></span>
-                <i data-lucide="rocket" class="icon icon--sm" x-show="!research.launching"></i> Lancia
+                <i data-lucide="rocket" class="icon icon--sm" x-show="!research.launching"></i> Launch
               </button>
               <span class="text-muted" style="font-size: var(--t-xs);" x-text="research.message"></span>
             </div>
@@ -5163,29 +5163,29 @@
                   </div>
                 </div>
                 <span class="research-item__open" x-show="t.status === 'completed'">
-                  Apri report <i data-lucide="chevron-right" class="icon icon--sm"></i>
+                  Open report <i data-lucide="chevron-right" class="icon icon--sm"></i>
                 </span>
-                <button class="btn btn--ghost btn--xs" @click.stop="deleteResearch(t)" title="Elimina task e report">
+                <button class="btn btn--ghost btn--xs" @click.stop="deleteResearch(t)" title="Delete task and report">
                   <i data-lucide="trash-2" class="icon icon--sm"></i>
                 </button>
               </div>
             </template>
           </div>
           <div class="text-muted" x-show="!research.tasks.length" style="font-size: var(--t-sm); margin-bottom: var(--s-4);">
-            Nessuna ricerca ancora — lancia la prima qui sopra, o chiedila in chat.
+No research yet — launch the first one above, or ask for it in chat.
           </div>
 
           <!-- Report viewer -->
           <div class="card" style="padding: var(--s-5);" x-show="research.current">
             <div style="display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-3); flex-wrap: wrap;">
-              <button class="btn btn--ghost btn--xs" @click="copyText(research.current.path); showToast('success', 'Path copiato', research.current.path)">
-                <i data-lucide="copy" class="icon icon--sm"></i> Copia path
+              <button class="btn btn--ghost btn--xs" @click="copyText(research.current.path); showToast('success', 'Path copied', research.current.path)">
+                <i data-lucide="copy" class="icon icon--sm"></i> Copy path
               </button>
-              <button class="btn btn--ghost btn--xs" @click="copyText('/anja-ingest ' + research.current.path); showToast('success', 'Comando copiato', 'Incollalo in una chat per ingerire il report nel wiki')">
-                <i data-lucide="book-plus" class="icon icon--sm"></i> Ingerisci nel wiki
+              <button class="btn btn--ghost btn--xs" @click="copyText('/anja-ingest ' + research.current.path); showToast('success', 'Command copied', 'Paste it into a chat to ingest the report into the wiki')">
+                <i data-lucide="book-plus" class="icon icon--sm"></i> Ingest into wiki
               </button>
               <button class="btn btn--ghost btn--xs" @click="research.current = null" style="margin-left: auto;">
-                <i data-lucide="x" class="icon icon--sm"></i> Chiudi
+                <i data-lucide="x" class="icon icon--sm"></i> Close
               </button>
             </div>
             <div class="md" x-html="renderMarkdown(research.current.content || '')"></div>
@@ -5223,24 +5223,24 @@
           <!-- Genera immagine (credenziali hub) -->
           <div class="card" style="padding:14px 18px;margin-bottom:var(--s-3)">
             <div style="font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:10px">
-              <i data-lucide="sparkles" style="width:16px;height:16px"></i> Genera immagine
+              <i data-lucide="sparkles" style="width:16px;height:16px"></i> Generate image
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-              <input class="form-input" style="flex:1;min-width:240px" placeholder="Descrivi l'immagine…"
+              <input class="form-input" style="flex:1;min-width:240px" placeholder="Describe the image…"
                      x-model="mediaGen.prompt" @keydown.enter="generateMedia('hub')" :disabled="mediaGen.busy">
               <select class="form-input" style="width:auto" x-model="mediaGen.model">
                 <template x-for="m in mediaGen.models" :key="m.id">
-                  <option :value="m.id" :disabled="!m.ready" x-text="m.ready ? m.label : (m.label + ' — manca ' + m.needs)"></option>
+                  <option :value="m.id" :disabled="!m.ready" x-text="m.ready ? m.label : (m.label + ' — missing ' + m.needs)"></option>
                 </template>
               </select>
               <button class="btn btn-primary" @click="generateMedia('hub')" :disabled="mediaGen.busy || !mediaGen.prompt.trim()">
                 <i data-lucide="sparkles" style="width:14px;height:14px"></i>
-                <span x-text="mediaGen.busy ? 'Genero…' : 'Genera'"></span>
+                <span x-text="mediaGen.busy ? 'Generating…' : 'Generate'"></span>
               </button>
             </div>
             <div x-show="mediaGen.msg" x-text="mediaGen.msg" x-transition style="margin-top:8px;font-size:12.5px;color:var(--text-2)"></div>
             <div x-show="mediaGen.models.length && !mediaGen.models.some(m => m.ready)" class="text-muted" style="margin-top:8px;font-size:11.5px">
-              Nessun modello pronto — aggiungi le key dei provider (OpenAI, Google AI Studio, xAI…) in <b>Settings → Integrations → Generazione immagini</b>.
+              No models ready — add provider keys (OpenAI, Google AI Studio, xAI…) in <b>Settings → Integrations → Image generation</b>.
             </div>
           </div>
 
@@ -6820,7 +6820,7 @@
                   <span class="badge" style="background: rgba(245,158,11,0.14); color: var(--warning);">paid</span>
                 </div>
                 <div class="text-muted" style="font-size: var(--t-xs); margin-top: 2px;">
-                  Google Search grounding via Gemini API: sintesi + fonti citate in una chiamata. Usa la <code>GEMINI_API_KEY</code> di Integrations.
+                  Google Search grounding via Gemini API: synthesis + cited sources in one call. Uses the <code>GEMINI_API_KEY</code> from Integrations.
                 </div>
               </div>
               <button class="btn btn--ghost btn--xs" @click="testResearch('research-gemini')">Test</button>
@@ -6882,12 +6882,12 @@
           <div class="card" style="padding: var(--s-4); margin-bottom: var(--s-4);">
             <h2 style="font-size: var(--t-lg); margin: 0 0 var(--s-2) 0;">
               <i data-lucide="sparkles" class="icon icon--sm"></i>
-              <span>Generazione immagini (condivisa)</span>
+              <span>Image generation (shared)</span>
             </h2>
             <p class="text-muted" style="margin: 0 0 var(--s-3) 0; font-size: var(--t-sm);">
-              Credenziali usate da <strong>tutto l'hub</strong> per generare immagini (Media → Genera). I workspace le usano di default e possono fare <strong>override</strong> nei propri Connettori.
+              Credentials used by <strong>the whole hub</strong> to generate images (Media → Generate). Workspaces use them by default and can <strong>override</strong> them in their own Connectors.
             </p>
-            <div x-show="!hubConnectors" class="text-muted" style="font-size: var(--t-sm);">Carico…</div>
+            <div x-show="!hubConnectors" class="text-muted" style="font-size: var(--t-sm);">Loading…</div>
             <template x-if="hubConnectors">
              <div>
               <template x-for="con in hubConnectors" :key="con.key">
@@ -6903,12 +6903,12 @@
                     <div style="margin-bottom:8px">
                       <label class="form-label" style="font-size:var(--t-xs)">
                         <span x-text="f.label"></span>
-                        <span class="tag success" x-show="f.secret && f.set" style="margin-left:6px">impostato</span>
+                        <span class="tag success" x-show="f.secret && f.set" style="margin-left:6px">set</span>
                       </label>
                       <input class="form-input" style="width:100%"
                              :type="f.secret ? 'password' : 'text'"
                              :autocomplete="f.secret ? 'new-password' : 'off'"
-                             :placeholder="f.secret ? (f.set ? '•••• (lascia vuoto per non cambiare)' : f.placeholder) : f.placeholder"
+                             :placeholder="f.secret ? (f.set ? '•••• (leave empty to keep unchanged)' : f.placeholder) : f.placeholder"
                              x-model="hubConnDraft[f.key]">
                     </div>
                   </template>
@@ -6918,7 +6918,7 @@
                 <span x-show="hubConnMsg" x-text="hubConnMsg" style="font-size:var(--t-sm);color:var(--text-2)"></span>
                 <button class="btn btn--primary btn--sm" @click="saveHubConnectors()" :disabled="hubConnSaving" x-show="isAdmin()">
                   <i data-lucide="save" class="icon icon--sm"></i>
-                  <span x-text="hubConnSaving ? 'Salvo…' : 'Salva'"></span>
+                  <span x-text="hubConnSaving ? 'Saving…' : 'Save'"></span>
                 </button>
               </div>
              </div>
@@ -6988,20 +6988,20 @@
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s-2);">
               <h2 style="font-size: var(--t-lg); margin: 0;">
                 <i data-lucide="archive" class="icon icon--sm"></i>
-                <span>Backup dell'hub</span>
+                <span>Hub backups</span>
               </h2>
               <button class="btn btn--primary btn--sm" @click="runBackupNow()" :disabled="backupDR.running">
                 <i data-lucide="hard-drive-download" class="icon icon--sm"></i>
-                <span x-text="backupDR.running ? 'In corso…' : 'Backup ora'"></span>
+                <span x-text="backupDR.running ? 'Running…' : 'Backup now'"></span>
               </button>
             </div>
             <p class="text-muted" style="margin: 0 0 var(--s-3) 0; font-size: var(--t-sm);">
-              Snapshot notturno completo (03:00) di dati, database WAL-safe, conversazioni e secrets <strong>cifrati</strong> con chiave dedicata.
-              I backup <code>pre-update</code> non vengono mai potati dalla retention.
+              Full nightly snapshot (03:00) of data, WAL-safe databases, conversations and secrets <strong>encrypted</strong> with a dedicated key.
+              <code>pre-update</code> backups are never pruned by retention.
             </p>
 
             <template x-if="backupDR.loaded && !backupDR.backups.length">
-              <p class="text-muted" style="font-size: var(--t-sm);">Nessun backup ancora. Il primo parte stanotte alle 03:00, oppure lancialo ora.</p>
+              <p class="text-muted" style="font-size: var(--t-sm);">No backups yet. The first one starts tonight at 03:00, or launch it now.</p>
             </template>
 
             <template x-for="b in backupDR.backups" :key="b.name">
@@ -7014,18 +7014,18 @@
                 <span class="text-mono text-muted" style="flex: 0 0 70px; font-size: var(--t-sm); text-align: right;" x-text="formatBytes(b.size)"></span>
                 <span :class="b.reason === 'pre-update' ? 'badge badge--warning' : 'badge badge--default'"
                       style="flex: 0 0 auto; font-size: var(--t-xs);" x-text="b.reason"></span>
-                <span :title="b.include_secrets ? 'secrets inclusi (cifrati)' : 'secrets esclusi'" style="flex: 0 0 auto;">
+                <span :title="b.include_secrets ? 'secrets included (encrypted)' : 'secrets excluded'" style="flex: 0 0 auto;">
                   <i :data-lucide="b.include_secrets ? 'lock' : 'lock-open'" class="icon icon--sm text-muted"></i>
                 </span>
-                <button class="btn btn--ghost btn--xs" @click="copyRestoreCmd(b)" title="Copia il comando di restore (CLI)">
+                <button class="btn btn--ghost btn--xs" @click="copyRestoreCmd(b)" title="Copy the restore command (CLI)">
                   <i data-lucide="terminal" class="icon icon--sm"></i>
                 </button>
               </div>
             </template>
 
             <p class="text-muted" style="margin: var(--s-3) 0 0 0; font-size: var(--t-xs);">
-              Il restore completo è volutamente <strong>solo da CLI</strong> (è l'operazione più invasiva che esista):
-              il bottone <i data-lucide="terminal" class="icon icon--sm"></i> copia il comando pronto da incollare sul server.
+              Full restore is deliberately <strong>CLI-only</strong> (it's the most invasive operation there is):
+              the <i data-lucide="terminal" class="icon icon--sm"></i> button copies the command ready to paste on the server.
             </p>
             <div x-show="backupDR.message" :class="backupDR.error ? 'text-danger' : 'text-muted'" style="margin-top: var(--s-2); font-size: var(--t-sm);" x-text="backupDR.message"></div>
           </div>
@@ -7034,15 +7034,15 @@
           <div class="card" style="padding: var(--s-4); margin-bottom: var(--s-4);">
             <h2 style="font-size: var(--t-lg); margin: 0 0 var(--s-2) 0;">
               <i data-lucide="history" class="icon icon--sm"></i>
-              <span>Time machine della memoria</span>
+              <span>Memory time machine</span>
             </h2>
             <p class="text-muted" style="margin: 0 0 var(--s-3) 0; font-size: var(--t-sm);">
-              Undo <strong>chirurgico</strong> di <code>users/*.md</code> a un checkpoint pre-mutazione (es. prima del dreaming notturno),
-              senza toccare il resto dell'hub. Prima l'anteprima del diff, poi il ripristino — che crea a sua volta un checkpoint di ritorno.
+              <strong>Surgical</strong> undo of <code>users/*.md</code> to a pre-mutation checkpoint (e.g. before the nightly dreaming),
+              without touching the rest of the hub. Preview the diff first, then restore — which in turn creates a return checkpoint.
             </p>
 
             <template x-if="backupDR.loaded && !backupDR.snapshots.length">
-              <p class="text-muted" style="font-size: var(--t-sm);">Nessun checkpoint memoria ancora (si creano automaticamente prima di ogni consolidamento).</p>
+              <p class="text-muted" style="font-size: var(--t-sm);">No memory checkpoints yet (they're created automatically before each consolidation).</p>
             </template>
 
             <template x-for="s in backupDR.snapshots" :key="s.sha">
@@ -7052,17 +7052,17 @@
                   <span class="text-muted" style="flex: 0 0 150px; font-size: var(--t-xs);" x-text="new Date(s.ts).toLocaleString()"></span>
                   <span style="flex: 1 1 200px; font-size: var(--t-sm); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" x-text="s.label"></span>
                   <button class="btn btn--ghost btn--xs" @click="previewMemoryUndo(s.sha)" :disabled="backupDR.previewBusy">
-                    <span x-text="backupDR.previewRef === s.sha ? 'Nascondi' : 'Anteprima'"></span>
+                    <span x-text="backupDR.previewRef === s.sha ? 'Hide' : 'Preview'"></span>
                   </button>
                   <button class="btn btn--danger btn--xs" x-show="backupDR.previewRef === s.sha && backupDR.previewChanged"
                           @click="execMemoryUndo(s.sha)" :disabled="backupDR.undoBusy">
-                    <span x-text="backupDR.undoBusy ? '…' : 'Ripristina'"></span>
+                    <span x-text="backupDR.undoBusy ? '…' : 'Restore'"></span>
                   </button>
                 </div>
                 <template x-if="backupDR.previewRef === s.sha && backupDR.previewDiff !== null">
                   <div style="margin-top: var(--s-2);">
                     <template x-if="!backupDR.previewChanged">
-                      <p class="text-muted" style="font-size: var(--t-sm); margin: 0;">Nessuna differenza: la memoria è identica a questo checkpoint.</p>
+                      <p class="text-muted" style="font-size: var(--t-sm); margin: 0;">No differences: memory is identical to this checkpoint.</p>
                     </template>
                     <template x-if="backupDR.previewChanged">
                       <pre class="text-mono" style="max-height: 260px; overflow: auto; font-size: var(--t-xs); background: var(--bg-2); padding: var(--s-2); border-radius: 6px; margin: 0;" x-text="backupDR.previewDiff"></pre>
@@ -7075,16 +7075,16 @@
             <!-- Card autonome dello steward -->
             <div style="margin-top: var(--s-4); padding-top: var(--s-3); border-top: 1px solid var(--border-1);">
               <div style="display: flex; align-items: center; justify-content: space-between;">
-                <h3 style="font-size: var(--t-md); margin: 0;">Card autonome del kanban</h3>
-                <button class="btn btn--ghost btn--sm" @click="loadCardsUndoPreview()" :disabled="backupDR.cardsBusy">Cosa archivierei?</button>
+                <h3 style="font-size: var(--t-md); margin: 0;">Autonomous kanban cards</h3>
+                <button class="btn btn--ghost btn--sm" @click="loadCardsUndoPreview()" :disabled="backupDR.cardsBusy">What would be archived?</button>
               </div>
               <p class="text-muted" style="margin: var(--s-1) 0 0 0; font-size: var(--t-sm);">
-                Archivia (reversibile, mai delete) le card create in autonomia da steward/commitment — il rollback dei "task spazzatura".
+                Archive (reversible, never delete) the cards created autonomously by steward/commitment — the rollback for "junk tasks".
               </p>
               <template x-if="backupDR.cardsPreview">
                 <div style="margin-top: var(--s-2);">
                   <template x-if="!backupDR.cardsPreview.count">
-                    <p class="text-muted" style="font-size: var(--t-sm); margin: 0;">Nessuna card autonoma recente da archiviare.</p>
+                    <p class="text-muted" style="font-size: var(--t-sm); margin: 0;">No recent autonomous cards to archive.</p>
                   </template>
                   <template x-if="backupDR.cardsPreview.count">
                     <div>
@@ -7094,7 +7094,7 @@
                         </div>
                       </template>
                       <button class="btn btn--danger btn--sm" style="margin-top: var(--s-2);" @click="execCardsUndo()" :disabled="backupDR.cardsBusy"
-                              x-text="`Archivia ${backupDR.cardsPreview.count} card`"></button>
+                              x-text="`Archive ${backupDR.cardsPreview.count} cards`"></button>
                     </div>
                   </template>
                 </div>
@@ -7106,17 +7106,17 @@
           <div class="card" style="padding: var(--s-4); margin-bottom: var(--s-4);">
             <h2 style="font-size: var(--t-lg); margin: 0 0 var(--s-2) 0;">
               <i data-lucide="refresh-cw" class="icon icon--sm"></i>
-              <span>Versione & migrazioni</span>
+              <span>Version & migrations</span>
             </h2>
             <template x-if="backupDR.version">
               <div>
                 <div style="display: flex; gap: var(--s-4); flex-wrap: wrap; font-size: var(--t-sm);">
-                  <div>codice: <span class="text-mono" x-text="backupDR.version.code_version"></span></div>
-                  <div>dati hub: <span class="text-mono" x-text="backupDR.version.hub_version || '(mai migrato)'"></span></div>
+                  <div>code: <span class="text-mono" x-text="backupDR.version.code_version"></span></div>
+                  <div>hub data: <span class="text-mono" x-text="backupDR.version.hub_version || '(never migrated)'"></span></div>
                   <div>
-                    <span x-show="!backupDR.version.needs_migration" class="badge badge--success">allineato</span>
+                    <span x-show="!backupDR.version.needs_migration" class="badge badge--success">up to date</span>
                     <span x-show="backupDR.version.needs_migration" class="badge badge--warning"
-                          x-text="`${backupDR.version.pending_migrations.length || ''} migrazioni pending`.trim()"></span>
+                          x-text="`${backupDR.version.pending_migrations.length || ''} pending migrations`.trim()"></span>
                   </div>
                 </div>
                 <template x-if="backupDR.version.pending_migrations && backupDR.version.pending_migrations.length">
@@ -7128,10 +7128,10 @@
                 </template>
                 <button class="btn btn--primary btn--sm" style="margin-top: var(--s-3);" x-show="backupDR.version.needs_migration"
                         @click="runMigrate()" :disabled="backupDR.migrateBusy">
-                  <span x-text="backupDR.migrateBusy ? 'In corso…' : 'Applica migrazioni (con backup pre-update)'"></span>
+                  <span x-text="backupDR.migrateBusy ? 'Running…' : 'Apply migrations (with pre-update backup)'"></span>
                 </button>
                 <p class="text-muted" x-show="!backupDR.version.needs_migration" style="margin: var(--s-2) 0 0 0; font-size: var(--t-xs);">
-                  Le migrazioni si applicano ai <em>dati</em> dell'hub; il codice nuovo arriva via git (transport, Fase 3b-bis).
+                  Migrations apply to the hub's <em>data</em>; new code arrives via git (transport, Fase 3b-bis).
                 </p>
               </div>
             </template>
@@ -7143,7 +7143,7 @@
           <div x-show="settingsTab === 'help'">
 
           <div class="card" style="padding: var(--s-4);">
-            <h2 style="font-size: var(--t-lg); margin: 0 0 var(--s-2) 0;">Note</h2>
+            <h2 style="font-size: var(--t-lg); margin: 0 0 var(--s-2) 0;">Notes</h2>
             <ul class="text-muted" style="font-size: var(--t-sm); margin: 0; padding-left: var(--s-4);">
               <li>Non-Claude providers run via <strong>LiteLLM</strong> in-process — no external CLI required.</li>
               <li>For <strong>Claude</strong> we use the SDK in-process: the key is your Claude Code CLI's (no need to set it here).</li>

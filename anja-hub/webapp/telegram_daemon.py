@@ -225,7 +225,7 @@ QUICK_REPLY_KEYBOARD = {
     ],
     "resize_keyboard": True,
     "is_persistent": True,
-    "input_field_placeholder": "Scrivi ad Anja, o tap un'azione…",
+    "input_field_placeholder": "Write to Anja, or tap an action…",
 }
 
 # Map dei testi keyboard ai comandi slash equivalenti
@@ -704,28 +704,28 @@ async def transcribe_audio(file_path: Path, model_chain: Optional[list] = None,
 
 # Comandi che Telegram mostra nel menu "/"
 BOT_COMMANDS = [
-    {"command": "help", "description": "Mostra elenco comandi"},
-    {"command": "status", "description": "Provider, model, agent corrente"},
-    {"command": "model", "description": "Cambia model (es. /model opus)"},
-    {"command": "provider", "description": "Cambia provider (claude, xai, openai...)"},
-    {"command": "agent", "description": "Switch ad agent specializzato (es. /agent trader)"},
-    {"command": "project", "description": "Switch al context di un progetto registrato"},
-    {"command": "queue", "description": "Schedula task per più tardi (es. /queue domani 9am ...)"},
-    {"command": "threads", "description": "Lista/switch thread di conversazione"},
-    {"command": "newchat", "description": "Nuovo thread (i precedenti restano)"},
-    {"command": "compact", "description": "Compatta storia chat in summary"},
-    {"command": "autocompact", "description": "Auto-compact su soglia % token (es. /autocompact 60)"},
-    {"command": "voice", "description": "Risposta vocale: on|off|auto (default auto se gli mandi audio)"},
+    {"command": "help", "description": "Show command list"},
+    {"command": "status", "description": "Current provider, model, agent"},
+    {"command": "model", "description": "Change model (e.g. /model opus)"},
+    {"command": "provider", "description": "Change provider (claude, xai, openai...)"},
+    {"command": "agent", "description": "Switch to a specialized agent (e.g. /agent trader)"},
+    {"command": "project", "description": "Switch to a registered project's context"},
+    {"command": "queue", "description": "Schedule a task for later (e.g. /queue tomorrow 9am ...)"},
+    {"command": "threads", "description": "List/switch conversation threads"},
+    {"command": "newchat", "description": "New thread (previous ones are kept)"},
+    {"command": "compact", "description": "Compact chat history into a summary"},
+    {"command": "autocompact", "description": "Auto-compact at % token threshold (e.g. /autocompact 60)"},
+    {"command": "voice", "description": "Voice reply: on|off|auto (default auto if you send audio)"},
     {"command": "kanban", "description": "Kanban tasks: list/add/done/block/show"},
-    {"command": "retry", "description": "Riprova l'ultimo turno interrotto/fallito"},
-    {"command": "stop", "description": "Interrompi il turno in corso"},
-    {"command": "mode", "description": "Permessi del thread: default|acceptEdits|plan|auto"},
-    {"command": "allow", "description": "Consenti il permesso richiesto (always = impara)"},
-    {"command": "deny", "description": "Nega il permesso richiesto"},
-    {"command": "approve", "description": "Approva il piano proposto"},
-    {"command": "replan", "description": "Chiedi una revisione del piano"},
-    {"command": "merge", "description": "Applica le modifiche della git-sessione"},
-    {"command": "discard", "description": "Scarta le modifiche della git-sessione"},
+    {"command": "retry", "description": "Retry the last interrupted/failed turn"},
+    {"command": "stop", "description": "Interrupt the current turn"},
+    {"command": "mode", "description": "Thread permissions: default|acceptEdits|plan|auto"},
+    {"command": "allow", "description": "Grant the requested permission (always = learn it)"},
+    {"command": "deny", "description": "Deny the requested permission"},
+    {"command": "approve", "description": "Approve the proposed plan"},
+    {"command": "replan", "description": "Request a plan revision"},
+    {"command": "merge", "description": "Apply the git-session changes"},
+    {"command": "discard", "description": "Discard the git-session changes"},
 ]
 
 
@@ -743,13 +743,13 @@ async def send_typing(token: str, chat_id: int) -> None:
 # =================================================================
 
 ONBOARDING_TEMPLATE = """\
-Ciao! Sono Anja, il tuo personal AI assistant.
+Hi! I'm Anja, your personal AI assistant.
 
-Per parlare con me devi essere autorizzato. Aggiungi questo chat_id alla allow-list:
+To talk to me you need to be authorized. Add this chat_id to the allow-list:
 
   chat_id: `{chat_id}`
 
-Modifica `<hub>/config.json` aggiungendo:
+Edit `<hub>/config.json` adding:
 ```
 "telegram": {{
   "enabled": true,
@@ -757,7 +757,7 @@ Modifica `<hub>/config.json` aggiungendo:
 }}
 ```
 
-Poi riavvia il server o chiama l'endpoint /api/telegram/reload.
+Then restart the server or call the /api/telegram/reload endpoint.
 """
 
 
@@ -896,7 +896,7 @@ class TelegramDaemon:
                     _nb.publish(
                         self.hub_path, source="telegram", category="warn",
                         title="Unknown Telegram chat_id",
-                        body=f"chat_id={chat_id} username='{chat.get('username','?')}' — onboarding inviato",
+                        body=f"chat_id={chat_id} username='{chat.get('username','?')}' — onboarding sent",
                         action={"label": "Add to allow-list", "url": "/#settings/telegram", "type": "navigate"},
                         payload={"chat_id": chat_id, "username": chat.get("username")},
                     )
@@ -916,7 +916,7 @@ class TelegramDaemon:
                 file_id = voice.get("file_id")
                 fp = await get_file_path(self.token, file_id)
                 if not fp:
-                    await send_message(self.token, chat_id, "⚠ Non sono riuscito a scaricare l'audio.")
+                    await send_message(self.token, chat_id, "⚠ I couldn't download the audio.")
                     return
                 # Download in tempfile (suffix da mime_type, fallback .oga)
                 import tempfile
@@ -929,7 +929,7 @@ class TelegramDaemon:
                 tmp.close()
                 ok = await download_telegram_file(self.token, fp, Path(tmp.name))
                 if not ok:
-                    await send_message(self.token, chat_id, "⚠ Download audio fallito.")
+                    await send_message(self.token, chat_id, "⚠ Audio download failed.")
                     return
                 # Transcribe (config-driven: prima prova audio.stt model from hub config.json)
                 text, model_used = await transcribe_audio(Path(tmp.name), hub_path=self.hub_path)
@@ -939,13 +939,13 @@ class TelegramDaemon:
                 except Exception:
                     pass
                 # Preview al user
-                await send_message(self.token, chat_id, f"🎤 Ho capito: _{text}_")
+                await send_message(self.token, chat_id, f"🎤 I heard: _{text}_")
             except Exception as e:
                 print(f"[telegram] transcription error: {type(e).__name__}: {e}")
-                await send_message(self.token, chat_id, f"⚠ Trascrizione fallita: {e}")
+                await send_message(self.token, chat_id, f"⚠ Transcription failed: {e}")
                 return
             if not text.strip():
-                await send_message(self.token, chat_id, "⚠ Audio trascritto ma vuoto.")
+                await send_message(self.token, chat_id, "⚠ Audio transcribed but empty.")
                 return
 
         # Translate quick-reply keyboard text → slash command
@@ -976,7 +976,7 @@ class TelegramDaemon:
             print(f"[telegram] dispatch error: {type(e).__name__}: {e}", flush=True)
             try:
                 await send_message(self.token, payload["chat_id"],
-                                   f"⚠ Errore interno: {type(e).__name__}: {e}")
+                                   f"⚠ Internal error: {type(e).__name__}: {e}")
             except Exception:
                 pass
 
@@ -992,7 +992,7 @@ class TelegramDaemon:
         # Autorizza chi preme il bottone (from.id), non la chat: in un gruppo
         # chat.id è il gruppo mentre from.id è l'utente reale che clicca.
         if from_id not in allowed:
-            await answer_callback_query(self.token, cb_id, "❌ Non autorizzato")
+            await answer_callback_query(self.token, cb_id, "❌ Not authorized")
             return
         # Phase B — Intercept goal action callbacks (act:approve|reject|hold:...)
         if data.startswith("act:"):

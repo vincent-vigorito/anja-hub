@@ -8,9 +8,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Changed
 
-- Web UI language is now fully English (labels, hints, toasts, API error
-  messages, notifications). Telegram bot strings and agent prompts are
-  unchanged for now.
+- UI language is now fully English: web app (labels, hints, toasts, API
+  error messages, notifications) and Telegram bot (commands menu, /help,
+  acks, permission prompts). Agent prompts unchanged for now.
 
 ### Added
 

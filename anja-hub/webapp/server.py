@@ -3999,11 +3999,11 @@ async def _auto_ingest_on_changes(project_name: str, changes: list, cfg: dict):
             try:
                 from telegram_daemon import send_message as _tg_send
                 paths = [c["path"] for c in changes[:5]]
-                more = f" + {len(changes) - 5} altri" if len(changes) > 5 else ""
+                more = f" + {len(changes) - 5} more" if len(changes) > 5 else ""
                 msg = (f"📂 *Auto-ingest* `{project_name}`\n\n"
-                       f"{len(changes)} file rilevati:\n"
+                       f"{len(changes)} files detected:\n"
                        + "\n".join(f"• `{p}`" for p in paths) + more
-                       + "\n\nApri webapp → Project → Settings per fare ingest.")
+                       + "\n\nOpen webapp → Project → Settings to run the ingest.")
                 await _tg_send(TELEGRAM_DAEMON.token, int(chat_id), msg)
             except Exception as e:
                 print(f"[auto_ingest] telegram notify error: {e}")
@@ -6914,10 +6914,10 @@ async def _asp_notify_diff_ready(conv_id: str, summary: dict):
     from telegram_daemon import send_message as _tg_send
     n = len(summary.get("files", []))
     await _tg_send(token, chat_id,
-                   f"📝 *Diff di sessione pronto* — {n} file "
+                   f"📝 *Session diff ready* — {n} files "
                    f"(+{summary.get('additions', 0)}/−{summary.get('deletions', 0)}) "
-                   f"su `{summary.get('branch', '?')}`\n"
-                   f"Rivedi in UI, oppure: /merge · /discard")
+                   f"on `{summary.get('branch', '?')}`\n"
+                   f"Review in the UI, or: /merge · /discard")
 
 
 async def _asp_notify_permission_ask(conv_id: str, tool: str, target: str,
@@ -6946,9 +6946,9 @@ async def _asp_notify_permission_ask(conv_id: str, tool: str, target: str,
         return
     from telegram_daemon import send_message as _tg_send
     await _tg_send(token, chat_id,
-                   f"🔐 *Permesso richiesto* — `{tool}`\n"
+                   f"🔐 *Permission requested* — `{tool}`\n"
                    f"`{target[:150]}`\n"
-                   f"Rispondi: /allow · /allow always · /deny")
+                   f"Reply: /allow · /allow always · /deny")
 
 
 @app.on_event("shutdown")
@@ -11396,31 +11396,31 @@ def _tg_new_thread_conv(chat_id: int) -> str:
     return f"telegram-{chat_id}-t{n}"
 
 
-TELEGRAM_HELP_TEXT = """*Comandi Anja via Telegram*
+TELEGRAM_HELP_TEXT = """*Anja commands via Telegram*
 
-`/help` — questo messaggio
-`/status` — model, provider, agent/project corrente
-`/model <nome>` — cambia model (es. `/model opus`)
-`/provider <nome>` — cambia provider (claude/openai/xai/openrouter/...)
-`/agent <nome>` — switch ad agent specializzato (es. `/agent trader`)
-`/project <nome>` — switch al context di un progetto registrato
-`/queue <when> <prompt>` — schedula task (es. `/queue domani 9am riassumimi il lavoro fatto ieri`)
-`/threads` — lista thread di questa chat, switch via bottoni
-`/newchat` — nuovo thread (i precedenti restano)
-`/async <msg>` — Anja lavora in background e ti avvisa quando è pronto (la chat resta libera)
-`/compact` — compatta storia in summary, libera context
-`/autocompact [on|off|<pct>]` — auto-compact intelligente quando ctx ≥ N% (default 55%)
-`/voice on|off|auto` — Anja risponde anche con voice message (auto: solo se gli invii audio)
-`/retry` — riprova l'ultimo turno interrotto o fallito su questo thread
-`/stop` — interrompe il turno in corso (la conversazione resta viva)
-`/allow [always]` · `/deny` — rispondi a una richiesta di permesso (🔐) del turno
-`/approve` · `/replan <note>` — rispondi a un piano proposto (plan mode)
-`/merge` · `/discard` — chiudi la git-sessione (📝): porta il diff nel branch o scartalo
-`/mode default|acceptEdits|plan|auto` — permessi sessione (auto = consenti tutto)
+`/help` — this message
+`/status` — current model, provider, agent/project
+`/model <name>` — change model (e.g. `/model opus`)
+`/provider <name>` — change provider (claude/openai/xai/openrouter/...)
+`/agent <name>` — switch to a specialized agent (e.g. `/agent trader`)
+`/project <name>` — switch to a registered project's context
+`/queue <when> <prompt>` — schedule a task (e.g. `/queue tomorrow 9am summarize yesterday's work`)
+`/threads` — list this chat's threads, switch via buttons
+`/newchat` — new thread (previous ones are kept)
+`/async <msg>` — Anja works in the background and pings you when done (the chat stays free)
+`/compact` — compact history into a summary, free up context
+`/autocompact [on|off|<pct>]` — smart auto-compact when ctx ≥ N% (default 55%)
+`/voice on|off|auto` — Anja also replies with a voice message (auto: only if you send audio)
+`/retry` — retry the last interrupted or failed turn on this thread
+`/stop` — interrupt the current turn (the conversation stays alive)
+`/allow [always]` · `/deny` — answer a permission request (🔐) from the turn
+`/approve` · `/replan <note>` — answer a proposed plan (plan mode)
+`/merge` · `/discard` — close the git-session (📝): merge the diff into the branch or discard it
+`/mode default|acceptEdits|plan|auto` — session permissions (auto = allow everything)
 
-Audio: invia un vocale → Anja trascrive con Whisper e risponde.
-Senza comando: Anja risponde normalmente.
-Mentre Anja lavora: un messaggio di testo viene iniettato nel turno in corso (steering).
+Audio: send a voice note → Anja transcribes it with Whisper and replies.
+No command: Anja replies normally.
+While Anja is working: a text message is injected into the current turn (steering).
 """
 
 
@@ -11450,27 +11450,27 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         if not stopped:
             stopped = chat_streams.cancel(conv_id)
         await _tg_send(token, chat_id,
-                       "⏹ _Turno interrotto._" if stopped
-                       else "_Nessun turno in corso su questo thread._")
+                       "⏹ _Turn interrupted._" if stopped
+                       else "_No turn in progress on this thread._")
         return True
 
     if cmd in ("/merge", "/discard"):
         # F-AgentSessions Fase 4: chiusura git-sessione dal thread attivo
         if os.environ.get("ANJA_ASP_GIT") != "1":
-            await _tg_send(token, chat_id, "_Git-sessione non attiva._")
+            await _tg_send(token, chat_id, "_Git-session not active._")
             return True
         import asp_git as _ag
         ctx = _ag.get_ctx(conv_id)
         if ctx is None:
-            await _tg_send(token, chat_id, "_Nessuna git-sessione su questo thread._")
+            await _tg_send(token, chat_id, "_No git-session on this thread._")
             return True
         if cmd == "/merge":
             res = await asyncio.to_thread(_ag.merge, ctx)
-            msg = (f"✅ _Merge fatto in_ `{res.get('into')}` (`{res.get('merged_commit')}`)"
+            msg = (f"✅ _Merged into_ `{res.get('into')}` (`{res.get('merged_commit')}`)"
                    if res.get("ok") else f"⚠ {res.get('error')}")
         else:
             res = await asyncio.to_thread(_ag.discard, ctx)
-            msg = ("🗑 _Branch di sessione scartato._" if res.get("ok")
+            msg = ("🗑 _Session branch discarded._" if res.get("ok")
                    else f"⚠ {res.get('error')}")
         import asp_permissions as _ap
         _ap.record_decision(tool="session.merge", target=ctx.get("branch", "?"),
@@ -11482,22 +11482,22 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
     if cmd in ("/approve", "/replan"):
         # F-AgentSessions Fase 3: risposta a un piano proposto (plan mode)
         if os.environ.get("ANJA_ASP_PERMISSIONS") != "1":
-            await _tg_send(token, chat_id, "_Control-plane non attivo._")
+            await _tg_send(token, chat_id, "_Control-plane not active._")
             return True
         import asp_permissions as _ap
         rid = _ap.pending.latest_for_conv(conv_id)
         if not rid:
-            await _tg_send(token, chat_id, "_Nessun piano in attesa._")
+            await _tg_send(token, chat_id, "_No plan pending._")
             return True
         decision = "approve" if cmd == "/approve" else "deny"
         meta = _ap.pending.resolve(rid, decision, message=args.strip(),
                                    by=f"telegram:{chat_id}")
         if meta is None:
-            await _tg_send(token, chat_id, "_Già risolto._")
+            await _tg_send(token, chat_id, "_Already resolved._")
             return True
         await _tg_send(token, chat_id,
-                       "✅ _Piano approvato, procedo._" if decision == "approve"
-                       else "🔄 _Rivedo il piano col tuo feedback._")
+                       "✅ _Plan approved, proceeding._" if decision == "approve"
+                       else "🔄 _Revising the plan with your feedback._")
         return True
 
     if cmd == "/mode":
@@ -11508,10 +11508,10 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         # se il set live fallisce, il riciclo col resume avviene al turno dopo.
         mode = args.strip()
         if mode not in ("default", "acceptEdits", "plan", "auto"):
-            await _tg_send(token, chat_id, "Uso: `/mode default|acceptEdits|plan|auto`")
+            await _tg_send(token, chat_id, "Usage: `/mode default|acceptEdits|plan|auto`")
             return True
         if os.environ.get("ANJA_ASP_PERMISSIONS") != "1":
-            await _tg_send(token, chat_id, "_Control-plane non attivo._")
+            await _tg_send(token, chat_id, "_Control-plane not active._")
             return True
         if mode == "auto":
             import asp_permissions as _ap
@@ -11527,22 +11527,22 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         except Exception:
             res = {"ok": False}
         await _tg_send(token, chat_id,
-                       (f"🔧 _Mode → `{mode}` — applicato subito._"
+                       (f"🔧 _Mode → `{mode}` — applied immediately._"
                         if res.get("ok")
-                        else f"🔧 _Mode `{mode}` — attivo dal prossimo messaggio (contesto conservato)._")
-                       + "\n_Impostato come default Telegram: vale anche per i nuovi thread._")
+                        else f"🔧 _Mode `{mode}` — takes effect from the next message (context preserved)._")
+                       + "\n_Saved as Telegram default: applies to new threads too._")
         return True
 
     if cmd in ("/allow", "/deny"):
         # F-AgentSessions Fase 2: risolve la richiesta di permesso in attesa
         # sul thread attivo. La chat Telegram è in allowlist = canale fidato.
         if os.environ.get("ANJA_ASP_PERMISSIONS") != "1":
-            await _tg_send(token, chat_id, "_Control-plane permessi non attivo._")
+            await _tg_send(token, chat_id, "_Permissions control-plane not active._")
             return True
         import asp_permissions as _ap
         rid = _ap.pending.latest_for_conv(conv_id)
         if not rid:
-            await _tg_send(token, chat_id, "_Nessuna richiesta di permesso in attesa._")
+            await _tg_send(token, chat_id, "_No permission request pending._")
             return True
         if cmd == "/allow":
             decision = ("always_allow"
@@ -11551,10 +11551,10 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             decision = "deny"
         meta = _ap.pending.resolve(rid, decision, by=f"telegram:{chat_id}")
         if meta is None:
-            await _tg_send(token, chat_id, "_Richiesta già risolta._")
+            await _tg_send(token, chat_id, "_Request already resolved._")
             return True
-        lbl = {"allow": "✅ consentito", "always_allow": "✅ consentito (sempre)",
-               "deny": "🚫 negato"}[decision]
+        lbl = {"allow": "✅ allowed", "always_allow": "✅ allowed (always)",
+               "deny": "🚫 denied"}[decision]
         await _tg_send(token, chat_id, f"{lbl} — `{meta['tool']}`")
         return True
 
@@ -11565,9 +11565,9 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
     if cmd == "/retry":
         prev = (existing.get("interrupted_prompt") or "").strip()
         if not prev:
-            await _tg_send(token, chat_id, "Niente da riprendere: nessun turno interrotto o fallito su questo thread.")
+            await _tg_send(token, chat_id, "Nothing to resume: no interrupted or failed turn on this thread.")
             return True
-        await _tg_send(token, chat_id, f"🔁 Riprendo: _{prev[:200]}_")
+        await _tg_send(token, chat_id, f"🔁 Resuming: _{prev[:200]}_")
         return prev  # → il dispatch continua con questo testo
 
     if cmd == "/status":
@@ -11596,17 +11596,17 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         thread_suffix = conv_id.removeprefix(f"telegram-{chat_id}").lstrip("-") or "main"
         _pm = existing.get("asp_mode") or _tg_default_asp_mode(chat_id) or "default"
         _pm_def = _tg_default_asp_mode(chat_id)
-        pm_line = f"• permessi: `{_pm}`" + (f" (default Telegram: `{_pm_def}`)" if _pm_def else "")
+        pm_line = f"• permissions: `{_pm}`" + (f" (Telegram default: `{_pm_def}`)" if _pm_def else "")
         msg_text = (
-            f"*Status chat*\n"
+            f"*Chat status*\n"
             f"• provider: `{prov}`\n"
             f"• model: `{mod}`\n"
             f"• scope: {scope_line}\n"
-            f"• thread: `{thread_suffix}` (`/threads` per switchare)\n"
+            f"• thread: `{thread_suffix}` (`/threads` to switch)\n"
             f"{pm_line}\n"
-            f"• messaggi: {nmsg}{ctx_line}\n"
-            f"• auto-compact: {'on' if auto_compact else 'off'} ({ac_pct}% soglia)\n"
-            f"• session_id: `{sid[:16] + '…' if sid else '(nuova)'}`"
+            f"• messages: {nmsg}{ctx_line}\n"
+            f"• auto-compact: {'on' if auto_compact else 'off'} ({ac_pct}% threshold)\n"
+            f"• session_id: `{sid[:16] + '…' if sid else '(new)'}`"
         )
         await _tg_send(token, chat_id, msg_text)
         return True
@@ -11618,7 +11618,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             cur_provider = existing.get("provider") or defaults["provider"]
             models = _get_provider_models_short(cur_provider)
             if not models:
-                await _tg_send(token, chat_id, f"Uso: `/model <nome>` (es. opus, sonnet, grok-4)")
+                await _tg_send(token, chat_id, f"Usage: `/model <name>` (e.g. opus, sonnet, grok-4)")
                 return True
             buttons = []
             row = []
@@ -11629,7 +11629,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             if row:
                 buttons.append(row)
             markup = {"inline_keyboard": buttons}
-            await _tg_send(token, chat_id, f"Quale model? (provider: `{cur_provider}`)", reply_markup=markup)
+            await _tg_send(token, chat_id, f"Which model? (provider: `{cur_provider}`)", reply_markup=markup)
             return True
         existing["model"] = args.strip()
         # Reset session_id perché alcuni provider non transferiscono context tra modelli
@@ -11680,7 +11680,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             if row:
                 buttons.append(row)
             markup = {"inline_keyboard": buttons}
-            await _tg_send(token, chat_id, "Quale provider?", reply_markup=markup)
+            await _tg_send(token, chat_id, "Which provider?", reply_markup=markup)
             return True
         existing["provider"] = args.strip()
         existing["sdk_session_id"] = ""
@@ -11710,7 +11710,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             buttons.append([{"text": "↩ reset (Anja)", "callback_data": "agent:reset"}])
             markup = {"inline_keyboard": buttons}
             cur = existing.get("scope_agent") or "Anja (default)"
-            await _tg_send(token, chat_id, f"Quale agent? (corrente: `{cur}`)", reply_markup=markup)
+            await _tg_send(token, chat_id, f"Which agent? (current: `{cur}`)", reply_markup=markup)
             return True
         if args.strip().lower() == "reset":
             existing["scope_agent"] = ""
@@ -11724,7 +11724,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         agent_name = args.strip()
         agent_dir = HUB_PATH / "agents" / agent_name
         if not agent_dir.is_dir():
-            await _tg_send(token, chat_id, f"⚠ agent `{agent_name}` non trovato in {HUB_PATH}/agents/")
+            await _tg_send(token, chat_id, f"⚠ agent `{agent_name}` not found in {HUB_PATH}/agents/")
             return True
         existing["scope_agent"] = agent_name
         existing["sdk_session_id"] = ""
@@ -11740,8 +11740,8 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         if arg not in ("on", "off", "auto"):
             cur = existing.get("voice_reply", "auto")
             await _tg_send(token, chat_id,
-                f"Uso: `/voice on` (sempre voce) · `/voice off` (mai voce) · `/voice auto` (voce solo se gli invii audio)\n"
-                f"Stato corrente: *{cur}*")
+                f"Usage: `/voice on` (always voice) · `/voice off` (never voice) · `/voice auto` (voice only if you send audio)\n"
+                f"Current state: *{cur}*")
             return True
         # Persist in conversation
         conv_path = WEBAPP_DIR / "conversations" / f"{conv_id}.json"
@@ -11752,7 +11752,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         payload["voice_reply"] = arg
         conv_path.parent.mkdir(parents=True, exist_ok=True)
         conv_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-        labels = {"on": "sempre voce", "off": "mai voce", "auto": "voce se input vocale"}
+        labels = {"on": "always voice", "off": "never voice", "auto": "voice if voice input"}
         await _tg_send(token, chat_id, f"✓ voice: *{arg}* ({labels[arg]})")
         return True
 
@@ -11764,13 +11764,13 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         if not arg:
             await _tg_send(token, chat_id,
                 f"*Auto-compact*\n"
-                f"• Stato: {'on' if cur_enabled else 'off'}\n"
-                f"• Soglia: {cur_pct}% del context\n\n"
-                f"Uso:\n"
-                f"• `/autocompact on` — attiva\n"
-                f"• `/autocompact off` — disattiva\n"
-                f"• `/autocompact 60` — imposta soglia al 60%\n"
-                f"• `/autocompact on 50` — attiva + soglia 50%")
+                f"• State: {'on' if cur_enabled else 'off'}\n"
+                f"• Threshold: {cur_pct}% of context\n\n"
+                f"Usage:\n"
+                f"• `/autocompact on` — enable\n"
+                f"• `/autocompact off` — disable\n"
+                f"• `/autocompact 60` — set threshold to 60%\n"
+                f"• `/autocompact on 50` — enable + 50% threshold")
             return True
         # Parse tokens
         parts = arg.split()
@@ -11789,7 +11789,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
                 except ValueError:
                     pass
         if new_enabled is None and new_pct is None:
-            await _tg_send(token, chat_id, f"⚠ Argomento non riconosciuto: `{arg}`. Usa `/autocompact` per la guida.")
+            await _tg_send(token, chat_id, f"⚠ Unrecognized argument: `{arg}`. Use `/autocompact` for help.")
             return True
         # Patch conv file
         conv_path = WEBAPP_DIR / "conversations" / f"{conv_id}.json"
@@ -11806,17 +11806,17 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         final_enabled = payload.get("auto_compact", cur_enabled)
         final_pct = int(float(payload.get("auto_compact_pct", 0.55)) * 100)
         await _tg_send(token, chat_id,
-            f"✓ auto-compact: *{'on' if final_enabled else 'off'}* · soglia *{final_pct}%* del context")
+            f"✓ auto-compact: *{'on' if final_enabled else 'off'}* · threshold *{final_pct}%* of context")
         return True
 
     if cmd == "/queue":
         if not args:
             await _tg_send(token, chat_id,
-                "Uso: `/queue <quando> <cosa>`\n\n"
-                "Esempi:\n"
-                "• `/queue tra 30 min ricordami di chiamare Marco`\n"
-                "• `/queue domani alle 9 dammi il summary delle attività di ieri`\n"
-                "• `/queue oggi alle 17 controlla email Gmail`")
+                "Usage: `/queue <when> <what>`\n\n"
+                "Examples:\n"
+                "• `/queue in 30 min remind me to call Marco`\n"
+                "• `/queue tomorrow at 9 give me a summary of yesterday's activity`\n"
+                "• `/queue today at 5pm check Gmail email`")
             return True
         # Iniettiamo nel prompt una istruzione esplicita per Anja:
         # usa task.schedule_one_shot con notifica Telegram a questo chat_id.
@@ -11852,7 +11852,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             buttons.append([{"text": "↩ reset (Anja hub)", "callback_data": "project:reset"}])
             markup = {"inline_keyboard": buttons}
             cur = existing.get("scope_project") or "Anja hub (default)"
-            await _tg_send(token, chat_id, f"Quale progetto? (corrente: `{cur}`)", reply_markup=markup)
+            await _tg_send(token, chat_id, f"Which project? (current: `{cur}`)", reply_markup=markup)
             return True
         if args.strip().lower() == "reset":
             existing["scope_project"] = ""
@@ -11868,8 +11868,8 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         # Verifica progetto registrato
         proj_match = [p for p in projects if p.get("name") == proj_name]
         if not proj_match:
-            avail = ", ".join(p.get("name", "?") for p in projects) or "(nessuno)"
-            await _tg_send(token, chat_id, f"⚠ Progetto `{proj_name}` non registrato.\nDisponibili: {avail}")
+            avail = ", ".join(p.get("name", "?") for p in projects) or "(none)"
+            await _tg_send(token, chat_id, f"⚠ Project `{proj_name}` not registered.\nAvailable: {avail}")
             return True
         existing["scope_project"] = proj_name
         existing["scope_agent"] = ""  # mutuamente esclusivo con project
@@ -11878,14 +11878,14 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
                                title=existing.get("title", ""), scope=f"project:{proj_name}",
                                provider=existing.get("provider", ""), model=existing.get("model", ""),
                                effort=existing.get("effort", ""))
-        await _tg_send(token, chat_id, f"✓ scope: `project:{proj_name}` — Anja risponderà nel context di questo progetto.")
+        await _tg_send(token, chat_id, f"✓ scope: `project:{proj_name}` — Anja will reply in this project's context.")
         return True
 
     if cmd == "/threads":
         # F-TelegramMultiSession: lista thread come inline buttons (pattern /agent)
         threads = _tg_list_threads(chat_id)
         if not threads:
-            await _tg_send(token, chat_id, "Nessun thread ancora — scrivimi e ne creo uno, oppure `/newchat`.")
+            await _tg_send(token, chat_id, "No threads yet — message me and I'll create one, or `/newchat`.")
             return True
         active = _tg_active_conv(chat_id)
         buttons = []
@@ -11895,8 +11895,8 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             agent_part = f" · 🤖{t['scope_agent']}" if t["scope_agent"] else ""
             buttons.append([{"text": f"{mark}{label}{agent_part} · {t['n_msgs']} msg",
                              "callback_data": f"thread:{t['suffix']}"}])
-        buttons.append([{"text": "➕ nuovo thread", "callback_data": "thread:new"}])
-        await _tg_send(token, chat_id, "Thread di questa chat (▶ = attivo):",
+        buttons.append([{"text": "➕ new thread", "callback_data": "thread:new"}])
+        await _tg_send(token, chat_id, "Threads in this chat (▶ = active):",
                        reply_markup={"inline_keyboard": buttons})
         return True
 
@@ -11909,12 +11909,12 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             new_conv = _tg_new_thread_conv(chat_id)
             _tg_set_active_thread(chat_id, new_conv)
             await _tg_send(token, chat_id,
-                f"✓ Nuovo thread `{new_conv.rsplit('-', 1)[-1]}` attivo — parto fresh.\n"
-                f"I thread precedenti restano: `/threads` per switchare.")
+                f"✓ New thread `{new_conv.rsplit('-', 1)[-1]}` active — starting fresh.\n"
+                f"Previous threads are kept: `/threads` to switch.")
             return True
         target = f"telegram-{chat_id}" if arg == "main" else f"telegram-{chat_id}-{arg}"
         if target not in {t["conv_id"] for t in _tg_list_threads(chat_id)} and arg != "main":
-            await _tg_send(token, chat_id, f"⚠ Thread `{arg}` non trovato. `/threads` per la lista.")
+            await _tg_send(token, chat_id, f"⚠ Thread `{arg}` not found. `/threads` for the list.")
             return True
         _tg_set_active_thread(chat_id, target)
         data = chat.load_conversation(WEBAPP_DIR, target) or {}
@@ -11922,7 +11922,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         ag = data.get("scope_agent") or ""
         ag_part = f" (agent: `{ag}`)" if ag else ""
         await _tg_send(token, chat_id,
-                       f"✓ Thread attivo: *{title}*{ag_part} — {len(data.get('messages', []))} msg.")
+                       f"✓ Active thread: *{title}*{ag_part} — {len(data.get('messages', []))} msg.")
         return True
 
     if cmd == "/newchat":
@@ -11935,10 +11935,10 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         mode_note = ""
         if _def_mode:
             _tg_set_conv_asp_mode(new_conv, _def_mode)
-            _lbl = "auto (consenti tutto)" if _def_mode == "auto" else _def_mode
-            mode_note = f"\n🔧 Permessi: `{_lbl}` — default Telegram (`/mode` per cambiare)."
+            _lbl = "auto (allow everything)" if _def_mode == "auto" else _def_mode
+            mode_note = f"\n🔧 Permissions: `{_lbl}` — Telegram default (`/mode` to change)."
         await _tg_send(token, chat_id,
-            "✓ Nuovo thread attivo — parto fresh.\nI thread precedenti restano: `/threads` per tornarci."
+            "✓ New thread active — starting fresh.\nPrevious threads are kept: `/threads` to go back."
             + mode_note)
         return True
 
@@ -11949,29 +11949,29 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         prompt = args.strip()
         if not prompt:
             await _tg_send(token, chat_id,
-                "Uso: `/async <messaggio>` — Anja lavora in background e ti avvisa quando è pronto. "
-                "Intanto switcha thread (`/threads`) e continua a chattare.")
+                "Usage: `/async <message>` — Anja works in the background and pings you when done. "
+                "Meanwhile switch threads (`/threads`) and keep chatting.")
             return True
         label = _tg_thread_label(existing, conv_id, chat_id)
         import asyncio as _aio
         _aio.create_task(_telegram_async_bg(chat_id, conv_id, prompt, label))
         await _tg_send(token, chat_id,
-            f"⏳ In lavorazione in background su *{label}* — ti avviso appena pronto. La chat resta libera.")
+            f"⏳ Working in the background on *{label}* — I'll ping you as soon as it's ready. The chat stays free.")
         return True
 
     if cmd == "/compact":
         if not existing.get("messages"):
-            await _tg_send(token, chat_id, "⚠ Nessun messaggio da compattare.")
+            await _tg_send(token, chat_id, "⚠ No messages to compact.")
             return True
-        await _tg_send(token, chat_id, "⏳ Compatto la conversation…")
+        await _tg_send(token, chat_id, "⏳ Compacting the conversation…")
         # Telegram: keep_last_n=1 (2 msg) — Telegram chat sono brevi, compact aggressivo
         result = await compact_conversation(conv_id, keep_last_n=1)
         if not result.get("ok"):
-            await _tg_send(token, chat_id, f"⚠ Compact fallito: {result.get('error')}")
+            await _tg_send(token, chat_id, f"⚠ Compact failed: {result.get('error')}")
             return True
         msg_text = (
             f"✓ Compact OK: {result['messages_before']} → {result['messages_after']} msg "
-            f"(ultimi {result['kept_last']} mantenuti).\n\n"
+            f"(last {result['kept_last']} kept).\n\n"
             f"*Summary:*\n{result['summary']}"
         )
         await _tg_send(token, chat_id, msg_text)
@@ -11984,7 +11984,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         except Exception:
             kio = None
         if not kio:
-            await _tg_send(token, chat_id, "⚠ Kanban non disponibile.")
+            await _tg_send(token, chat_id, "⚠ Kanban not available.")
             return True
 
         rest = cmd[len("/kanban"):].strip()
@@ -11992,9 +11992,9 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         if not rest or rest == "list":
             tasks = kio.list_tasks(HUB_PATH, status="active", limit=20)
             if not tasks:
-                await _tg_send(token, chat_id, "📋 *Kanban:* nessun task attivo.")
+                await _tg_send(token, chat_id, "📋 *Kanban:* no active tasks.")
                 return True
-            lines = ["📋 *Kanban — task attivi:*\n"]
+            lines = ["📋 *Kanban — active tasks:*\n"]
             by_status = {}
             for t in tasks:
                 by_status.setdefault(t["status"], []).append(t)
@@ -12009,7 +12009,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
                     assignee = f" @{t['assignee']}" if t.get("assignee") else ""
                     lines.append(f"  `#{t['id']}` {prio} {t['title']}{assignee}")
                 if len(items) > 5:
-                    lines.append(f"  _… +{len(items)-5} altri_")
+                    lines.append(f"  _… +{len(items)-5} more_")
             await _tg_send(token, chat_id, "\n".join(lines))
             return True
 
@@ -12017,7 +12017,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         if rest.startswith("add "):
             title = rest[4:].strip()
             if not title:
-                await _tg_send(token, chat_id, "Usa: `/kanban add <titolo>`")
+                await _tg_send(token, chat_id, "Usage: `/kanban add <title>`")
                 return True
             # Resolve scope: se conv current è project, usa quello
             existing = chat.load_conversation(WEBAPP_DIR, conv_id) if conv_id else {}
@@ -12037,9 +12037,9 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
                     assignee = "anja"
             try:
                 t = kio.create_task(HUB_PATH, title=title, scope=scope, assignee=assignee)
-                await _tg_send(token, chat_id, f"➕ Task creato `#{t['id']}`: *{title}*\nScope: `{scope}` · Assignee: `@{assignee}`")
+                await _tg_send(token, chat_id, f"➕ Task created `#{t['id']}`: *{title}*\nScope: `{scope}` · Assignee: `@{assignee}`")
             except Exception as e:
-                await _tg_send(token, chat_id, f"⚠ Errore: {e}")
+                await _tg_send(token, chat_id, f"⚠ Error: {e}")
             return True
 
         # /kanban done <id> [summary]
@@ -12048,14 +12048,14 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             try:
                 task_id = int(parts[0])
             except ValueError:
-                await _tg_send(token, chat_id, "Usa: `/kanban done <id> [summary]`")
+                await _tg_send(token, chat_id, "Usage: `/kanban done <id> [summary]`")
                 return True
             summary = parts[1] if len(parts) > 1 else ""
             if summary:
                 kio.add_comment(HUB_PATH, task_id, f"✓ Completed: {summary}", author="human:telegram")
             t = kio.update_status(HUB_PATH, task_id, "done")
             if not t:
-                await _tg_send(token, chat_id, f"⚠ Task `#{task_id}` non trovato.")
+                await _tg_send(token, chat_id, f"⚠ Task `#{task_id}` not found.")
                 return True
             promoted = kio.auto_promote_ready(HUB_PATH)
             msg = f"✅ Task `#{task_id}` *done*: {t['title']}"
@@ -12071,13 +12071,13 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
                 task_id = int(parts[0])
                 reason = parts[1] if len(parts) > 1 else "blocked via telegram"
             except (ValueError, IndexError):
-                await _tg_send(token, chat_id, "Usa: `/kanban block <id> <reason>`")
+                await _tg_send(token, chat_id, "Usage: `/kanban block <id> <reason>`")
                 return True
             t = kio.update_status(HUB_PATH, task_id, "blocked", block_reason=reason)
             if t:
                 await _tg_send(token, chat_id, f"🚫 Task `#{task_id}` blocked: {reason}")
             else:
-                await _tg_send(token, chat_id, f"⚠ Task `#{task_id}` non trovato.")
+                await _tg_send(token, chat_id, f"⚠ Task `#{task_id}` not found.")
             return True
 
         # /kanban show <id>
@@ -12085,11 +12085,11 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             try:
                 task_id = int(rest[5:].strip())
             except ValueError:
-                await _tg_send(token, chat_id, "Usa: `/kanban show <id>`")
+                await _tg_send(token, chat_id, "Usage: `/kanban show <id>`")
                 return True
             t = kio.get_task(HUB_PATH, task_id)
             if not t:
-                await _tg_send(token, chat_id, f"⚠ Task `#{task_id}` non trovato.")
+                await _tg_send(token, chat_id, f"⚠ Task `#{task_id}` not found.")
                 return True
             lines = [
                 f"*#{t['id']}* — {t['title']}",
@@ -12109,15 +12109,15 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         # Help kanban
         await _tg_send(token, chat_id,
             "📋 *Kanban commands:*\n"
-            "`/kanban` — lista task attivi\n"
-            "`/kanban add <title>` — crea task\n"
-            "`/kanban show <id>` — dettaglio task\n"
-            "`/kanban done <id> [summary]` — marca done\n"
-            "`/kanban block <id> <reason>` — blocca")
+            "`/kanban` — list active tasks\n"
+            "`/kanban add <title>` — create task\n"
+            "`/kanban show <id>` — task detail\n"
+            "`/kanban done <id> [summary]` — mark done\n"
+            "`/kanban block <id> <reason>` — block")
         return True
 
     # Comando sconosciuto
-    await _tg_send(token, chat_id, f"Comando `{cmd}` sconosciuto. Usa `/help` per la lista.")
+    await _tg_send(token, chat_id, f"Unknown command `{cmd}`. Use `/help` for the list.")
     return True
 
 
@@ -12171,9 +12171,9 @@ async def _tg_heartbeat_loop(token: str, chat_id: int, state, hb: dict):
         except Exception:
             pass
         if n:
-            txt = f"⏳ _Sto ancora lavorando — {n} azioni" + (f", ultima: {label}" if label else "") + f" · {mins} min_" + todo_txt
+            txt = f"⏳ _Still working — {n} actions" + (f", last: {label}" if label else "") + f" · {mins} min_" + todo_txt
         else:
-            txt = f"⏳ _Sto ancora lavorando · {mins} min_" + todo_txt
+            txt = f"⏳ _Still working · {mins} min_" + todo_txt
         try:
             if hb.get("message_id"):
                 await _edit(token, chat_id, hb["message_id"], txt)
@@ -12221,7 +12221,7 @@ async def _telegram_dispatch(msg: dict):
                 print(f"[asp] tg live-command error: {type(e).__name__}: {e}")
                 try:
                     from telegram_daemon import send_message as _tg_send
-                    await _tg_send(token, msg["chat_id"], f"⚠ Errore comando: {e}")
+                    await _tg_send(token, msg["chat_id"], f"⚠ Command error: {e}")
                 except Exception:
                     pass
             return
@@ -12234,7 +12234,7 @@ async def _telegram_dispatch(msg: dict):
                 if token:
                     from telegram_daemon import send_message as _tg_send
                     await _tg_send(token, msg["chat_id"],
-                                   "⤳ _iniettato nel turno in corso_")
+                                   "⤳ _injected into the current turn_")
                 return
         except Exception as e:
             print(f"[asp] tg steer error: {e}")
@@ -12247,7 +12247,7 @@ async def _telegram_dispatch(msg: dict):
             if token:
                 from telegram_daemon import send_message as _tg_send
                 await _tg_send(token, msg["chat_id"],
-                               "🕐 _in coda: arrivo appena chiudo il turno in corso_")
+                               "🕐 _queued: I'll get to it as soon as the current turn finishes_")
         except Exception:
             pass
     async with _lock:
@@ -12280,7 +12280,7 @@ async def _telegram_async_bg(chat_id: int, conv_id: str, text: str, label: str):
             try:
                 from telegram_daemon import send_message as _tg_send
                 await _tg_send(token, chat_id,
-                               f"⚠ Task async *{label}* fallito: {type(e).__name__}: {e}")
+                               f"⚠ Async task *{label}* failed: {type(e).__name__}: {e}")
             except Exception:
                 pass
 
@@ -12324,7 +12324,7 @@ async def _telegram_dispatch_locked(msg: dict, conv_id_override: str = None, rep
         except Exception as e:
             print(f"[telegram] command error: {type(e).__name__}: {e}")
             from telegram_daemon import send_message as _tg_send
-            await _tg_send(token, chat_id, f"⚠ Errore comando: {e}")
+            await _tg_send(token, chat_id, f"⚠ Command error: {e}")
             return
 
     # Typing indicator (best-effort)
@@ -12405,8 +12405,8 @@ async def _telegram_dispatch_locked(msg: dict, conv_id_override: str = None, rep
         print(f"[telegram] build_system_prompt error: {type(e).__name__}: {e}")
         try:
             await _tg_send(token, chat_id,
-                           f"⚠ Errore interno nel preparare il contesto ({type(e).__name__}). "
-                           "Riprova; se persiste è un bug del server, non del tuo messaggio.")
+                           f"⚠ Internal error while preparing context ({type(e).__name__}). "
+                           "Try again; if it persists it's a server bug, not your message.")
         except Exception:
             pass
         return
@@ -12534,15 +12534,15 @@ async def _telegram_dispatch_locked(msg: dict, conv_id_override: str = None, rep
                 if _is_killed_turn_error(err_msg):
                     print(f"[telegram] turno {conv_id} UCCISO da SIGTERM (restart?) "
                           f"dopo {stream_state.tool_iter_count} azioni")
-                    full_response = ("🔄 Il server si è riavviato mentre lavoravo (probabile "
-                                     "deploy/update) e il turno è stato interrotto.\n"
-                                     "Scrivi /retry per farmi riprendere da capo.")
+                    full_response = ("🔄 The server restarted while I was working (likely a "
+                                     "deploy/update) and the turn was interrupted.\n"
+                                     "Send /retry to have me start over.")
                 else:
-                    full_response = f"⚠ Errore: {err_msg}\nScrivi /retry per ritentare."
+                    full_response = f"⚠ Error: {err_msg}\nSend /retry to try again."
                 break
     except Exception as e:
         turn_errored = True
-        full_response = f"⚠ Eccezione interna: {type(e).__name__}: {e}\nScrivi /retry per ritentare."
+        full_response = f"⚠ Internal exception: {type(e).__name__}: {e}\nSend /retry to try again."
     finally:
         hb_task.cancel()
         stream_state.completed = True
@@ -12556,10 +12556,10 @@ async def _telegram_dispatch_locked(msg: dict, conv_id_override: str = None, rep
                 pass
 
     if not full_response.strip():
-        full_response = "(nessuna risposta generata)"
+        full_response = "(no response generated)"
     elif turn_interrupted:
-        full_response = ("⏹ _Turno interrotto — quello che avevo già "
-                         "prodotto:_\n\n" + full_response)
+        full_response = ("⏹ _Turn interrupted — here's what I had "
+                         "so far:_\n\n" + full_response)
 
     # Voice-loop logic (Fase 11 TTS 3): decide se rispondere anche con voice
     voice_reply_mode = existing.get("voice_reply", "auto")  # 'auto' | 'on' | 'off'
@@ -12615,11 +12615,11 @@ async def _telegram_dispatch_locked(msg: dict, conv_id_override: str = None, rep
                     print(f"[telegram] audio reply sent via {model_used} ({len(audio_bytes)} bytes, {codec})")
                 else:
                     print(f"[telegram] send audio failed: {resp}")
-                    await _tg_send(token, chat_id, f"⚠ Audio send fallito: `{resp.get('description', 'unknown')}`")
+                    await _tg_send(token, chat_id, f"⚠ Audio send failed: `{resp.get('description', 'unknown')}`")
         except Exception as e:
             err_msg = str(e)
             print(f"[telegram] TTS error: {err_msg}")
-            await _tg_send(token, chat_id, f"⚠ TTS fallito: `{err_msg[:200]}`")
+            await _tg_send(token, chat_id, f"⚠ TTS failed: `{err_msg[:200]}`")
 
     # Smart auto-compact su soglia % token (Fase 11 fix 2026-05-11)
     # Default: compact quando input_tokens >= 55% del context_window del modello.

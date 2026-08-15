@@ -560,3 +560,113 @@ def resync_marketing_mcp(hub_path: Path) -> dict:
                 _write_mcp_json(adir, ws_slug, ws_root, anjawiki, hub_path, role_groups, extra)
         updated.append(ws_slug)
     return {"ok": True, "updated_workspaces": updated, "count": len(updated)}
+
+
+# ----------------------------------------------------------------------
+# F-BlueprintForge Step A — validazione deterministica (pre-scaffold)
+# ----------------------------------------------------------------------
+
+_DUMMY_MAPPING = {"{WS}": "demo-ws", "{BRAND}": "Demo Brand", "{LEAD}": "anja-demo-ws"}
+
+
+def validate_blueprint(name: str, hub_path: Optional[Path] = None) -> dict:
+    """Schema-check completo di un blueprint (hub o built-in) SENZA istanziarlo.
+
+    Ritorna {ok, origin, errors: [...], warnings: [...]}: `errors` = lo scaffold
+    fallirebbe o produrrebbe un workspace rotto; `warnings` = funziona ma manca
+    qualcosa di consigliato. È il contratto reale di `scaffold_from_blueprint`.
+    """
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    try:
+        bp_dir = resolve_blueprint_dir(name, hub_path)
+    except BlueprintError as e:
+        return {"ok": False, "origin": None, "errors": [str(e)], "warnings": []}
+    origin = ("hub" if (hub_path and bp_dir.is_relative_to(Path(hub_path).resolve()))
+              else "builtin")
+
+    # --- blueprint.json
+    try:
+        bp = json.loads((bp_dir / "blueprint.json").read_text(encoding="utf-8"))
+    except Exception as e:
+        return {"ok": False, "origin": origin,
+                "errors": [f"blueprint.json non parseabile: {e}"], "warnings": []}
+
+    if bp.get("name") != bp_dir.name:
+        warnings.append(f"name '{bp.get('name')}' ≠ nome directory '{bp_dir.name}' "
+                        "(la galleria usa name: tienili allineati)")
+    for field in ("description", "workspace_type", "version"):
+        if not bp.get(field):
+            warnings.append(f"blueprint.json: campo '{field}' mancante o vuoto")
+
+    backends = bp.get("backends")
+    if not isinstance(backends, list) or not backends:
+        errors.append("blueprint.json: 'backends' deve essere una lista non vuota")
+        backends = []
+    default_backend = bp.get("default_backend", "")
+    if backends and default_backend not in backends:
+        errors.append(f"'default_backend' ({default_backend!r}) non è in backends {backends}")
+    tgb = bp.get("tool_groups_by_backend") or {}
+    for b in backends:
+        if b not in tgb:
+            warnings.append(f"tool_groups_by_backend: manca la chiave '{b}' "
+                            "(fallback 'cms,analytics,social')")
+
+    pod = bp.get("pod")
+    if not isinstance(pod, list) or not pod:
+        errors.append("blueprint.json: 'pod' deve essere una lista di ruoli non vuota")
+        pod = []
+    lead_role = bp.get("lead_role", "lead")
+    if pod and lead_role not in pod:
+        errors.append(f"'lead_role' ({lead_role!r}) non è nel pod {pod}")
+
+    # --- agents/<role>.json (lo scaffold SALTA in silenzio i template mancanti:
+    # qui è un errore, altrimenti il pod nasce monco)
+    for role in pod:
+        tmpl = bp_dir / "agents" / f"{role}.json"
+        if not tmpl.is_file():
+            errors.append(f"agents/{role}.json mancante (il ruolo verrebbe saltato)")
+            continue
+        try:
+            cfg = json.loads(_subst(tmpl.read_text(encoding="utf-8"), _DUMMY_MAPPING))
+        except Exception as e:
+            errors.append(f"agents/{role}.json non parseabile dopo i placeholder: {e}")
+            continue
+        if not cfg.get("name"):
+            errors.append(f"agents/{role}.json: campo 'name' mancante")
+        if not cfg.get("role"):
+            warnings.append(f"agents/{role}.json: campo 'role' vuoto (l'agente non sa cosa fa)")
+        if not cfg.get("allowed_tools"):
+            warnings.append(f"agents/{role}.json: 'allowed_tools' vuoto (nessun tool MCP)")
+
+    # --- vault.schema.env (lo scaffold lo legge INCONDIZIONATAMENTE: senza, crash)
+    vault = bp_dir / "vault.schema.env"
+    if not vault.is_file():
+        errors.append("vault.schema.env mancante (lo scaffold fallirebbe)")
+
+    # --- routines/*.yaml
+    routines_dir = bp_dir / "routines"
+    if routines_dir.is_dir():
+        try:
+            import yaml  # noqa: PLC0415
+        except Exception:
+            yaml = None
+            warnings.append("pyyaml non disponibile: routine non validate")
+        if yaml:
+            for f in sorted(routines_dir.glob("*.yaml")):
+                try:
+                    yaml.safe_load(_subst(f.read_text(encoding="utf-8"), _DUMMY_MAPPING))
+                except Exception as e:
+                    errors.append(f"routines/{f.name}: YAML non valido: {e}")
+
+    # --- content/ (opzionale, ma la triade è consigliata)
+    content = bp_dir / "content"
+    if content.is_dir():
+        for fname in ("ESPERTO.md", "BRAND.md", "PIANO.md"):
+            if not (content / fname).is_file():
+                warnings.append(f"content/{fname} mancante (il brand nasce senza)")
+    else:
+        warnings.append("content/ assente: il workspace nasce senza triade brand")
+
+    return {"ok": not errors, "origin": origin, "errors": errors, "warnings": warnings}

@@ -977,6 +977,23 @@ async def api_blueprints():
     return JSONResponse({"blueprints": blueprint_scaffold.list_blueprints(HUB_PATH)})
 
 
+@app.post("/api/blueprints/{name}/validate")
+async def api_blueprint_validate(request: Request, name: str):
+    """F-BlueprintForge Step A: schema-check deterministico di un blueprint
+    (hub o built-in) senza istanziarlo. Per gli agent che ne creano di nuovi
+    in <hub>/blueprints/: scrivi → valida → istanzia."""
+    if not HUB_PATH:
+        raise HTTPException(400, "hub not configured")
+    _require_admin(request)
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", name):
+        raise HTTPException(400, "nome blueprint non valido")
+    try:
+        import blueprint_scaffold
+    except Exception as e:
+        raise HTTPException(500, f"blueprint_scaffold missing: {e}")
+    return JSONResponse({"name": name, **blueprint_scaffold.validate_blueprint(name, HUB_PATH)})
+
+
 @app.post("/api/workspaces/from-blueprint")
 async def api_workspaces_from_blueprint(request: Request, payload: dict = Body(...)):
     """Istanzia un workspace-brand da un blueprint (F-WorkspaceBlueprint).

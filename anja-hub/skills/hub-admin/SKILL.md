@@ -99,9 +99,14 @@ api("PATCH", "/api/agents/fin-analyst", body={
 |------|---------------|
 | Lista | `GET /api/workspaces` |
 | Dettaglio (path, agents/routines/goals interni, config) | `GET /api/workspaces/{name}` |
-| Crea | `POST /api/workspaces/create` |
+| Crea (base) | `POST /api/workspaces/create` |
+| Crea da blueprint (pod completo) | `POST /api/workspaces/from-blueprint` body `{brand_name, blueprint?, backend?, ecommerce?}` |
+| Blueprint disponibili | `GET /api/blueprints` |
+| Valida un blueprint (prima di istanziare o dopo averne creato uno) | `POST /api/blueprints/{name}/validate` |
 | Archivia | `POST /api/workspaces/{name}/archive` |
 | Elimina | `POST /api/workspaces/{name}/delete` ⚠️ confirm |
+
+Per PROGETTARE un blueprint nuovo (formato, pod, workflow): `skill.load("blueprint-authoring")`.
 
 ### Goal
 

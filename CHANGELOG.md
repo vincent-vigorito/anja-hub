@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ## [Unreleased]
 
+### Added
+
+- **Blueprint authoring (Forge, step 1)**: agents can now design and create
+  new workspace blueprints in `<hub>/blueprints/` — `blueprint-authoring`
+  skill documents the full format, and `POST /api/blueprints/{name}/validate`
+  runs a deterministic schema check (pod/agents/vault/routines) before
+  instantiating. Validator covered by `tests/blueprint_validate_test.py`.
+
 ### Fixed
 
 - Hub home / sidebar "+ Add" buttons now open the blueprint Marketplace

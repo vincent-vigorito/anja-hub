@@ -5552,8 +5552,10 @@ function app() {
       this.refreshIcons();
     },
 
-    addProjectStub() {
-      alert('In M2/M3, this will open the "/anja-register" wizard. For now: run it from the terminal.');
+    addProject() {
+      // Creazione workspace = Marketplace (blueprint gallery); i progetti dev
+      // esterni si registrano con /anja-register da Claude Code.
+      this.openMarketplace();
     },
 
     addRoutineStub() {

@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ## [Unreleased]
 
+### Fixed
+
+- Hub home / sidebar "+ Add" buttons now open the blueprint Marketplace
+  instead of a legacy alert stub.
+
 ## [0.9.0] — 2026-08-15
 
 First public release 🎉 — Anja Hub goes fully open source under MIT

@@ -125,7 +125,7 @@
             <span>Projects</span>
             <span class="text-mono" style="text-transform: none; color: var(--text-3); margin-left: 4px;" x-text="`(${projects.length})`"></span>
           </div>
-          <button class="sidebar__section-action" @click.stop="addProjectStub()">+ Add</button>
+          <button class="sidebar__section-action" @click.stop="addProject()">+ Add</button>
         </div>
         <div class="sidebar__section-content">
           <template x-if="loading.registry">
@@ -184,7 +184,7 @@
             </div>
           </template>
 
-          <div class="sidebar__add-project" @click="addProjectStub()">
+          <div class="sidebar__add-project" @click="addProject()">
             <i data-lucide="plus-circle" class="icon icon--sm"></i>
             <span>Add project</span>
           </div>
@@ -761,7 +761,7 @@
           <!-- KIT: workspaces come product-card (no albero, ci si entra) -->
           <div class="dash-section">
             <div class="dash-section-title">Workspaces</div>
-            <button class="btn btn--ghost btn--xs" @click="addProjectStub()"><i data-lucide="plus" class="icon icon--sm"></i> Add</button>
+            <button class="btn btn--ghost btn--xs" @click="addProject()"><i data-lucide="plus" class="icon icon--sm"></i> Add</button>
           </div>
           <template x-if="!loading.registry && projects.length === 0">
             <div class="empty-state" style="padding: var(--s-6);">
@@ -799,7 +799,7 @@
                     Workspaces
                     <span class="panel__title-count" x-text="`(${projects.length})`"></span>
                   </div>
-                  <button class="btn btn--ghost btn--xs" @click="addProjectStub()">+ Add</button>
+                  <button class="btn btn--ghost btn--xs" @click="addProject()">+ Add</button>
                 </div>
 
                 <template x-if="loading.registry">

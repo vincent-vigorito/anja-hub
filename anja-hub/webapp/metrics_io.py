@@ -410,18 +410,18 @@ def seed_demo(db_path: Path, site: str = "example.com", days: int = 90) -> dict:
         today = datetime.date.today()
         # query: (testo, pos_base, drift_su_90gg, imp_giornaliere_medie, ctr_decimale)
         queries = [
-            ("dati raccolti", 15.5, -3.5, 2.2, 0.0),                # quick-win + mover up
-            ("raccolta dati riservati", 8.5, -4.0, 0.7, 0.0),       # mover up
-            ("ai tag html semantico", 9.0, 4.5, 0.9, 0.0),          # mover down (8→13)
-            ("firewall gestito pmi", 13.0, 3.5, 0.8, 0.02),         # mover down
-            ("piattaforme digitali custom", 9.5, 4.0, 0.4, 0.0),    # mover down (scivola)
-            ("automazione customer service crm", 12.0, -3.5, 0.5, 0.0),  # mover up
-            ("dpo obbligatorio aziende", 6.0, -0.5, 1.1, 0.0),      # pos<=7, 0 click → anomalia CTR
-            ("consenso cookie gdpr", 5.5, 0.3, 0.9, 0.0),           # anomalia CTR
-            ("pulsante recesso ecommerce 2026", 4.5, -1.0, 1.4, 0.06),   # ben posizionato, click
-            ("costo sito web professionale", 16.0, -3.5, 0.6, 0.0),  # mover up
-            ("checklist gdpr marketing", 18.0, 0.5, 0.5, 0.0),
-            ("sito web custom vs wordpress", 11.0, 3.5, 0.4, 0.0),   # mover down
+            ("zaino trekking 40 litri", 15.5, -3.5, 2.2, 0.0),          # quick-win + mover up
+            ("zaino impermeabile viaggio", 8.5, -4.0, 0.7, 0.0),        # mover up
+            ("scarpe trail running uomo", 9.0, 4.5, 0.9, 0.0),          # mover down (8→13)
+            ("bastoncini trekking carbonio", 13.0, 3.5, 0.8, 0.02),     # mover down
+            ("giacca antivento leggera", 9.5, 4.0, 0.4, 0.0),           # mover down (scivola)
+            ("borraccia termica 1 litro", 12.0, -3.5, 0.5, 0.0),        # mover up
+            ("tenda 2 posti ultraleggera", 6.0, -0.5, 1.1, 0.0),        # pos<=7, 0 click → anomalia CTR
+            ("sacco a pelo invernale", 5.5, 0.3, 0.9, 0.0),             # anomalia CTR
+            ("kit pronto soccorso escursione", 4.5, -1.0, 1.4, 0.06),   # ben posizionato, click
+            ("lampada frontale ricaricabile", 16.0, -3.5, 0.6, 0.0),    # mover up
+            ("guanti trekking impermeabili", 18.0, 0.5, 0.5, 0.0),
+            ("fornello campeggio gas", 11.0, 3.5, 0.4, 0.0),            # mover down
         ]
         channels = [("Direct", 0.5), ("Referral", 0.2), ("Organic Search", 0.25), ("Social", 0.05)]
 

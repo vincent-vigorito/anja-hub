@@ -11,6 +11,8 @@ isolation, and multi-LLM support — built on the
 > author, but the public API and setup flow are still stabilizing. UI and
 > agent prompts are currently Italian-first; i18n contributions welcome.
 
+![Mission Control](docs/screenshots/mission-control.png)
+
 ## What it does
 
 - **Mission Control** — web app with multi-pane chat (Claude subscription via
@@ -41,6 +43,12 @@ isolation, and multi-LLM support — built on the
   zero-friction default.
 - **Governance** — cost tracking, decision trail, self-health monitoring,
   encrypted secrets vault, backup/restore with memory time-machine.
+
+## Screenshots
+
+| Workspace statistics (demo data) | Blueprint marketplace |
+|---|---|
+| ![Statistics](docs/screenshots/workspace-stats.png) | ![Blueprints](docs/screenshots/blueprint-gallery.png) |
 
 ## Requirements
 

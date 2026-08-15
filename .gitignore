@@ -30,3 +30,6 @@ anja-hub/webapp/uploads/
 # Scratch (spesso contengono segreti incollati)
 paste.txt
 open.txt
+
+# Anja dev wiki (dogfooding locale — mai nel repo pubblico)
+.anjawiki/

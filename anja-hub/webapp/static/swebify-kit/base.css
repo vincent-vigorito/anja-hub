@@ -1,0 +1,102 @@
+/* base.css - Struttura base */
+/* Reset di base (normalizzazione cross-browser) */
+
+*, ::before, ::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  touch-action: manipulation;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  color: var(--sw-slate-600);
+  background: linear-gradient(to bottom right, #f8fafc, #ffffff, #f1f5f9) fixed;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul, ol, menu {
+  list-style: none;
+}
+
+button, [role="button"] {
+  cursor: pointer;
+  background-color: transparent;
+  border: 0;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+input, textarea, select, button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+input, textarea, select {
+  background-color: transparent;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+img, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+
+/* Screen reader only - accessibilità */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

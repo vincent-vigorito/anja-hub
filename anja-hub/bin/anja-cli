@@ -1,0 +1,348 @@
+#!/usr/bin/env python3
+"""
+anja-cli — Hub management CLI.
+
+Comandi:
+    anja-cli routine list
+    anja-cli routine get <name>
+    anja-cli routine create -f <yaml-file>
+    anja-cli routine update <name> [--prompt-file <f>|--prompt <txt>] [--schedule "<cron>"] [--field key=val]...
+    anja-cli routine toggle <name> [--on|--off]
+    anja-cli routine run <name>
+    anja-cli routine status <name>
+    anja-cli agent list
+    anja-cli agent get <name>
+    anja-cli agent delete <name> --yes
+    anja-cli workspace list
+    anja-cli workspace create <name> [--description "..."]
+    anja-cli workspace archive <name>
+    anja-cli goal list
+    anja-cli skill list
+    anja-cli api <METHOD> <PATH> [--body '<json>'] [--query key=val]...
+    anja-cli openapi [--paths-only]
+
+Env:
+    ANJA_API_BASE = base URL (default http://127.0.0.1:8765)
+
+Stdlib only.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+from typing import Any, Optional
+
+
+DEFAULT_BASE = os.environ.get("ANJA_API_BASE", "http://127.0.0.1:8765")
+
+
+def http(method: str, path: str, body: Any = None, query: Optional[dict] = None,
+         timeout: int = 30) -> tuple[int, Any]:
+    """Chiamata HTTP all'API. Ritorna (status_code, parsed_json|str)."""
+    url = DEFAULT_BASE.rstrip("/") + path
+    if query:
+        url += "?" + urllib.parse.urlencode(query, doseq=True)
+    data = None
+    headers = {"Accept": "application/json"}
+    if body is not None:
+        data = json.dumps(body).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+    req = urllib.request.Request(url, data=data, method=method.upper(), headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+            try:
+                return resp.getcode(), json.loads(raw) if raw else None
+            except json.JSONDecodeError:
+                return resp.getcode(), raw
+    except urllib.error.HTTPError as e:
+        raw = e.read().decode("utf-8", errors="replace")
+        try:
+            return e.code, json.loads(raw)
+        except json.JSONDecodeError:
+            return e.code, raw
+    except urllib.error.URLError as e:
+        return 0, f"connection error: {e.reason} (is webapp running on {DEFAULT_BASE}?)"
+
+
+def print_result(code: int, body: Any) -> int:
+    if isinstance(body, (dict, list)):
+        print(json.dumps(body, indent=2, ensure_ascii=False))
+    else:
+        print(body)
+    return 0 if 200 <= code < 300 else 1
+
+
+# =================================================================
+# routine subcommands
+# =================================================================
+
+def cmd_routine_list(args):
+    code, body = http("GET", "/api/routines")
+    return print_result(code, body)
+
+
+def cmd_routine_get(args):
+    code, body = http("GET", f"/api/routines/{args.name}")
+    return print_result(code, body)
+
+
+def cmd_routine_create(args):
+    yaml_content = open(args.file).read() if args.file else sys.stdin.read()
+    # POST accepts yaml as text in body field 'yaml_content' or full dict?
+    # Backend espone POST /api/routines con body JSON dict campi routine.
+    # Per --file YAML: parsa lato CLI (mini parser stdlib) o lascia all'utente JSON.
+    try:
+        # tenta JSON prima
+        body = json.loads(yaml_content)
+    except json.JSONDecodeError:
+        print("ERROR: input must be JSON. Use --json-file invece di --yaml-file, oppure converti yaml→json.", file=sys.stderr)
+        return 2
+    code, resp = http("POST", "/api/routines", body=body)
+    return print_result(code, resp)
+
+
+def cmd_routine_update(args):
+    """PATCH /api/routines/{name} — merge-style, solo i campi nel body cambiano."""
+    patch = {}
+    if args.prompt is not None:
+        patch["prompt"] = args.prompt
+    if args.prompt_file:
+        patch["prompt"] = open(args.prompt_file).read()
+    if args.schedule:
+        patch["schedule"] = args.schedule
+    if args.field:
+        for kv in args.field:
+            k, _, v = kv.partition("=")
+            try:
+                patch[k.strip()] = json.loads(v)
+            except json.JSONDecodeError:
+                patch[k.strip()] = v
+    if not patch:
+        print("ERROR: no field to update. Use --prompt, --schedule, or --field key=val", file=sys.stderr)
+        return 2
+    return print_result(*http("PATCH", f"/api/routines/{args.name}", body=patch))
+
+
+def cmd_routine_toggle(args):
+    enabled = True if args.on else (False if args.off else None)
+    if enabled is None:
+        print("ERROR: --on or --off required", file=sys.stderr)
+        return 2
+    code, body = http("POST", f"/api/routines/{args.name}/toggle", body={"enabled": enabled})
+    return print_result(code, body)
+
+
+def cmd_routine_run(args):
+    code, body = http("POST", f"/api/routines/{args.name}/run")
+    return print_result(code, body)
+
+
+def cmd_routine_status(args):
+    code, body = http("GET", f"/api/routines/{args.name}/status")
+    return print_result(code, body)
+
+def cmd_routine_delete(args):
+    if not args.yes:
+        print("ERROR: --yes required for delete", file=sys.stderr); return 2
+    return print_result(*http("DELETE", f"/api/routines/{args.name}"))
+
+
+# =================================================================
+# agent / workspace / goal / skill — getter base
+# =================================================================
+
+def cmd_agent_list(_): return print_result(*http("GET", "/api/agents"))
+def cmd_agent_get(args): return print_result(*http("GET", f"/api/agents/{args.name}"))
+def cmd_agent_delete(args):
+    if not args.yes:
+        print("ERROR: --yes required for delete", file=sys.stderr); return 2
+    return print_result(*http("DELETE", f"/api/agents/{args.name}"))
+def cmd_agent_update(args):
+    patch = {}
+    if args.soul_file: patch["soul_md"] = open(args.soul_file).read()
+    if args.agents_file: patch["agents_md"] = open(args.agents_file).read()
+    if args.config:
+        cfg = {}
+        for kv in args.config:
+            k, _, v = kv.partition("=")
+            try: cfg[k.strip()] = json.loads(v)
+            except json.JSONDecodeError: cfg[k.strip()] = v
+        patch["config_patch"] = cfg
+    if not patch:
+        print("ERROR: nothing to update (--soul-file/--agents-file/--config k=v)", file=sys.stderr); return 2
+    return print_result(*http("PATCH", f"/api/agents/{args.name}", body=patch))
+
+def cmd_workspace_list(_): return print_result(*http("GET", "/api/workspaces"))
+def cmd_workspace_get(args): return print_result(*http("GET", f"/api/workspaces/{args.name}"))
+def cmd_workspace_create(args):
+    body = {"name": args.name}
+    if args.description: body["description"] = args.description
+    return print_result(*http("POST", "/api/workspaces/create", body=body))
+def cmd_workspace_archive(args):
+    return print_result(*http("POST", f"/api/workspaces/{args.name}/archive"))
+
+def cmd_goal_list(_): return print_result(*http("GET", "/api/goals"))
+def cmd_skill_list(_): return print_result(*http("GET", "/api/skills"))
+def cmd_skill_update(args):
+    body = {"content": open(args.file).read(), "scope": args.scope}
+    return print_result(*http("PATCH", f"/api/skills/{args.name}", body=body))
+
+
+def cmd_sources_list(args):
+    return print_result(*http("GET", "/api/sources/list", query={"scope": args.scope, "target": args.target}))
+
+def cmd_sources_add(args):
+    body = {"scope": args.scope, "target": args.target, "topic": args.topic}
+    if args.url:
+        body.update({"mode": "url", "url": args.url})
+        if args.filename: body["filename"] = args.filename
+    elif args.file:
+        import base64
+        with open(args.file, "rb") as f:
+            body.update({"mode": "inline", "filename": args.filename or args.file.rsplit("/", 1)[-1], "content_b64": base64.b64encode(f.read()).decode()})
+    else:
+        print("ERROR: --url or --file required", file=sys.stderr); return 2
+    return print_result(*http("POST", "/api/sources/add", body=body))
+
+def cmd_sources_delete(args):
+    if not args.yes:
+        print("ERROR: --yes required", file=sys.stderr); return 2
+    return print_result(*http("DELETE", "/api/sources/file", query={"scope": args.scope, "target": args.target, "topic": args.topic, "filename": args.filename}))
+
+def cmd_sources_pending(args):
+    return print_result(*http("GET", "/api/sources/pending", query={"scope": args.scope, "target": args.target}))
+
+
+# =================================================================
+# api passthrough (per casi non coperti)
+# =================================================================
+
+def cmd_api(args):
+    body = json.loads(args.body) if args.body else None
+    query = None
+    if args.query:
+        query = {}
+        for kv in args.query:
+            k, _, v = kv.partition("=")
+            query[k.strip()] = v
+    return print_result(*http(args.method, args.path, body=body, query=query))
+
+
+def cmd_openapi(args):
+    code, body = http("GET", "/openapi.json")
+    if args.paths_only and isinstance(body, dict):
+        print(json.dumps(sorted(body.get("paths", {}).keys()), indent=2))
+        return 0
+    return print_result(code, body)
+
+
+# =================================================================
+# argparse setup
+# =================================================================
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(prog="anja-cli", description="Hub management CLI")
+    p.add_argument("--base", default=None, help=f"API base URL (default {DEFAULT_BASE} or $ANJA_API_BASE)")
+    sub = p.add_subparsers(dest="entity", required=True)
+
+    # routine
+    r = sub.add_parser("routine")
+    rs = r.add_subparsers(dest="action", required=True)
+    rs.add_parser("list").set_defaults(func=cmd_routine_list)
+    g = rs.add_parser("get"); g.add_argument("name"); g.set_defaults(func=cmd_routine_get)
+    c = rs.add_parser("create"); c.add_argument("-f", "--file", help="JSON file (or stdin)"); c.set_defaults(func=cmd_routine_create)
+    u = rs.add_parser("update"); u.add_argument("name")
+    u.add_argument("--prompt"); u.add_argument("--prompt-file")
+    u.add_argument("--schedule")
+    u.add_argument("--field", action="append", help="key=value (val JSON-parsed if possible)")
+    u.set_defaults(func=cmd_routine_update)
+    t = rs.add_parser("toggle"); t.add_argument("name")
+    t.add_argument("--on", action="store_true"); t.add_argument("--off", action="store_true")
+    t.set_defaults(func=cmd_routine_toggle)
+    run = rs.add_parser("run"); run.add_argument("name"); run.set_defaults(func=cmd_routine_run)
+    st = rs.add_parser("status"); st.add_argument("name"); st.set_defaults(func=cmd_routine_status)
+    rd = rs.add_parser("delete"); rd.add_argument("name"); rd.add_argument("--yes", action="store_true")
+    rd.set_defaults(func=cmd_routine_delete)
+
+    # agent
+    a = sub.add_parser("agent")
+    as_ = a.add_subparsers(dest="action", required=True)
+    as_.add_parser("list").set_defaults(func=cmd_agent_list)
+    ag = as_.add_parser("get"); ag.add_argument("name"); ag.set_defaults(func=cmd_agent_get)
+    au = as_.add_parser("update"); au.add_argument("name")
+    au.add_argument("--soul-file"); au.add_argument("--agents-file")
+    au.add_argument("--config", action="append", help="key=value (val JSON-parsed if possible)")
+    au.set_defaults(func=cmd_agent_update)
+    ad = as_.add_parser("delete"); ad.add_argument("name"); ad.add_argument("--yes", action="store_true")
+    ad.set_defaults(func=cmd_agent_delete)
+
+    # workspace
+    w = sub.add_parser("workspace")
+    ws = w.add_subparsers(dest="action", required=True)
+    ws.add_parser("list").set_defaults(func=cmd_workspace_list)
+    wg = ws.add_parser("get"); wg.add_argument("name"); wg.set_defaults(func=cmd_workspace_get)
+    wc = ws.add_parser("create"); wc.add_argument("name"); wc.add_argument("--description")
+    wc.set_defaults(func=cmd_workspace_create)
+    wa = ws.add_parser("archive"); wa.add_argument("name"); wa.set_defaults(func=cmd_workspace_archive)
+
+    # goal
+    g = sub.add_parser("goal")
+    gs = g.add_subparsers(dest="action", required=True)
+    gs.add_parser("list").set_defaults(func=cmd_goal_list)
+
+    # skill
+    sk = sub.add_parser("skill")
+    sks = sk.add_subparsers(dest="action", required=True)
+    sks.add_parser("list").set_defaults(func=cmd_skill_list)
+    su = sks.add_parser("update"); su.add_argument("name"); su.add_argument("--file", required=True)
+    su.add_argument("--scope", default="hub", choices=["hub", "user-global"])
+    su.set_defaults(func=cmd_skill_update)
+
+    # sources (F-RawUI)
+    so = sub.add_parser("sources")
+    sos = so.add_subparsers(dest="action", required=True)
+    sl = sos.add_parser("list"); sl.add_argument("--scope", default="project"); sl.add_argument("--target", required=True)
+    sl.set_defaults(func=cmd_sources_list)
+    sa = sos.add_parser("add"); sa.add_argument("--scope", default="project"); sa.add_argument("--target", required=True)
+    sa.add_argument("--topic", required=True); sa.add_argument("--url"); sa.add_argument("--file"); sa.add_argument("--filename")
+    sa.set_defaults(func=cmd_sources_add)
+    sd = sos.add_parser("delete"); sd.add_argument("--scope", default="project"); sd.add_argument("--target", required=True)
+    sd.add_argument("--topic", required=True); sd.add_argument("--filename", required=True); sd.add_argument("--yes", action="store_true")
+    sd.set_defaults(func=cmd_sources_delete)
+    sp = sos.add_parser("pending"); sp.add_argument("--scope", default="project"); sp.add_argument("--target", required=True)
+    sp.set_defaults(func=cmd_sources_pending)
+
+    # api passthrough
+    ap = sub.add_parser("api", help="Raw HTTP call (any endpoint)")
+    ap.add_argument("method", choices=["GET", "POST", "PATCH", "PUT", "DELETE"])
+    ap.add_argument("path", help="es. /api/routines")
+    ap.add_argument("--body", help="JSON string")
+    ap.add_argument("--query", action="append", help="key=value")
+    ap.set_defaults(func=cmd_api)
+
+    # openapi
+    op = sub.add_parser("openapi", help="Fetch OpenAPI schema for discovery")
+    op.add_argument("--paths-only", action="store_true", help="Print only sorted list of paths")
+    op.set_defaults(func=cmd_openapi)
+
+    return p
+
+
+def main():
+    parser = build_parser()
+    args = parser.parse_args()
+    if args.base:
+        global DEFAULT_BASE
+        DEFAULT_BASE = args.base
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

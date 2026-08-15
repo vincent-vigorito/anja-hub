@@ -1,0 +1,17 @@
+{
+  "name": "anja-routines",
+  "version": "0.1.0",
+  "description": "Agenti autonomi schedulati per anja. Daemon always-on + runner + tool actions (email/slack/google_chat/wiki_ingest). Routine yaml nel hub con scope dichiarativo (hub | project:<name>).",
+  "keywords": [
+    "anja",
+    "routines",
+    "automation",
+    "scheduler",
+    "agents",
+    "cron"
+  ],
+  "author": {
+    "name": "Vincent Vigorito",
+    "email": "vincent-vigorito@users.noreply.github.com"
+  }
+}

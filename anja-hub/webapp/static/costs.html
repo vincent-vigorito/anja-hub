@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>anja · Costi</title>
+<style>
+  :root { --bg:#f7fafc; --card:#ffffff; --line:#e3e8ee; --fg:#1a1f36; --mut:#697386; --acc:#0b887b; --warn:#e11d48; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.5 -apple-system,system-ui,sans-serif; padding:24px; }
+  h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--mut); font-size:12px; margin-bottom:20px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+  .card { background:var(--card); border:1px solid #ebeff3; border-radius:8px; padding:16px; box-shadow:0 2px 5px 0 rgba(18,42,66,.04), 0 0 0 1px rgba(18,42,66,.06); }
+  .card h2 { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--mut); margin:0 0 12px; }
+  .big { font-size:32px; font-weight:600; } .big small { font-size:14px; color:var(--mut); font-weight:400; }
+  table { width:100%; border-collapse:collapse; } td,th { text-align:left; padding:6px 4px; border-bottom:1px solid var(--line); font-size:13px; }
+  th { color:var(--mut); font-weight:500; } td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  .bar { height:8px; background:#eaeef3; border-radius:4px; overflow:hidden; margin-top:3px; }
+  .bar > i { display:block; height:100%; background:var(--acc); }
+  .trend { display:flex; align-items:flex-end; gap:3px; height:80px; }
+  .trend > div { flex:1; background:var(--acc); border-radius:2px 2px 0 0; min-height:2px; opacity:.85; }
+  .muted { color:var(--mut); font-size:12px; } .over { color:var(--warn); }
+  input { background:#ffffff; border:1px solid var(--line); color:var(--fg); border-radius:6px; padding:5px 8px; width:90px; }
+  input:focus { outline:none; border-color:var(--acc); box-shadow:0 0 0 3px rgba(11,136,123,.12); }
+  button { background:var(--acc); border:0; color:#ffffff; border-radius:6px; padding:5px 12px; cursor:pointer; font-weight:600; }
+  .row { display:flex; align-items:center; gap:8px; margin-bottom:8px; } .row label { flex:1; }
+  a { color:var(--acc); }
+</style>
+</head>
+<body>
+  <h1>ᛗ Costi LLM</h1>
+  <div class="sub">M-CostObservability · spesa token/$ per provider · feature · giorno — <span id="range"></span></div>
+  <div class="grid">
+    <div class="card"><h2>Oggi</h2><div class="big" id="today">—</div><div class="muted" id="unpriced"></div></div>
+    <div class="card"><h2>Per provider</h2><table id="byprov"><tbody></tbody></table></div>
+    <div class="card"><h2>Per feature</h2><table id="byfeat"><tbody></tbody></table></div>
+    <div class="card"><h2>Trend giornaliero</h2><div class="trend" id="trend"></div><div class="muted" id="trendlbl"></div></div>
+    <div class="card"><h2>Budget cap (giornalieri)</h2><div id="budgets"></div>
+      <div class="row" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+        <input id="bf" placeholder="feature" style="width:120px">
+        <input id="bc" placeholder="$/giorno" type="number" step="0.5">
+        <button onclick="setBudget()">Salva</button>
+      </div>
+      <div class="muted">feature: chat · coding · routine · heartbeat · dialectic · commitment · judge · summarize · <b>_total</b></div>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:20px"><a href="/">← Mission Control</a> · i prezzi sono in <code>&lt;hub&gt;/config/pricing.json</code> (default editabili)</p>
+
+<script>
+const $ = s => document.querySelector(s);
+const usd = n => "$" + (Number(n)||0).toFixed(n >= 1 ? 2 : 4);
+const esc = s => (s==null?"":String(s)).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function load() {
+  const s = await fetch("/api/costs/summary?days=7").then(r => r.json()).catch(() => null);
+  if (!s) { $("#today").textContent = "errore"; return; }
+  $("#range").textContent = `ultimi ${s.range_days||7} giorni`;
+  $("#today").innerHTML = usd(s.today) + " <small>oggi</small>";
+  $("#unpriced").textContent = s.unpriced_calls ? `⚠ ${s.unpriced_calls} chiamate senza prezzo (aggiorna pricing.json)` : "";
+
+  const maxP = Math.max(...(s.by_provider||[]).map(p => p.cost), 0.0001);
+  $("#byprov").querySelector("tbody").innerHTML = (s.by_provider||[]).map(p =>
+    `<tr><td>${p.provider?esc(p.provider):"<i>?</i>"}</td><td class="n">${usd(p.cost)}<div class="bar"><i style="width:${100*p.cost/maxP}%"></i></div></td></tr>`).join("") || `<tr><td class="muted">nessun dato</td></tr>`;
+
+  const maxF = Math.max(...(s.by_feature||[]).map(f => f.cost), 0.0001);
+  $("#byfeat").querySelector("tbody").innerHTML = (s.by_feature||[]).map(f =>
+    `<tr><td>${esc(f.feature)}</td><td class="n">${usd(f.cost)}<div class="bar"><i style="width:${100*f.cost/maxF}%"></i></div></td></tr>`).join("") || `<tr><td class="muted">nessun dato</td></tr>`;
+
+  const days = s.by_day||[];
+  const maxD = Math.max(...days.map(d => d.cost), 0.0001);
+  $("#trend").innerHTML = days.map(d => `<div title="${esc(d.day)}: ${usd(d.cost)}" style="height:${Math.max(2,100*d.cost/maxD)}%"></div>`).join("");
+  $("#trendlbl").textContent = days.length ? `${days[0].day} → ${days[days.length-1].day}` : "nessun dato";
+
+  $("#budgets").innerHTML = (s.budgets||[]).map(b =>
+    `<div class="row"><label>${esc(b.feature)}</label><span class="${b.over?'over':''}">${usd(b.spent)} / ${usd(b.cap)}${b.over?' ⚠':''}</span></div>`).join("") || `<div class="muted">nessun cap impostato</div>`;
+}
+async function setBudget() {
+  const feature = $("#bf").value.trim(); const cap = parseFloat($("#bc").value);
+  if (!feature) return;
+  await fetch("/api/costs/budgets", {method:"PUT", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({feature, cap: isNaN(cap) ? 0 : cap})});
+  $("#bf").value = ""; $("#bc").value = ""; load();
+}
+load(); setInterval(load, 15000);
+</script>
+</body>
+</html>

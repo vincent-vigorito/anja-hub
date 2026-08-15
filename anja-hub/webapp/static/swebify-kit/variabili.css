@@ -1,0 +1,131 @@
+/* ============================================================
+   variabili.css — Design tokens Swebify
+   Allineati ai mock in da-implementare/ (palette brand turchese + ink Stripe-like).
+   Nessun font esterno: --font-sans/--font-mono in font.css usano solo system stack.
+   ============================================================ */
+
+:root {
+    /* === Brand (turchese) === */
+    --brand-50:  #edfefb;
+    --brand-100: #d2fcf4;
+    --brand-200: #a9f8eb;
+    --brand-300: #6ef0de;
+    --brand-400: #28ebcf;
+    --brand-500: #0fd4ba;
+    --brand-600: #08ab98;
+    --brand-700: #0b887b;
+    --brand-800: #0e6c63;
+    --brand-900: #115952;
+    --brand:       var(--brand-700);
+    --brand-hover: var(--brand-600);
+    --brand-soft:  #e0faf5;
+
+    /* === Ink (grigi neutri Stripe-like) === */
+    --ink-50:  #f7fafc;
+    --ink-100: #f0f4f9;
+    --ink-200: #e3e8ee;
+    --ink-300: #c1c9d2;
+    --ink-400: #8792a2;
+    --ink-500: #697386;
+    --ink-600: #4f566b;
+    --ink-700: #3c4257;
+    --ink-800: #2a2f45;
+    --ink-900: #1a1f36;
+
+    /* === Background & borders === */
+    --bg:          #ffffff;
+    --bg-sidebar:  #ffffff;
+    --bg-subtle:   #f7fafc;
+    --bg-hover:    #f0f4f9;
+    --border:      #e3e8ee;
+    --border-soft: #ebeff3;
+
+    /* === Semantic === */
+    --success:    #0e6245;
+    --success-bg: #cbf4c9;
+    --warn:       #983705;
+    --warn-bg:    #f8e5b9;
+    --danger:     #a41c4e;
+    --danger-bg:  #fde2dd;
+    --info:       #0f6fde;
+    --info-bg:    #cce5ff;
+
+    /* === Shadows === */
+    --shadow-xs: 0 1px 1px 0 rgba(18,42,66,0.02), 0 0 1px 0 rgba(18,42,66,0.1);
+    --shadow-sm: 0 2px 5px 0 rgba(18,42,66,0.04), 0 0 0 1px rgba(18,42,66,0.06);
+    --shadow-md: 0 15px 35px rgba(43,45,80,0.08), 0 5px 15px rgba(43,45,80,0.04), 0 0 0 1px rgba(18,42,66,0.06);
+
+    /* === Radius === */
+    --radius-sm: 5px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    /* ============================================================
+       Compatibilita' con kit swcss (alias --sw-* sui tokens sopra)
+       I componenti custom/*.css del kit usano questi nomi.
+       ============================================================ */
+
+    /* Primario app — di default brand, override-abile per pagina */
+    --sw-primario:       var(--brand);
+    --sw-primario-hover: var(--brand-hover);
+    --sw-primario-light: var(--brand-soft);
+
+    /* Stati semantici */
+    --sw-success:        var(--success);
+    --sw-success-light:  var(--success-bg);
+    --sw-success-border: #a7f3d0;
+
+    --sw-warning:        var(--warn);
+    --sw-warning-light:  var(--warn-bg);
+    --sw-warning-text:   var(--warn);
+    --sw-warning-border: #fde68a;
+
+    --sw-info:           var(--info);
+    --sw-info-light:     var(--info-bg);
+    --sw-info-border:    #bfdbfe;
+
+    --sw-alert:          var(--danger);
+    --sw-alert-light:    var(--danger-bg);
+    --sw-alert-text:     var(--danger);
+    --sw-alert-from:     var(--danger);
+    --sw-danger:         var(--danger);
+    --sw-danger-light:   var(--danger-bg);
+
+    /* Gray scale (mantenuto per componenti che la usano) */
+    --sw-gray-50:  #f9fafb;
+    --sw-gray-100: #f3f4f6;
+    --sw-gray-200: #e5e7eb;
+    --sw-gray-300: #d1d5db;
+    --sw-gray-400: #9ca3af;
+    --sw-gray-500: #6b7280;
+    --sw-gray-600: #4b5563;
+    --sw-gray-700: #374151;
+    --sw-gray-800: #1f2937;
+    --sw-gray-900: #111827;
+    --sw-gray-950: #030712;
+
+    /* Slate scale */
+    --sw-slate-50:  #f8fafc;
+    --sw-slate-100: #f1f5f9;
+    --sw-slate-200: #e2e8f0;
+    --sw-slate-300: #cbd5e1;
+    --sw-slate-400: #94a3b8;
+    --sw-slate-500: #64748b;
+    --sw-slate-600: #475569;
+    --sw-slate-700: #334155;
+    --sw-slate-800: #1e293b;
+    --sw-slate-900: #0f172a;
+    --sw-slate-950: #020617;
+
+    /* Neutri (alias per kit) */
+    --sw-neutro-bianco:        #ffffff;
+    --sw-neutro-scuro:         #000000;
+    --sw-testo:                var(--ink-700);
+    --sw-titoli:               var(--ink-900);
+    --sw-sfondo-sito:          var(--bg);
+    --sw-sfondo-box-selected:  var(--bg-subtle);
+    --sw-bordi-box:            var(--border);
+
+    /* Swebify e' monocromatico: nessuna palette per modulo.
+       --sw-primario punta al brand (turchese) globalmente. */
+}

@@ -1,0 +1,1244 @@
+/* ===========================================
+   SWCSS Custom - Badges
+   Status, priority, type, courier, category
+   =========================================== */
+
+/* === BADGE BASE (layout only, colori via style o varianti) === */
+.sw-badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.625rem;
+    border-radius: 0.5rem;
+    display: inline-block;
+    white-space: nowrap;
+}
+/* === SEMANTIC BADGES (sw-badge-*) === */
+.sw-badge-success,
+.sw-badge-info,
+.sw-badge-warning,
+.sw-badge-danger,
+.sw-badge-purple,
+.sw-badge-neutral,
+.sw-badge-rose,
+.sw-badge-cyan,
+.sw-badge-primary {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.625rem;
+    display: inline-block;
+}
+
+/* Size overrides (after semantic to win specificity) */
+.sw-badge-xs {
+    font-size: 0.625rem;
+    padding: 0.0625rem 0.4375rem;
+}
+.sw-badge-xxs {
+    font-size: 0.625rem;
+    font-weight: 500;
+    padding: 0.125rem 0.375rem;
+}
+/* Notification-style count badge (positioned absolute on parent) */
+.sw-badge-count {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 16px;
+    text-align: center;
+    display: inline-block;
+}
+.sw-badge-count-spedizioni {
+    background: var(--sw-spedizioni-light, #e0f2fe);
+    color: var(--sw-spedizioni);
+}
+.sw-badge-success { background-color: var(--sw-success-light); color: var(--sw-success); }
+.sw-badge-info { background-color: var(--sw-info-light); color: var(--sw-info); }
+.sw-badge-warning { background-color: var(--sw-warning-light); color: var(--sw-warning-text); }
+.sw-badge-danger { background-color: var(--sw-alert-light); color: var(--sw-alert-text); }
+.sw-badge-purple { background-color: var(--sw-progetti-light); color: var(--sw-progetti-hover); }
+.sw-badge-neutral { background-color: var(--sw-gray-100); color: var(--sw-gray-600); }
+.sw-badge-rose { background-color: var(--sw-whistleblower-light); color: var(--sw-whistleblower-hover); }
+.sw-badge-cyan { background-color: var(--sw-spedizioni-light); color: var(--sw-spedizioni-hover); }
+.sw-badge-amber { background-color: var(--sw-warning-light); color: var(--sw-warning-text); }
+.sw-badge-primary { background-color: color-mix(in srgb, var(--sw-primario) 12%, #ffffff); color: var(--sw-primario); }
+
+/* === STATUS BADGES === */
+[class^="status-"],
+[class*=" status-"] {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.625rem;
+    display: inline-block;
+}
+.status-attivo,
+.status-completato,
+.status-consegnato,
+.status-risolta {
+    background: #dcfce7;
+    color: #16a34a;
+}
+.status-pagato {
+    background: var(--sw-success-light);
+    color: var(--sw-success);
+}
+
+.status-inattivo,
+.status-archiviata,
+.status-annullato {
+    background: #f1f5f9;
+    color: #64748b;
+}
+.status-pubblicato {
+    background: #dcfce7;
+    color: #15803d;
+}
+.status-archiviato {
+    background: #fff7ed;
+    color: #c2410c;
+}
+.status-bozza {
+    background: var(--sw-st-bozza-light);
+    color: var(--sw-st-bozza);
+}
+
+.status-in-corso,
+.status-nuova,
+.status-in-transito {
+    background: #dbeafe;
+    color: #2563eb;
+}
+.status-nuovo {
+    background: var(--sw-st-nuovo-light);
+    color: var(--sw-st-nuovo);
+}
+
+.status-in-attesa,
+.status-in-lavorazione {
+    background: #fef3c7;
+    color: #d97706;
+}
+.status-parziale {
+    background: var(--sw-st-parziale-light);
+    color: var(--sw-st-parziale);
+}
+
+.status-bloccato,
+.status-scaduto,
+.status-problema {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-attesa-risposta {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+/* === STATUS BADGES - Activity (CRM) === */
+.status-completata {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-programmata {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-in_attesa {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-annullata {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* === STATUS BADGES - Documents (vendita/acquisto) === */
+.status-inviato {
+    background: var(--sw-st-inviato-light);
+    color: var(--sw-st-inviato);
+}
+
+.status-pagata {
+    background: var(--sw-success-light);
+    color: var(--sw-success);
+}
+
+.status-convertito {
+    background: var(--sw-st-convertito-light);
+    color: var(--sw-st-convertito);
+}
+
+.status-confermato {
+    background: var(--sw-st-confermato-light);
+    color: var(--sw-st-confermato);
+}
+
+.status-evaso {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-emessa {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-scaduta {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-non-pagata {
+    background: var(--sw-danger-light);
+    color: var(--sw-danger);
+}
+
+.status-rifiutato {
+    background: var(--sw-st-rifiutato-light);
+    color: var(--sw-st-rifiutato);
+}
+
+.status-in_approvazione,
+.status-in-approvazione {
+    background: var(--sw-st-parziale-light);
+    color: var(--sw-st-parziale);
+}
+
+.status-parzialmente-evaso,
+.status-parzialmente_evaso {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.status-fatturato_parziale,
+.status-fatturato-parziale {
+    background: var(--sw-st-parziale-light);
+    color: var(--sw-st-parziale);
+}
+
+.status-attesa {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+/* === HEADER BADGE (glass, inside gradient headers) === */
+.sw-badge-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.625rem;
+    line-height: 1.5;
+}
+.sw-badge-header .sw-badge-dot {
+    display: block;
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 0.5rem;
+    flex-shrink: 0;
+}
+.sw-badge-header.status-pagata .sw-badge-dot { background: #4ade80; }
+.sw-badge-header.status-parziale .sw-badge-dot { background: #fbbf24; }
+.sw-badge-header.status-non-pagata .sw-badge-dot { background: #fda4af; }
+
+/* Spedizioni status */
+.status-spedito {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-in-consegna {
+    background: #ccfbf1;
+    color: #0d9488;
+}
+
+.status-in-giacenza {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-creata {
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+
+.status-ritiro,
+.status-rientrato,
+.status-da-spedire,
+.status-da-ritirare {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-punto-ritiro {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+
+.status-ritirato {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+/* Ordini spedizioni status */
+.status-in-elaborazione {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-pronto {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-etichetta-creata {
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+
+.status-errore {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Storico spedizioni status */
+.status-prenotato {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+/* === STATUS BADGES - Supplier (fornitore/acquisti) === */
+.status-parz_ricevuto {
+    background: #ffedd5;
+    color: #ea580c;
+}
+
+.status-ricevuto {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-registrata {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-da_pagare {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-parz_pagata {
+    background: #fae8ff;
+    color: #c026d3;
+}
+
+.status-contestata {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-da_registrare {
+    background: var(--sw-st-confermato-light);
+    color: var(--sw-st-confermato);
+}
+
+.status-in_transito {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-chiuso {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.status-in_ritardo {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* === STATUS BADGES - RDA === */
+.status-approvata {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-rifiutata {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-evasa {
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+
+.status-parz_evasa {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+/* === STATUS BADGES - Fatture da registrare === */
+.status-da-registrare {
+    background: var(--sw-st-confermato-light);
+    color: var(--sw-st-confermato);
+}
+
+.status-associato {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-da-associare {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-scartata {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* === STATUS BADGES - Lead === */
+.status-suspect {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.status-lead {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-prospect {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-mql {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.status-sql {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.status-opportunity {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
+.status-sospeso {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* === STATUS BADGES - CRM Temperature === */
+.status-caldo {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-tiepido {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-freddo {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+/* Progetti status */
+.status-assegnato {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-in-verifica,
+.status-in_verifica {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+.status-in_corso {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-in_lavorazione {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+/* Inventario session status */
+.status-in_revisione {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+/* Inventario row status */
+.status-da-contare {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.status-contato {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-da-approvare {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-approvato {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-ignorato {
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
+/* === PRIORITY BADGES === */
+.priority-critica,
+.priority-alta,
+.priority-media,
+.priority-bassa {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.625rem;
+    display: inline-block;
+}
+
+.priority-critica,
+.priority-alta {
+    background: var(--sw-alert-light);
+    color: var(--sw-alert-text);
+}
+
+.priority-media {
+    background: var(--sw-warning-light);
+    color: var(--sw-warning-text);
+}
+
+.priority-bassa {
+    background: var(--sw-st-confermato-light);
+    color: var(--sw-st-confermato);
+}
+
+/* Priority (English) */
+.priority-high {
+    border-left-color: var(--sw-alert);
+}
+
+.priority-medium {
+    border-left-color: var(--sw-warning);
+}
+
+.priority-low {
+    border-left-color: var(--sw-success);
+}
+
+/* === URGENCY BADGES (RDA) === */
+.urgenza-alta {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.urgenza-media {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.urgenza-bassa {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+/* === TEMPERATURE BADGES (CRM) === */
+.temp-hot {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.temp-warm {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.temp-cold {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.temperature-hot {
+    background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+    color: #fff;
+}
+
+.temperature-warm {
+    background: linear-gradient(135deg, #f59e0b 0%, #eab308 100%);
+    color: #fff;
+}
+
+.temperature-cold {
+    background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+    color: #fff;
+}
+
+/* === AVATAR (iniziali utente) === */
+.sw-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+    background: var(--sw-av, #64748b);
+}
+.sw-avatar-xs {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.5rem;
+}
+.sw-avatar-table {
+    width: 1.625rem;
+    height: 1.625rem;
+    font-size: 0.625rem;
+}
+.sw-avatar-kanban {
+    width: 1.8rem;
+    height: 1.8rem;
+    font-size: 0.6875rem;
+}
+.sw-avatar-sm {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.75rem;
+}
+.sw-avatar-lg {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.125rem;
+}
+.sw-avatar-xl {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.25rem;
+}
+
+/* Inactive/muted */
+.sw-avatar-muted { background: #9ca3af; }
+
+/* Avatar stack (overlapping avatars) */
+.sw-avatar-stack {
+    display: flex;
+}
+.sw-avatar-stack > .sw-avatar {
+    border: 2px solid #fff;
+    margin-left: -0.375rem;
+}
+.sw-avatar-stack > .sw-avatar:first-child {
+    margin-left: 0;
+}
+
+/* === PROGRESS COLORS (colored circles/bars) === */
+.sw-progress-danger { background-color: #ef4444; }
+.sw-progress-warm { background-color: #f59e0b; }
+.sw-progress-neutral { background-color: #6b7280; }
+.sw-progress-crm { background-color: var(--sw-crm, #2563eb); }
+.sw-progress-success { background-color: #10b981; }
+.sw-progress-warning { background-color: #f59e0b; }
+
+/* === CHANGE BADGE (stats +% indicators) === */
+.sw-change-badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #059669;
+    background-color: #ecfdf5;
+    padding: 0.25rem 0.5rem;
+}
+
+/* === STAGE BADGES (CRM mobile) === */
+.sw-stage-qualificazione { background-color: #f3f4f6; color: #4b5563; }
+.sw-stage-proposta { background-color: #eff6ff; color: #2563eb; }
+.sw-stage-negoziazione { background-color: #f5f3ff; color: #6d28d9; }
+.sw-stage-contratto { background-color: #fffbeb; color: #b45309; }
+.sw-stage-vinta { background-color: #ecfdf5; color: #047857; }
+.sw-stage-persa { background-color: #fef2f2; color: #dc2626; }
+
+/* === ACTIVITY TYPE BADGES (CRM) === */
+.type-chiamata,
+.type-email,
+.type-riunione,
+.type-follow_up,
+.type-task {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 0.1875rem 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.type-chiamata i,
+.type-email i,
+.type-riunione i,
+.type-follow_up i,
+.type-task i {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+.type-chiamata {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.type-email {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.type-riunione {
+    background: #fce7f3;
+    color: #db2777;
+}
+
+.type-follow_up {
+    background: #ffedd5;
+    color: #ea580c;
+}
+
+.type-task {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* === CLIENT TYPE BADGES (CRM) === */
+.type-azienda {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.type-privato {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+
+.type-ente {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.type-professionista {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
+/* === DOCUMENT TYPE BADGES (tipo-*) === */
+.tipo-preventivo {
+    background: var(--sw-ft-preventivo-light);
+    color: var(--sw-ft-preventivo);
+}
+
+.tipo-ordine {
+    background: var(--sw-ft-ordine-light);
+    color: var(--sw-ft-ordine);
+}
+
+.tipo-ddt {
+    background: var(--sw-ft-ddt-light);
+    color: var(--sw-ft-ddt);
+}
+
+.tipo-fattura {
+    background: var(--sw-ft-fattura-light);
+    color: var(--sw-ft-fattura);
+}
+
+.tipo-nc {
+    background: var(--sw-ft-nota-credito-light);
+    color: var(--sw-ft-nota-credito);
+}
+
+/* === MOVEMENT TYPE BADGES (pagamenti) === */
+.tipo-incasso,
+.tipo-pagamento {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.tipo-incasso {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.tipo-pagamento {
+    background: #fce7f3;
+    color: #db2777;
+}
+
+/* === DOCUMENT TYPE BADGES === */
+.type-preventivo {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.type-ordine {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.type-ddt {
+    background: #cffafe;
+    color: #0891b2;
+}
+
+.type-fattura {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.type-nota-credito {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+/* === COURIER BADGES === */
+.courier-badge {
+    font-weight: 700;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.courier-brt {
+    background: #dc2626;
+    color: white;
+}
+
+.courier-sda {
+    background: #1d4ed8;
+    color: white;
+}
+
+.courier-ups {
+    background: #78350f;
+    color: #fcd34d;
+}
+
+.courier-dhl {
+    background: #fbbf24;
+    color: #78350f;
+}
+
+.courier-gls {
+    background: #1e40af;
+    color: white;
+}
+
+.courier-fedex {
+    background: #7c3aed;
+    color: white;
+}
+
+.courier-tnt {
+    background: #ea580c;
+    color: white;
+}
+
+.courier-poste,
+.courier-poste_italiane {
+    background: #fbbf24;
+    color: #78350f;
+}
+
+.courier-spedire {
+    background: #fbbf24;
+    color: #78350f;
+}
+
+.courier-mano,
+.courier-a_mano,
+.courier-consegna_mano {
+    background: #10b981;
+    color: white;
+}
+
+.courier-default,
+.courier-altro,
+.courier-spediamo_pro {
+    background: #64748b;
+    color: white;
+}
+
+.courier-inpost {
+    background: #fef200;
+    color: #1f2937;
+}
+
+.courier-chronopost {
+    background: #047857;
+    color: white;
+}
+
+/* === SOURCE BADGES (ordini spedizioni) === */
+.source-ecommerce {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+.source-marketplace {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.source-manuale {
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+
+.source-api {
+    background: #ccfbf1;
+    color: #0d9488;
+}
+
+.source-gestionale {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.source-sdi {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.source-pec {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+/* === PROJECT TYPE BADGES === */
+.type-sito {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.type-ecommerce {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+
+.type-crm {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
+.type-cloud {
+    background: #cffafe;
+    color: #0891b2;
+}
+
+.type-app {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+.type-altro {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* === PROJECT TASK CATEGORY BADGES === */
+.cat-frontend {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.cat-backend {
+    background: #fce7f3;
+    color: #db2777;
+}
+
+.cat-design {
+    background: #f3e8ff;
+    color: #9333ea;
+}
+
+.cat-infrastruttura {
+    background: #fed7aa;
+    color: #ea580c;
+}
+
+.cat-contenuti {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.cat-seo {
+    background: #fef08a;
+    color: #ca8a04;
+}
+
+/* === INVENTORY MODE BADGES === */
+.mode-completo {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.mode-parziale {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+/* === DIFFERENCE COLORS (inventario) === */
+.diff-positive {
+    color: #10b981;
+}
+
+.diff-negative {
+    color: #dc2626;
+}
+
+.diff-zero {
+    color: #64748b;
+}
+
+/* === WHISTLEBLOWER CATEGORY BADGES === */
+.cat-frode {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.cat-corruzione {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.cat-discriminazione {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.cat-molestie {
+    background: #fce7f3;
+    color: #db2777;
+}
+
+.cat-sicurezza {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.cat-policy {
+    background: #ccfbf1;
+    color: #0d9488;
+}
+
+.cat-altro {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* === CONTRACT STATUS BADGES === */
+.status-in-firma {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-in-scadenza {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-disdetto {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.status-rinnovato {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.status-cessato {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* === WHISTLEBLOWER STATUS BADGES === */
+.status-ricevuta {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-in-esame {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-attesa-segnalante {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.status-inviata-azienda {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-chiusa {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* === WHISTLEBLOWER GRAVITA BADGES === */
+.gravita-alta {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.gravita-media {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.gravita-bassa {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.gravita-nulla {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* === WHISTLEBLOWER CATEGORIA BADGES === */
+.categoria-frode {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.categoria-corruzione {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.categoria-discriminazione {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.categoria-molestie {
+    background: #fce7f3;
+    color: #db2777;
+}
+
+.categoria-sicurezza {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.categoria-policy {
+    background: #ccfbf1;
+    color: #0d9488;
+}
+
+.categoria-altro {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* === WHISTLEBLOWER RUOLO BADGES === */
+.ruolo-admin {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.ruolo-revisore {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.ruolo-visualizzatore {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* === MEDAL STYLES (agenti obiettivi) === */
+.medal-gold {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.medal-silver {
+    background: linear-gradient(135deg, #d1d5db, #9ca3af);
+}
+
+.medal-bronze {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+/* === POSITION BADGES (cerchio numerato) === */
+.position-1,
+.position-2,
+.position-3,
+.position-other {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.position-1 {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #fff;
+}
+
+.position-2 {
+    background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+    color: #fff;
+}
+
+.position-3 {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    color: #fff;
+}
+
+.position-other {
+    background: #f1f5f9;
+    color: #475569;
+}

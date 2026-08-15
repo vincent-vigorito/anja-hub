@@ -1,0 +1,52 @@
+/* ============================================================
+   auth.css — Login overlay (F4 Concierge)
+   ============================================================ */
+
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #0b887b 0%, #0a3d3a 100%);
+  padding: 20px;
+}
+.login-box {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .3);
+  padding: 36px 34px;
+  width: min(360px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+.login-logo {
+  font-size: 34px;
+  color: var(--brand);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.login-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -.02em;
+}
+.login-sub {
+  font-size: 13px;
+  color: var(--ink-500);
+  margin-bottom: 10px;
+}
+.login-input { width: 100%; text-align: left; }
+.login-btn { width: 100%; justify-content: center; margin-top: 4px; }
+.login-error {
+  font-size: 12.5px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 7px 10px;
+}

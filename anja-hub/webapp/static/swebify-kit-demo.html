@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AnjaHub — restyling Swebify (slice 0)</title>
+  <!-- CSS REALE del kit (ordine di concatenazione swcss) -->
+  <link rel="stylesheet" href="/static/swebify-kit/variabili_sistema.css">
+  <link rel="stylesheet" href="/static/swebify-kit/variabili.css">
+  <link rel="stylesheet" href="/static/swebify-kit/base.css">
+  <link rel="stylesheet" href="/static/swebify-kit/font.css">
+  <link rel="stylesheet" href="/static/swebify-kit/layouts.css">
+  <link rel="stylesheet" href="/static/swebify-kit/app-shell.css">
+  <link rel="stylesheet" href="/static/swebify-kit/cards.css">
+  <link rel="stylesheet" href="/static/swebify-kit/badges.css">
+  <link rel="stylesheet" href="/static/swebify-kit/tables.css">
+  <link rel="stylesheet" href="/static/swebify-kit/dashboard.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Workspace switcher (topbar, al posto della ricerca) */
+    .ws-switcher { display:inline-flex; align-items:center; gap:8px; height:36px; padding:0 10px 0 12px;
+      background:#fff; border:1px solid var(--border); border-radius:8px; font-size:13.5px; font-weight:600;
+      color:var(--ink-800); box-shadow:var(--shadow-xs); cursor:pointer; }
+    .ws-switcher:hover { background:var(--bg-subtle); border-color:var(--ink-300); }
+    .ws-switcher .ws-ico { color:var(--brand); display:inline-flex; }
+    .ws-switcher .ws-chev { color:var(--ink-400); display:inline-flex; margin-left:2px; }
+    .ws-kbd { display:inline-flex; align-items:center; gap:4px; height:30px; padding:0 8px; border:1px solid var(--border);
+      border-radius:7px; background:var(--bg-subtle); color:var(--ink-500); font-size:12px; cursor:pointer; }
+    .ws-kbd:hover { background:var(--bg-hover); }
+    .ws-kbd kbd { font-family:var(--font-mono); font-size:10.5px; color:var(--ink-600); }
+  </style>
+</head>
+<body>
+<div class="app">
+  <!-- ===== SIDEBAR (classi kit + logo Mannaz nostro + icone lucide) ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="#" class="sidebar-brand-logo">
+        <svg viewBox="0 0 20 28" width="22" height="22" fill="none" stroke="#0b887b" stroke-width="1.75" stroke-linecap="square">
+          <path d="M4 3 V25"/><path d="M16 3 V25"/><path d="M4 3 L16 12"/><path d="M16 3 L4 12"/>
+        </svg>
+        <span class="name">Anja</span>
+      </a>
+    </div>
+
+    <!-- Dentro un workspace → la sidebar è il MENU del workspace (niente cartelle espandibili) -->
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Workspace</div>
+        <a href="#" class="nav-item active"><i data-lucide="layout-dashboard"></i><span>Overview</span></a>
+        <a href="#" class="nav-item"><i data-lucide="messages-square"></i><span>Chat</span></a>
+        <a href="#" class="nav-item"><i data-lucide="folder-tree"></i><span>Files</span></a>
+        <a href="#" class="nav-item"><i data-lucide="image"></i><span>Media</span></a>
+        <a href="#" class="nav-item"><i data-lucide="book-open"></i><span>Wiki</span></a>
+        <a href="#" class="nav-item"><i data-lucide="calendar"></i><span>Sessions</span></a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Team &amp; flows</div>
+        <a href="#" class="nav-item"><i data-lucide="bot"></i><span>Agents</span><span class="count">5</span></a>
+        <a href="#" class="nav-item"><i data-lucide="layout-grid"></i><span>Kanban</span></a>
+        <a href="#" class="nav-item"><i data-lucide="calendar-days"></i><span>Calendario</span></a>
+        <a href="#" class="nav-item"><i data-lucide="target"></i><span>Goals</span></a>
+        <a href="#" class="nav-item"><i data-lucide="clock"></i><span>Routines</span><span class="count">2</span></a>
+        <a href="#" class="nav-item"><i data-lucide="brain"></i><span>Memory</span></a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer" style="padding:12px 16px;border-top:1px solid var(--border-soft);display:flex;align-items:center;gap:9px;">
+      <span style="width:28px;height:28px;border-radius:50%;background:#0b887b;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">VV</span>
+      <span style="font-size:12.5px;color:var(--ink-700);">demo@example.com</span>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main">
+    <header class="topbar">
+      <!-- Switcher workspace: elemento primario, al posto della ricerca. Apre la lista
+           (Hub + tutti i workspace) → selezionando si ENTRA nello scope. -->
+      <button class="ws-switcher" type="button" aria-label="Cambia workspace">
+        <span class="ws-ico"><i data-lucide="folder"></i></span>
+        <span>demo-brand</span>
+        <span class="ws-chev"><i data-lucide="chevrons-up-down"></i></span>
+      </button>
+      <div class="topbar-actions" style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+        <span class="status-badge success"><span>all healthy</span></span>
+        <button class="ws-kbd" aria-label="Cerca"><i data-lucide="search" style="width:14px;height:14px;opacity:.6"></i><kbd>⌘K</kbd></button>
+        <button class="topbar-icon-btn" aria-label="Tema"><i data-lucide="moon"></i></button>
+        <button class="topbar-icon-btn" aria-label="Notifiche"><i data-lucide="bell"></i></button>
+      </div>
+    </header>
+
+    <main>
+      <div class="page-header">
+        <div class="crumb"><span>anja-hub</span><span class="sep">/</span><span>demo-brand</span><span class="sep">/</span><span class="current">Overview</span></div>
+        <h1 class="page-title">demo-brand</h1>
+      </div>
+
+      <div class="page-body">
+        <!-- Greeting -->
+        <div class="dash-greeting">
+          <span class="dash-greeting-avatar" style="display:inline-flex;align-items:center;justify-content:center;background:#0b887b;color:#fff;font-weight:600;">VV</span>
+          <div>
+            <h1 class="dash-greeting-name">Buongiorno, Vincent</h1>
+            <p class="dash-greeting-sub">demo@example.com · Example Srl</p>
+          </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="dash-section"><div class="dash-section-title">Panoramica</div></div>
+        <div class="stat-card-grid">
+          <div class="stat-card stat-card-primary">
+            <div class="stat-card-label">Piano editoriale</div>
+            <div class="stat-card-value"><div class="stat-card-num">7</div></div>
+            <div class="stat-card-sub">3 programmati · 5 kit social</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Health</div>
+            <div class="stat-card-value"><div class="stat-card-icon"><i data-lucide="shield-check"></i></div><div class="stat-card-num">OK</div></div>
+            <div class="stat-card-sub">6 daemon attivi</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Routines</div>
+            <div class="stat-card-value"><div class="stat-card-icon"><i data-lucide="clock"></i></div><div class="stat-card-num">2</div></div>
+            <div class="stat-card-sub">weekly-report · marketing-alert</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Costi (30gg)</div>
+            <div class="stat-card-value"><div class="stat-card-icon"><i data-lucide="trending-up"></i></div><div class="stat-card-num">€0,19</div></div>
+            <div class="stat-card-sub">marketing-pod</div>
+          </div>
+        </div>
+
+        <!-- Products -->
+        <div class="dash-section"><div class="dash-section-title">Workspaces</div>
+          <button class="btn btn-primary btn-sm" type="button"><i data-lucide="plus"></i> Nuovo workspace</button>
+        </div>
+        <div class="product-grid">
+          <div class="product-card">
+            <div class="product-card-head">
+              <div class="product-card-head-left">
+                <div class="product-card-icon"><i data-lucide="globe"></i></div>
+                <span class="product-card-title">example.com</span>
+              </div>
+              <a class="product-card-link" href="#">Apri <i data-lucide="arrow-right"></i></a>
+            </div>
+            <p class="product-card-lead">Pod marketing · 5 agenti specializzati:</p>
+            <div class="stat-card-list">
+              <div class="stat-card-list-row"><span class="dot success"></span><span class="label">analyst · seo-copy</span><span class="val">2</span></div>
+              <div class="stat-card-list-row"><span class="dot neutral"></span><span class="label">social · dev</span><span class="val">2</span></div>
+              <div class="stat-card-list-row"><span class="dot warn"></span><span class="label">lead</span><span class="val">1</span></div>
+            </div>
+            <p class="product-card-note">Kit social pronto in files/social/</p>
+          </div>
+
+          <div class="product-card">
+            <div class="product-card-head">
+              <div class="product-card-head-left">
+                <div class="product-card-icon"><i data-lucide="calendar"></i></div>
+                <span class="product-card-title">Piano editoriale</span>
+              </div>
+              <a class="product-card-link" href="#">Kanban <i data-lucide="arrow-right"></i></a>
+            </div>
+            <table class="data-table" style="margin-top:8px;">
+              <thead><tr><th>Data</th><th>Articolo</th><th>Stato</th></tr></thead>
+              <tbody>
+                <tr><td>20/06</td><td>Blog 4580 — costo sito web</td><td><span class="status-badge neutral"><span>todo</span></span></td></tr>
+                <tr><td>24/06</td><td>Blog 4581 — refresh copyw.</td><td><span class="status-badge neutral"><span>todo</span></span></td></tr>
+                <tr><td>17/06</td><td>Blog 4579 — refresh minacce</td><td><span class="status-badge success"><span>done</span></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="product-card">
+            <div class="product-card-head">
+              <div class="product-card-head-left">
+                <div class="product-card-icon"><i data-lucide="activity"></i></div>
+                <span class="product-card-title">Attività recente</span>
+              </div>
+            </div>
+            <div class="stat-card-list">
+              <div class="stat-card-list-row"><span class="dot success"></span><span class="label">Kit social generato</span><span class="val">oggi</span></div>
+              <div class="stat-card-list-row"><span class="dot neutral"></span><span class="label">Report settimanale</span><span class="val">lun</span></div>
+              <div class="stat-card-list-row"><span class="dot warn"></span><span class="label">Alert marketing</span><span class="val">2g</span></div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <button class="btn btn-sm">Vedi tutto</button>
+              <button class="btn btn-primary btn-sm"><i data-lucide="play"></i> Esegui pod</button>
+            </div>
+          </div>
+        </div>
+
+        <p style="margin-top:24px;color:var(--ink-400);font-size:12px;">
+          Slice 0 — schermata AnjaHub costruita sul CSS reale di swebify-ui-kit (app-shell + dashboard), logo Mannaz + icone lucide nostri. Blueprint per il port della SPA.
+        </p>
+      </div>
+    </main>
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

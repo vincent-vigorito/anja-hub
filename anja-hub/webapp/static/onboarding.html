@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to AnjaHub ᛗ</title>
+<link rel="icon" type="image/svg+xml" href="/static/assets/favicon.svg">
+<script>
+  // Tema: solo light (kit swebify light-only)
+  document.documentElement.setAttribute('data-theme', 'light');
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- inherit CSS variables (Icelandic palette) + font from style.css -->
+<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/swebify-bridge.css"><!-- restyling kit (per ultimo) -->
+<style>
+  body {
+    margin: 0; min-height: 100vh;
+    background: var(--bg-2); color: var(--text-1);
+    font-family: var(--font-body);
+    display: flex; align-items: center; justify-content: center;
+    padding: var(--s-6);
+  }
+  .onb-card {
+    width: 100%; max-width: 520px;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+    padding: var(--s-10) var(--s-8) var(--s-8);
+  }
+  .onb-logo { font-size: 38px; line-height: 1; color: var(--accent); text-align: center; }
+  .onb-dots { display: flex; gap: var(--s-2); justify-content: center; margin: var(--s-5) 0 var(--s-8); }
+  .onb-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--bg-5); transition: background var(--tr-med), width var(--tr-med); }
+  .onb-dot--active { background: var(--accent); width: 20px; border-radius: 4px; }
+  .onb-dot--done { background: var(--accent-soft); }
+
+  .onb-step { display: none; }
+  .onb-step--active { display: block; animation: onb-fade var(--tr-med); }
+  @keyframes onb-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .onb-eyebrow { font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); font-weight: 600; margin-bottom: var(--s-2); }
+  .onb-title { font-size: var(--t-2xl); font-weight: 700; margin: 0 0 var(--s-2); letter-spacing: -0.01em; }
+  .onb-sub { font-size: var(--t-md); color: var(--text-2); margin: 0 0 var(--s-6); line-height: 1.5; }
+
+  .onb-input, .onb-textarea, .onb-select {
+    width: 100%; box-sizing: border-box;
+    background: var(--bg-2); color: var(--text-1);
+    border: 1px solid var(--border-strong); border-radius: var(--r-md);
+    padding: var(--s-3) var(--s-4); font-size: var(--t-md); font-family: var(--font-body);
+    transition: border-color var(--tr-fast);
+  }
+  .onb-input:focus, .onb-textarea:focus, .onb-select:focus { outline: none; border-color: var(--accent); }
+  .onb-textarea { resize: vertical; min-height: 96px; }
+  .onb-hint { font-size: var(--t-xs); color: var(--text-3); margin-top: var(--s-2); }
+
+  .onb-actions { display: flex; gap: var(--s-3); margin-top: var(--s-8); align-items: center; }
+  .onb-spacer { flex: 1; }
+  .onb-btn {
+    border: 1px solid var(--border-strong); background: var(--bg-2); color: var(--text-1);
+    border-radius: var(--r-md); padding: var(--s-3) var(--s-5); font-size: var(--t-base);
+    font-weight: 600; cursor: pointer; font-family: var(--font-body);
+    transition: background var(--tr-fast), border-color var(--tr-fast), opacity var(--tr-fast);
+  }
+  .onb-btn:hover { background: var(--bg-3); }
+  .onb-btn--primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .onb-btn--primary:hover { background: var(--accent-hover); }
+  .onb-btn--ghost { border-color: transparent; background: transparent; color: var(--text-2); }
+  .onb-btn--ghost:hover { color: var(--text-1); background: var(--bg-3); }
+  .onb-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* provider step */
+  .onb-detect { display: flex; align-items: flex-start; gap: var(--s-3); padding: var(--s-4); border-radius: var(--r-md); margin-bottom: var(--s-5); font-size: var(--t-base); line-height: 1.5; }
+  .onb-detect--ok { background: var(--accent-soft); border: 1px solid var(--accent); }
+  .onb-detect--warn { background: rgba(192,89,60,0.10); border: 1px solid var(--warning); }
+  .onb-detect__icon { font-size: 18px; line-height: 1.3; }
+  .onb-detect b { color: var(--text-1); }
+
+  .onb-tabs { display: flex; gap: var(--s-1); margin-bottom: var(--s-4); background: var(--bg-3); padding: var(--s-1); border-radius: var(--r-md); }
+  .onb-tab { flex: 1; text-align: center; padding: var(--s-2); border-radius: var(--r-sm); cursor: pointer; font-size: var(--t-sm); font-weight: 600; color: var(--text-2); border: none; background: transparent; font-family: var(--font-body); }
+  .onb-tab--active { background: var(--bg-1); color: var(--text-1); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  .onb-pane { display: none; }
+  .onb-pane--active { display: block; }
+  .onb-code { font-family: var(--font-mono); font-size: var(--t-sm); background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--s-2) var(--s-3); display: block; margin: var(--s-2) 0; color: var(--text-1); }
+  .onb-row { display: flex; gap: var(--s-2); }
+  .onb-msg { font-size: var(--t-sm); margin-top: var(--s-3); min-height: 18px; }
+  .onb-msg--err { color: var(--error); }
+  .onb-msg--ok { color: var(--success); }
+  .onb-field-label { font-size: var(--t-sm); font-weight: 600; color: var(--text-2); margin: var(--s-4) 0 var(--s-2); display: block; }
+  a.onb-link { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="onb-card">
+  <div class="onb-logo">ᛗ</div>
+  <div class="onb-dots" id="dots"></div>
+
+  <!-- STEP 1: user name -->
+  <section class="onb-step onb-step--active" data-step="0">
+    <div class="onb-eyebrow">Welcome to AnjaHub</div>
+    <h1 class="onb-title">What's your name?</h1>
+    <p class="onb-sub">Your Personal AI Hub. Let's start with your name — I'll use it to personalize memory and profiles.</p>
+    <input class="onb-input" id="f-name" type="text" placeholder="e.g. Vincent" autocomplete="off" autofocus>
+    <div class="onb-actions">
+      <div class="onb-spacer"></div>
+      <button class="onb-btn onb-btn--primary" data-next>Next</button>
+    </div>
+  </section>
+
+  <!-- STEP 2: agent name -->
+  <section class="onb-step" data-step="1">
+    <div class="onb-eyebrow">Your assistant</div>
+    <h1 class="onb-title">What should I be called?</h1>
+    <p class="onb-sub">The name of your main agent. The default is <b>Anja</b>, but pick whatever you prefer.</p>
+    <input class="onb-input" id="f-agent" type="text" placeholder="Anja" value="Anja" autocomplete="off">
+    <div class="onb-actions">
+      <button class="onb-btn onb-btn--ghost" data-back>Back</button>
+      <div class="onb-spacer"></div>
+      <button class="onb-btn onb-btn--primary" data-next>Next</button>
+    </div>
+  </section>
+
+  <!-- STEP 3: profile -->
+  <section class="onb-step" data-step="2">
+    <div class="onb-eyebrow">Profile (optional)</div>
+    <h1 class="onb-title">Tell me about yourself</h1>
+    <p class="onb-sub">Role, interests, how you prefer me to work. It goes into identity memory. You can skip and do it later.</p>
+    <textarea class="onb-textarea" id="f-profile" placeholder="e.g. Senior developer working on AI platforms. I prefer direct, concise answers."></textarea>
+    <div class="onb-actions">
+      <button class="onb-btn onb-btn--ghost" data-back>Back</button>
+      <div class="onb-spacer"></div>
+      <button class="onb-btn onb-btn--ghost" data-next>Skip</button>
+      <button class="onb-btn onb-btn--primary" data-next>Next</button>
+    </div>
+  </section>
+
+  <!-- STEP 4: provider / auth -->
+  <section class="onb-step" data-step="3">
+    <div class="onb-eyebrow">AI model</div>
+    <h1 class="onb-title">Let's connect an LLM</h1>
+    <p class="onb-sub">You need at least one provider to use chat. Checking what you already have configured…</p>
+
+    <div id="detect-box"></div>
+
+    <!-- shown only if no provider detected -->
+    <div id="provider-config" style="display:none">
+      <div class="onb-tabs">
+        <button class="onb-tab onb-tab--active" data-pane="sub">I have a subscription</button>
+        <button class="onb-tab" data-pane="key">I have an API key</button>
+      </div>
+
+      <div class="onb-pane onb-pane--active" data-pane="sub">
+        <p class="onb-sub" style="margin-bottom:var(--s-3)">If you have <b>Claude Pro/Max</b> or <b>ChatGPT Plus</b>, log in from the terminal — I'll use those credentials, no key to paste.</p>
+        <code class="onb-code">claude login &nbsp;<span style="color:var(--text-3)"># Claude Pro/Max</span></code>
+        <code class="onb-code">codex login &nbsp;<span style="color:var(--text-3)"># ChatGPT Plus (Codex CLI)</span></code>
+        <button class="onb-btn" id="btn-recheck" style="margin-top:var(--s-3)">↻ I've logged in, re-check</button>
+        <div class="onb-msg" id="recheck-msg"></div>
+      </div>
+
+      <div class="onb-pane" data-pane="key">
+        <label class="onb-field-label" for="f-prov">Provider</label>
+        <select class="onb-select" id="f-prov"></select>
+        <label class="onb-field-label" for="f-key">API key</label>
+        <input class="onb-input" id="f-key" type="password" placeholder="sk-…" autocomplete="off">
+        <div class="onb-hint" id="key-url"></div>
+        <button class="onb-btn onb-btn--primary" id="btn-savekey" style="margin-top:var(--s-4)">Save key</button>
+        <div class="onb-msg" id="key-msg"></div>
+      </div>
+    </div>
+
+    <div class="onb-actions">
+      <button class="onb-btn onb-btn--ghost" data-back>Back</button>
+      <div class="onb-spacer"></div>
+      <button class="onb-btn onb-btn--primary" data-next id="btn-prov-next" disabled>Next</button>
+    </div>
+  </section>
+
+  <!-- STEP 5: finish -->
+  <section class="onb-step" data-step="4">
+    <div class="onb-eyebrow">All set</div>
+    <h1 class="onb-title" id="finish-title">Ready to start</h1>
+    <p class="onb-sub" id="finish-sub"></p>
+    <div class="onb-actions">
+      <button class="onb-btn onb-btn--ghost" data-back>Back</button>
+      <div class="onb-spacer"></div>
+      <button class="onb-btn onb-btn--primary" id="btn-finish">Open Mission Control</button>
+    </div>
+    <div class="onb-msg onb-msg--err" id="finish-msg"></div>
+  </section>
+</div>
+
+<script>
+const TOTAL = 5;
+const state = { step: 0, providers: [], suggested: null, chosenProvider: null };
+
+// API-key providers available in the wizard (aligned with PROVIDER_KEY_FIELDS backend)
+const KEY_PROVIDERS = [
+  { id: 'openai',     label: 'OpenAI',          env: 'OPENAI_API_KEY',     url: 'https://platform.openai.com/api-keys' },
+  { id: 'openrouter', label: 'OpenRouter',      env: 'OPENROUTER_API_KEY', url: 'https://openrouter.ai/keys' },
+  { id: 'xai',        label: 'xAI (Grok)',      env: 'XAI_API_KEY',        url: 'https://console.x.ai' },
+  { id: 'anthropic',  label: 'Anthropic (API)', env: 'ANTHROPIC_API_KEY',  url: 'https://console.anthropic.com/settings/keys' },
+];
+
+// readable labels for detected providers
+const PROV_LABEL = {
+  claude: 'Claude Pro/Max', openai_oauth: 'ChatGPT (Codex)',
+  openai: 'OpenAI', openrouter: 'OpenRouter', xai: 'xAI (Grok)', anthropic: 'Anthropic', gemini: 'Gemini',
+};
+
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+// mini DOM builder (no innerHTML → no XSS risk on user input)
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) { if (k === 'class') e.className = attrs[k]; else e.setAttribute(k, attrs[k]); }
+  for (const c of kids) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  return e;
+}
+
+function renderDots() {
+  const dots = $('#dots');
+  dots.replaceChildren();
+  for (let i = 0; i < TOTAL; i++) {
+    const cls = 'onb-dot' + (i === state.step ? ' onb-dot--active' : (i < state.step ? ' onb-dot--done' : ''));
+    dots.appendChild(h('div', { class: cls }));
+  }
+}
+
+function show(step) {
+  state.step = step;
+  $$('.onb-step').forEach(el => el.classList.toggle('onb-step--active', +el.dataset.step === step));
+  renderDots();
+  if (step === 3) enterProviderStep();
+  if (step === 4) enterFinishStep();
+}
+
+function next() {
+  if (state.step === 0 && !$('#f-name').value.trim()) { $('#f-name').focus(); return; }
+  if (state.step < TOTAL - 1) show(state.step + 1);
+}
+function back() { if (state.step > 0) show(state.step - 1); }
+
+$$('[data-next]').forEach(b => b.addEventListener('click', next));
+$$('[data-back]').forEach(b => b.addEventListener('click', back));
+$('#f-name').addEventListener('keydown', e => { if (e.key === 'Enter') next(); });
+$('#f-agent').addEventListener('keydown', e => { if (e.key === 'Enter') next(); });
+
+// ---- STEP 4: provider detection ----
+async function fetchStatus() {
+  const r = await fetch('/api/onboarding/status');
+  const j = await r.json();
+  state.providers = j.providers_available || [];
+  state.suggested = j.suggested_provider || null;
+  return j;
+}
+
+function renderDetect() {
+  const box = $('#detect-box');
+  const cfg = $('#provider-config');
+  const nextBtn = $('#btn-prov-next');
+  box.replaceChildren();
+  if (state.providers.length) {
+    const names = state.providers.map(p => PROV_LABEL[p] || p).join(', ');
+    if (!state.chosenProvider) state.chosenProvider = state.suggested;
+    box.appendChild(h('div', { class: 'onb-detect onb-detect--ok' },
+      h('span', { class: 'onb-detect__icon' }, '✓'),
+      h('div', null,
+        'Detected: ', h('b', null, names), h('br'),
+        "You're ready to go — default: ", h('b', null, PROV_LABEL[state.chosenProvider] || state.chosenProvider || ''), '.')
+    ));
+    cfg.style.display = 'none';
+    nextBtn.disabled = false;
+  } else {
+    box.appendChild(h('div', { class: 'onb-detect onb-detect--warn' },
+      h('span', { class: 'onb-detect__icon' }, '!'),
+      h('div', null, "No LLM configured. Pick an option below — you need it to chat.")
+    ));
+    cfg.style.display = 'block';
+    nextBtn.disabled = true;
+  }
+}
+
+let providerStepInit = false;
+async function enterProviderStep() {
+  if (!providerStepInit) {
+    const sel = $('#f-prov');
+    KEY_PROVIDERS.forEach(p => sel.appendChild(h('option', { value: p.id }, p.label)));
+    const setUrl = () => {
+      const p = KEY_PROVIDERS.find(x => x.id === sel.value);
+      const box = $('#key-url'); box.replaceChildren();
+      if (p) box.appendChild(h('span', null, 'Get a key: ',
+        h('a', { class: 'onb-link', href: p.url, target: '_blank', rel: 'noopener' }, p.url)));
+    };
+    sel.addEventListener('change', setUrl); setUrl();
+    providerStepInit = true;
+  }
+  try { await fetchStatus(); } catch (e) {}
+  renderDetect();
+}
+
+// tabs
+$$('.onb-tab').forEach(t => t.addEventListener('click', () => {
+  $$('.onb-tab').forEach(x => x.classList.toggle('onb-tab--active', x === t));
+  $$('.onb-pane').forEach(p => p.classList.toggle('onb-pane--active', p.dataset.pane === t.dataset.pane));
+}));
+
+// re-check subscription
+$('#btn-recheck').addEventListener('click', async () => {
+  const msg = $('#recheck-msg'); msg.textContent = 'Checking…'; msg.className = 'onb-msg';
+  try {
+    await fetchStatus();
+    if (state.providers.length) { renderDetect(); }
+    else { msg.textContent = 'Still nothing. Did you log in from the terminal?'; msg.className = 'onb-msg onb-msg--err'; }
+  } catch (e) { msg.textContent = 'Network error.'; msg.className = 'onb-msg onb-msg--err'; }
+});
+
+// save API key
+$('#btn-savekey').addEventListener('click', async () => {
+  const msg = $('#key-msg');
+  const provId = $('#f-prov').value;
+  const prov = KEY_PROVIDERS.find(p => p.id === provId);
+  const key = $('#f-key').value.trim();
+  if (!key) { msg.textContent = 'Enter a key.'; msg.className = 'onb-msg onb-msg--err'; return; }
+  msg.textContent = 'Saving…'; msg.className = 'onb-msg';
+  try {
+    const r = await fetch('/api/settings/providers', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [prov.env]: key }),
+    });
+    if (!r.ok) throw new Error('save failed');
+    state.chosenProvider = provId;       // becomes the chosen default provider
+    msg.textContent = '✓ Key saved.'; msg.className = 'onb-msg onb-msg--ok';
+    await fetchStatus();
+    renderDetect();
+    $('#btn-prov-next').disabled = false;
+  } catch (e) { msg.textContent = 'Save error.'; msg.className = 'onb-msg onb-msg--err'; }
+});
+
+// ---- STEP 5: finish ----
+function enterFinishStep() {
+  const name = $('#f-name').value.trim() || 'you';
+  const agent = $('#f-agent').value.trim() || 'Anja';
+  $('#finish-title').textContent = `Hi ${name}!`;
+  const sub = $('#finish-sub'); sub.replaceChildren();
+  sub.appendChild(h('span', null, "I'm ", h('b', null, agent),
+    ", your personal hub. All set — let's open Mission Control."));
+}
+
+$('#btn-finish').addEventListener('click', async () => {
+  const btn = $('#btn-finish'); const msg = $('#finish-msg');
+  btn.disabled = true; msg.textContent = '';
+  const payload = {
+    name: $('#f-name').value.trim(),
+    agent_name: $('#f-agent').value.trim() || 'Anja',
+    profile: $('#f-profile').value.trim(),
+    language: (navigator.language || 'en').slice(0, 2),
+  };
+  try {
+    const r = await fetch('/api/onboarding/complete', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.detail || 'error'); }
+    if (state.chosenProvider) {
+      await fetch('/api/settings/defaults', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ default_provider: state.chosenProvider }),
+      }).catch(() => {});
+    }
+    window.location.href = '/';
+  } catch (e) {
+    btn.disabled = false;
+    msg.textContent = "Couldn't complete: " + e.message;
+  }
+});
+
+renderDots();
+</script>
+</body>
+</html>

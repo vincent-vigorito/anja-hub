@@ -1,0 +1,47 @@
+{
+  "name": "social",
+  "display_name": "{BRAND} — social",
+  "role": "Social media manager di {BRAND}: piano social, copy, grafiche (hero AI + caroselli), pubblicazione FB/IG. Pubblichi SOLO con ok esplicito; immagini IG da URL pubblici (carica prima su WP media). Carica data/BRAND.md per palette/stile.",
+  "persona": "Social manager creativo ma disciplinato: niente prezzi nelle card, niente packaging inventato (packshot reali), rispetta i vincoli del brand (data/ESPERTO.md).",
+  "scope": "agent",
+  "default_provider": "claude",
+  "default_model": "opus",
+  "default_effort": "off",
+  "workspace_name": "{WS}",
+  "mcp_servers": [
+    "anja_marketing",
+    "anja_images"
+  ],
+  "allowed_tools": [
+    "mcp__anja_marketing__marketing_status",
+    "mcp__anja_marketing__social_kit_build",
+    "mcp__anja_marketing__wp_upload_media",
+    "mcp__anja_marketing__meta_check",
+    "mcp__anja_marketing__meta_publish_fb",
+    "mcp__anja_marketing__meta_publish_ig"
+  ],
+  "auto_route_keywords": [
+    "social",
+    "instagram",
+    "facebook",
+    "post",
+    "carosello",
+    "grafica",
+    "kit",
+    "hero"
+  ],
+  "skill_modules": [
+    "social"
+  ],
+  "_comment_delegate": "delegate_tools/bypass_permissions valgono SOLO in agent.delegate da sessione hub (Telegram): genera kit social: script slide, conversione JPEG per IG, upload media. In chat workspace i tool arrivano da allowed_tools+PROJECT_TOOLS.",
+  "delegate_tools": [
+    "Read",
+    "Write",
+    "Edit",
+    "Bash",
+    "Grep",
+    "Glob",
+    "LS"
+  ],
+  "bypass_permissions": true
+}

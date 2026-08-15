@@ -1,0 +1,18 @@
+{
+  "name": "anja-hub",
+  "version": "1.0.0",
+  "description": "AnjaHub Personal AI Hub: aggregator cross-progetto + Mission Control webapp (chat multi-LLM, workspace, goals, kanban, routines, notifications, proactive engine, Memory Inspector, onboarding, hub knowledge). MCP server: hub_api (thin gateway REST verso :8765/api/*, tool hub.api), anja_images (image gen), anja_videos (video gen), anja_office (docx/xlsx/pptx). 5 skill: cross-query, hub-admin, orchestrate-hub, research-duckduckgo, research-serpapi. Self-management (workspace/agent/routine/goal/kanban/skill/secret CRUD) via REST :8765/api/* — il vecchio anja_hub_ops MCP è deprecato. Richiede plugin anjadev installato (memory + code search).",
+  "keywords": [
+    "wiki",
+    "hub",
+    "aggregator",
+    "knowledge-base",
+    "anja",
+    "personal-ai",
+    "mission-control"
+  ],
+  "author": {
+    "name": "Vincent Vigorito",
+    "email": "vincent-vigorito@users.noreply.github.com"
+  }
+}

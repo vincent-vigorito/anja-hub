@@ -1,0 +1,34 @@
+# Routine: alert proattivo marketing di {BRAND} — READ-ONLY, notifica SOLO se notevole.
+# Lightweight proactive: gira ogni giorno, ma consegna solo quando c'è qualcosa
+# (skip_if_contains "NESSUN_ALERT" sopprime gli output nei giorni tranquilli).
+name: marketing-alert-{WS}
+description: Alert proattivo (quick-win GSC, anomalie) di {BRAND}, solo se notevole
+scope: project:{WS}
+schedule: "0 8 * * *"          # ogni giorno 8:00
+enabled: true
+model: sonnet
+tools:
+  - Read
+prompt: |
+  Sei il responsabile marketing di {BRAND}. Controlla OGGI — SOLO LETTURA — se c'è
+  qualcosa che merita attenzione immediata:
+  - **quick-win GSC nuovi**: query in posizione 8-20 con impression in crescita;
+  - **anomalie**: crollo/picco di sessioni o CTR, pagine forti che scivolano;
+  - eventi/conversioni anomali (GA4).
+  Usa i tool anja_marketing (gsc_query, ga_report).
+
+  Se trovi qualcosa di **notevole e azionabile**, scrivi un alert BREVE (3-5 righe,
+  cosa + perché conta + azione suggerita).
+  Se NON c'è nulla di rilevante oggi, rispondi ESATTAMENTE con: NESSUN_ALERT
+output:
+  - type: telegram
+    chat_id: "{{TELEGRAM_CHAT_ID}}"
+    title: "⚡ Alert {BRAND}"
+    skip_if_contains: "NESSUN_ALERT"
+  - type: file
+    path: workspaces/{WS}/files/reports/alert-{date}.md
+    mode: overwrite
+    skip_if_contains: "NESSUN_ALERT"
+timeout_sec: 240
+max_retries: 1
+tags: [marketing, alert, proactive]

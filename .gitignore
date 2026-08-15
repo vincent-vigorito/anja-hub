@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Secrets — mai committare
+.env
+.env.*
+.secrets.env
+.secrets.vault
+*.key
+*.pem
+*credentials*.json
+*token*.json
+*service-account*.json
+secrets/
+
+# Runtime / dati locali (il TUO hub vive fuori dal repo)
+anja-hub/webapp/conversations/
+anja-hub/webapp/uploads/
+*.db
+*.log
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Scratch (spesso contengono segreti incollati)
+paste.txt
+open.txt

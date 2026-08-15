@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Piano editoriale — demo-brand (anteprima)</title>
+  <!-- CSS reale del kit (ordine di concatenazione swcss) -->
+  <link rel="stylesheet" href="swebify-kit/variabili_sistema.css">
+  <link rel="stylesheet" href="swebify-kit/variabili.css">
+  <link rel="stylesheet" href="swebify-kit/font.css">
+  <link rel="stylesheet" href="swebify-kit/base.css">
+  <link rel="stylesheet" href="swebify-kit/layouts.css">
+  <link rel="stylesheet" href="swebify-kit/app-shell.css">
+  <link rel="stylesheet" href="swebify-kit/cards.css">
+  <link rel="stylesheet" href="swebify-kit/badges.css">
+  <link rel="stylesheet" href="swebify-kit/tables.css">
+  <link rel="stylesheet" href="swebify-kit/editorial.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Site switcher topbar (riusa lo stile ws-switcher del kit-demo) */
+    .ws-switcher { display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 10px 0 12px;
+      background:#fff; border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600;
+      color:var(--ink-800); box-shadow:var(--shadow-xs); cursor:pointer; }
+    .ws-switcher:hover { background:var(--bg-subtle); border-color:var(--ink-300); }
+    .ws-switcher .ws-ico { color:var(--brand); display:inline-flex; }
+    .ws-switcher .ws-chev { color:var(--ink-400); display:inline-flex; margin-left:2px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <!-- ===== SIDEBAR (voci reali dell'hub AnjaHub — da rivedere) ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="#" class="sidebar-brand-logo">
+        <svg viewBox="0 0 20 28" width="22" height="22" fill="none" stroke="#0b887b" stroke-width="1.75" stroke-linecap="square">
+          <path d="M4 3 V25"/><path d="M16 3 V25"/><path d="M4 3 L16 12"/><path d="M16 3 L4 12"/>
+        </svg>
+        <span class="name">Anja</span>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item"><i data-lucide="layout-dashboard"></i><span>Hub home</span></a>
+      <a href="#" class="nav-item"><i data-lucide="plus"></i><span>New conversation</span></a>
+
+      <div class="nav-section">
+        <div class="nav-section-label">Anja's workspace</div>
+        <a href="#" class="nav-item"><i data-lucide="folder"></i><span>Files</span></a>
+        <a href="#" class="nav-item"><i data-lucide="database"></i><span>Data</span></a>
+        <a href="#" class="nav-item"><i data-lucide="code-2"></i><span>Scripts</span></a>
+        <a href="#" class="nav-item"><i data-lucide="image"></i><span>Media</span></a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">Team &amp; flows</div>
+        <a href="#" class="nav-item"><i data-lucide="bot"></i><span>Agents</span></a>
+        <a href="#" class="nav-item"><i data-lucide="messages-square"></i><span>Chats</span></a>
+        <a href="#" class="nav-item"><i data-lucide="clock"></i><span>Routines</span></a>
+        <a href="#" class="nav-item"><i data-lucide="layout-grid"></i><span>Kanban</span></a>
+        <a href="#" class="nav-item active"><i data-lucide="calendar-check"></i><span>Piano editoriale</span></a>
+        <a href="#" class="nav-item"><i data-lucide="target"></i><span>Goals</span></a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">Knowledge</div>
+        <a href="#" class="nav-item"><i data-lucide="book-open"></i><span>Hub Knowledge</span></a>
+        <a href="#" class="nav-item"><i data-lucide="link"></i><span>Cross Analyses</span></a>
+        <a href="#" class="nav-item"><i data-lucide="history"></i><span>Sessions Timeline</span></a>
+        <a href="#" class="nav-item"><i data-lucide="heart-pulse"></i><span>Health</span></a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="avatar">A</div>
+      <div class="user">
+        <span class="name">Anja</span>
+        <span class="email">anja-test-hub</span>
+      </div>
+      <button type="button" aria-label="Impostazioni"><i data-lucide="settings"></i></button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-site-switch" style="display:flex;align-items:center;gap:8px">
+        <i data-lucide="globe" style="width:16px;height:16px;color:var(--ink-400)"></i>
+        <button class="ws-switcher" type="button" aria-label="Cambia sito">
+          <span class="ws-ico"><i data-lucide="folder"></i></span>
+          <span>example.com</span>
+          <span class="ws-chev"><i data-lucide="chevrons-up-down"></i></span>
+        </button>
+      </div>
+      <div class="topbar-actions">
+        <a class="topbar-icon-btn" href="#" aria-label="Anja hub"><i data-lucide="sparkles"></i></a>
+        <a class="topbar-icon-btn" href="#" aria-label="Siti"><i data-lucide="layout-grid"></i></a>
+        <a class="topbar-icon-btn" href="#" aria-label="Team"><i data-lucide="users"></i></a>
+        <a class="topbar-icon-btn" href="#" aria-label="Impostazioni"><i data-lucide="settings"></i></a>
+      </div>
+    </header>
+
+    <main>
+      <!-- ===== PAGE HEADER (crumb + titolo) ===== -->
+      <div class="page-header">
+        <div class="crumb">
+          <a href="#">Siti</a>
+          <span class="sep">/</span>
+          <a href="#">example.com</a>
+          <span class="sep">/</span>
+          <span class="current">Piano editoriale</span>
+        </div>
+        <h1 class="page-title">Piano editoriale &amp; social</h1>
+      </div>
+
+      <div class="page-body">
+
+        <!-- SEZIONE 1 — Calendario settimanale -->
+        <div class="ed-toolbar">
+          <div class="section-title">Calendario</div>
+          <div class="ed-week-nav">
+            <a class="btn btn-sm" href="#"><i data-lucide="chevron-left" style="width:16px;height:16px"></i></a>
+            <span class="ed-week-label">Settimana 15–21 giu</span>
+            <a class="btn btn-sm" href="#"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></a>
+            <a class="btn btn-sm btn-primary" href="#">Oggi</a>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto">
+          <table class="cal">
+            <thead>
+              <tr>
+                <th class="cal-corner"></th>
+                <th>Lun <span class="num">15</span></th>
+                <th>Mar <span class="num">16</span></th>
+                <th class="cal-today">Mer <span class="num">17</span></th>
+                <th>Gio <span class="num">18</span></th>
+                <th>Ven <span class="num">19</span></th>
+                <th>Sab <span class="num">20</span></th>
+                <th>Dom <span class="num">21</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Blog -->
+              <tr>
+                <th class="cal-ch"><i data-lucide="file-text" style="width:16px;height:16px"></i> Blog</th>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell">
+                  <div class="ev ev-bozza ev-click" data-kind="plan" data-title="4580 — costo sito web"
+                       data-channel="Blog" data-date="20/06" data-status="bozza"
+                       data-keyword="quanto costa un sito web 2026">4580 · costo sito web</div>
+                </td>
+                <td class="cal-cell"></td>
+              </tr>
+              <!-- Instagram -->
+              <tr>
+                <th class="cal-ch"><i data-lucide="instagram" style="width:16px;height:16px"></i> Instagram</th>
+                <td class="cal-cell">
+                  <div class="ev ev-post ev-click" data-kind="post" data-title="pulsante recesso — carosello"
+                       data-channel="Instagram" data-date="15/06"
+                       data-reach="3.420" data-likes="118" data-comments="9"
+                       data-permalink="https://instagram.com/p/demo">✓ pulsante recesso</div>
+                </td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell">
+                  <div class="ev ev-bozza ev-click" data-kind="plan" data-title="minacce-pmi — kit pronto"
+                       data-channel="Instagram" data-date="17/06" data-status="bozza"
+                       data-keyword="cybersecurity pmi">minacce-pmi</div>
+                </td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+              </tr>
+              <!-- Facebook -->
+              <tr>
+                <th class="cal-ch"><i data-lucide="facebook" style="width:16px;height:16px"></i> Facebook</th>
+                <td class="cal-cell">
+                  <div class="ev ev-post ev-click" data-kind="post" data-title="pulsante recesso"
+                       data-channel="Facebook" data-date="15/06"
+                       data-reach="2.110" data-likes="64" data-comments="3"
+                       data-permalink="https://facebook.com/demo">✓ pulsante recesso</div>
+                </td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell">
+                  <div class="ev ev-bozza ev-click" data-kind="plan" data-title="minacce-pmi — kit pronto"
+                       data-channel="Facebook" data-date="17/06" data-status="bozza"
+                       data-keyword="cybersecurity pmi">minacce-pmi</div>
+                </td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+              </tr>
+              <!-- LinkedIn -->
+              <tr>
+                <th class="cal-ch"><i data-lucide="linkedin" style="width:16px;height:16px"></i> LinkedIn</th>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell">
+                  <div class="ev ev-brief ev-click" data-kind="plan" data-title="recesso PDF — pubblicazione manuale"
+                       data-channel="LinkedIn" data-date="18/06" data-status="brief"
+                       data-keyword="diritto di recesso">recesso PDF</div>
+                </td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+                <td class="cal-cell"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="color:var(--ink-400);font-size:11px;margin-top:8px">✓ = pubblicato (dai post social) · le voci colorate sono pianificate. Programma una voce dall'elenco qui sotto (imposta data + canale).</div>
+
+        <!-- SEZIONE 2 — Elenco del piano -->
+        <div style="display:flex;align-items:center;gap:10px;margin-top:28px;flex-wrap:wrap">
+          <div class="section-title">Piano editoriale · 6 voci</div>
+          <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+            <span style="font-size:11.5px;color:var(--ink-500)">Periodo (elenco + performance):</span>
+            <a class="btn btn-sm btn-primary" href="#">Tutto</a>
+            <a class="btn btn-sm" href="#">Questo mese</a>
+            <a class="btn btn-sm" href="#">Mese prossimo</a>
+          </div>
+        </div>
+
+        <div class="plan-list">
+          <div class="plan-row plan-head">
+            <div>Contenuto</div><div>Stato</div><div>Canale</div><div>Programmato</div><div></div>
+          </div>
+
+          <!-- 4580 — costo sito web (bozza, 20/06) -->
+          <div class="plan-row">
+            <div class="plan-c-title">
+              <div class="t">Blog 4580 — costo sito web</div>
+              <div class="kw">quanto costa un sito web 2026</div>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option>Idea</option><option selected>Bozza</option><option>Brief</option><option>Pubblicato</option>
+              </select>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option selected>Blog</option><option>Instagram</option><option>Facebook</option><option>LinkedIn</option>
+              </select>
+            </div>
+            <div><input type="date" class="form-input sm" value="2026-06-20"></div>
+            <div class="plan-c-act">
+              <button class="btn btn-sm" type="button">Salva</button>
+              <a class="btn btn-sm" href="#" title="Pubblica / programma"><i data-lucide="upload-cloud" style="width:16px;height:16px"></i></a>
+            </div>
+          </div>
+
+          <!-- 4581 — refresh copywriting (brief, 24/06) -->
+          <div class="plan-row">
+            <div class="plan-c-title">
+              <div class="t">Blog 4581 — refresh copywriting</div>
+              <div class="kw">travaso su 4158</div>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option>Idea</option><option>Bozza</option><option selected>Brief</option><option>Pubblicato</option>
+              </select>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option selected>Blog</option><option>Instagram</option><option>Facebook</option><option>LinkedIn</option>
+              </select>
+            </div>
+            <div><input type="date" class="form-input sm" value="2026-06-24"></div>
+            <div class="plan-c-act">
+              <button class="btn btn-sm" type="button">Salva</button>
+            </div>
+          </div>
+
+          <!-- 4582 — GEO pillar (idea, 27/06) -->
+          <div class="plan-row">
+            <div class="plan-c-title">
+              <div class="t">Blog 4582 — GEO pillar</div>
+              <div class="kw">generative engine optimization</div>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option selected>Idea</option><option>Bozza</option><option>Brief</option><option>Pubblicato</option>
+              </select>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option selected>Blog</option><option>Instagram</option><option>Facebook</option><option>LinkedIn</option>
+              </select>
+            </div>
+            <div><input type="date" class="form-input sm" value="2026-06-27"></div>
+            <div class="plan-c-act">
+              <button class="btn btn-sm" type="button">Salva</button>
+            </div>
+          </div>
+
+          <!-- Social — minacce-pmi (bozza, IG/FB, 17/06) -->
+          <div class="plan-row">
+            <div class="plan-c-title">
+              <div class="t">Social kit — minacce-pmi</div>
+              <div class="kw">carosello 7 slide + hero · IG/FB</div>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option>Idea</option><option selected>Bozza</option><option>Brief</option><option>Pubblicato</option>
+              </select>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option>Blog</option><option selected>Instagram</option><option>Facebook</option><option>LinkedIn</option>
+              </select>
+            </div>
+            <div><input type="date" class="form-input sm" value="2026-06-17"></div>
+            <div class="plan-c-act">
+              <button class="btn btn-sm" type="button">Salva</button>
+              <a class="btn btn-sm" href="#" title="Pubblica / programma"><i data-lucide="upload-cloud" style="width:16px;height:16px"></i></a>
+            </div>
+          </div>
+
+          <!-- Social — pulsante recesso (pubblicato, IG/FB, 15/06) -->
+          <div class="plan-row">
+            <div class="plan-c-title">
+              <div class="t">Social kit — pulsante recesso</div>
+              <div class="kw">carosello + UTM · IG/FB</div>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option>Idea</option><option>Bozza</option><option>Brief</option><option selected>Pubblicato</option>
+              </select>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option>Blog</option><option selected>Instagram</option><option>Facebook</option><option>LinkedIn</option>
+              </select>
+            </div>
+            <div><input type="date" class="form-input sm" value="2026-06-15"></div>
+            <div class="plan-c-act">
+              <button class="btn btn-sm" type="button">Salva</button>
+            </div>
+          </div>
+
+          <!-- recesso PDF — LinkedIn (brief, 18/06) -->
+          <div class="plan-row">
+            <div class="plan-c-title">
+              <div class="t">recesso PDF — LinkedIn</div>
+              <div class="kw">pubblicazione manuale · documento</div>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option>Idea</option><option>Bozza</option><option selected>Brief</option><option>Pubblicato</option>
+              </select>
+            </div>
+            <div>
+              <select class="form-select sm">
+                <option>Blog</option><option>Instagram</option><option>Facebook</option><option selected>LinkedIn</option>
+              </select>
+            </div>
+            <div><input type="date" class="form-input sm" value="2026-06-18"></div>
+            <div class="plan-c-act">
+              <button class="btn btn-sm" type="button">Salva</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEZIONE 3 — Performance social -->
+        <div class="section-title" style="margin-top:28px">Performance social organica</div>
+        <div class="card" style="padding:20px;margin-top:10px">
+          <table class="data-table">
+            <thead><tr><th>Data</th><th>Canale</th><th>Post</th><th>Reach</th><th>Like</th><th>Commenti</th><th>Salv./Cond.</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>15/06</td>
+                <td><span class="tag brand">instagram</span></td>
+                <td><a href="#" target="_blank" rel="noopener">pulsante recesso — carosello</a></td>
+                <td>3.420</td><td>118</td><td>9</td><td>21/14</td>
+              </tr>
+              <tr>
+                <td>15/06</td>
+                <td><span class="tag neutral">facebook</span></td>
+                <td><a href="#" target="_blank" rel="noopener">pulsante recesso</a></td>
+                <td>2.110</td><td>64</td><td>3</td><td>8/11</td>
+              </tr>
+              <tr>
+                <td>08/06</td>
+                <td><span class="tag brand">instagram</span></td>
+                <td><a href="#" target="_blank" rel="noopener">minacce PMI — reel teaser</a></td>
+                <td>4.890</td><td>203</td><td>17</td><td>44/29</td>
+              </tr>
+              <tr>
+                <td>01/06</td>
+                <td><span class="tag neutral">facebook</span></td>
+                <td>refresh copywriting — promo</td>
+                <td>—</td><td>—</td><td>—</td><td>0/0</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="color:var(--ink-400);font-size:11px;margin-top:8px">Reach/interazioni dal DB (aggiornati col pulsante "Aggiorna dati"). "—" = non ancora scaricato.</div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Quick view voce calendario -->
+<div id="ev-modal" class="ev-modal" hidden>
+  <div class="ev-modal-box">
+    <button class="ev-modal-x" type="button" aria-label="Chiudi">&times;</button>
+    <div id="evm-kind" class="ev-modal-kind"></div>
+    <h3 id="evm-title" style="margin:6px 0 8px;font-size:16px;line-height:1.3"></h3>
+    <div id="evm-meta" style="color:var(--ink-500);font-size:13px"></div>
+    <div id="evm-extra" style="color:var(--ink-700);font-size:13px;margin-top:10px"></div>
+    <a id="evm-link" class="btn btn-sm" target="_blank" rel="noopener" style="margin-top:14px" hidden>Vedi post ↗</a>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>lucide.createIcons();</script>
+<script>
+(function () {
+  const modal = document.getElementById('ev-modal');
+  if (!modal) return;
+  const close = () => { modal.hidden = true; };
+  function openEv(el) {
+    const d = el.dataset;
+    document.getElementById('evm-kind').textContent = d.kind === 'post' ? 'Pubblicato' : 'Pianificato';
+    document.getElementById('evm-title').textContent = d.title || '(senza titolo)';
+    const meta = [];
+    if (d.channel) meta.push(d.channel);
+    if (d.date) meta.push(d.date);
+    if (d.status) meta.push('stato: ' + d.status);
+    document.getElementById('evm-meta').textContent = meta.join('  ·  ');
+    const extra = document.getElementById('evm-extra');
+    extra.textContent = '';
+    if (d.kind === 'post') {
+      const p = [];
+      if (d.reach) p.push('Reach ' + d.reach);
+      if (d.likes) p.push('Like ' + d.likes);
+      if (d.comments) p.push('Commenti ' + d.comments);
+      extra.textContent = p.length ? p.join('  ·  ') : 'Insight non ancora scaricati (usa "Aggiorna dati").';
+    } else if (d.keyword) {
+      extra.textContent = 'Keyword: ' + d.keyword;
+    }
+    const link = document.getElementById('evm-link');
+    if (d.permalink) { link.href = d.permalink; link.hidden = false; }
+    else { link.hidden = true; }
+    modal.hidden = false;
+  }
+  document.querySelectorAll('.ev-click').forEach(el => el.addEventListener('click', () => openEv(el)));
+  modal.addEventListener('click', e => { if (e.target === modal || e.target.classList.contains('ev-modal-x')) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+})();
+</script>
+</body>
+</html>

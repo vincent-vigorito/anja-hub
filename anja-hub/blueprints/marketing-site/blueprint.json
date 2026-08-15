@@ -1,0 +1,23 @@
+{
+  "name": "marketing-site",
+  "version": "0.1.0",
+  "description": "Gestione sito/ecommerce — SEO, contenuti, ads, social, analisi. Un brand = un workspace.",
+  "workspace_type": "marketing",
+  "backends": ["wp", "woo", "swerpi"],
+  "default_backend": "wp",
+  "ecommerce_optional": true,
+  "shared_skill": "seo-manager",
+  "mcp_server": "anja_marketing",
+  "tool_groups_by_backend": {
+    "wp": "cms,analytics,social",
+    "woo": "cms,analytics,social",
+    "swerpi": "analytics,social"
+  },
+  "pod": ["lead", "analyst", "seo-copy", "dev", "social"],
+  "lead_role": "lead",
+  "placeholders": {
+    "WS": "slug del workspace (es. acme-shop)",
+    "BRAND": "nome brand (es. example.com)",
+    "LEAD": "slug agente lead (es. anja-acme-shop)"
+  }
+}

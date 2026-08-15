@@ -1,0 +1,35 @@
+# Routine: report SEO/traffico settimanale di {BRAND} — READ-ONLY (governata).
+# Scaffoldata da blueprint_scaffold in <ws>/.anjawiki/routines/ con {WS}/{BRAND} sostituiti.
+name: weekly-report-{WS}
+description: Report SEO/traffico settimanale di {BRAND} (read-only)
+scope: project:{WS}
+schedule: "0 9 * * 1"          # ogni lunedì 9:00
+enabled: true
+model: sonnet
+tools:
+  - Read                        # per leggere data/ESPERTO.md; i tool anja_marketing sono auto-attivi
+prompt: |
+  Sei il responsabile marketing di {BRAND}. Genera il REPORT SETTIMANALE — **SOLO LETTURA**:
+  non scrivere né modificare NULLA sul sito (vietati wp_create/update/delete e meta_publish).
+  Se utile carica i fatti del brand da `data/ESPERTO.md`.
+
+  Contenuto (markdown, conciso, max ~400 parole, niente preamboli):
+  1. **Organico (GSC, ultimi 7g vs 7g precedenti)** — query in crescita/calo, quick-win (posizione 8-20).
+  2. **Analytics (GA4, ultimi 7g)** — sessioni per canale, eventi/conversioni chiave.
+  3. **Contenuti** — pagine deboli o novità da migliorare.
+  4. **Azioni consigliate** — max 3, in ordine di priorità.
+
+  Usa i tool del server `anja_marketing` (gsc_query, ga_report, wp_list_content).
+output:
+  - type: file
+    path: workspaces/{WS}/files/reports/weekly-{date}.md
+    mode: overwrite
+  # Consegna Telegram. Token da TELEGRAM_BOT_TOKEN; serve TELEGRAM_CHAT_ID in
+  # <hub>/.secrets.env (o config.telegram.allowed_chat_ids). Se assente, questa
+  # action fallisce soft (il file viene comunque scritto).
+  - type: telegram
+    chat_id: "{{TELEGRAM_CHAT_ID}}"
+    title: "📊 Report settimanale {BRAND}"
+timeout_sec: 300
+max_retries: 1
+tags: [marketing, weekly, report]

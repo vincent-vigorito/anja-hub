@@ -1,0 +1,190 @@
+/* ============================================================
+   editorial.css — Piano editoriale (F1b)
+   Replica fedele del <style> inline di anja-marketer/plan_board.html,
+   rimappato sui token del kit (variabili.css). I soli hex hardcoded
+   sono i verdi/ambra "vivi" degli stati che il kit non espone come
+   token semantico (pubblicato=verde, brief=ambra).
+   Mappe stato→colore: pubblicato=verde · bozza=brand/teal · brief=ambra · idea=grigio.
+   ============================================================ */
+
+/* === Titoli sezione === */
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-700);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+/* === Toolbar settimana (‹ / week / › / Oggi) === */
+.ed-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.ed-week-nav { display: flex; align-items: center; gap: 8px; }
+.ed-week-label {
+  font-weight: 600;
+  font-size: 14px;
+  min-width: 120px;
+  text-align: center;
+  color: var(--ink-800);
+}
+
+/* === Calendario canale × giorno === */
+.cal {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  min-width: 720px;
+  table-layout: fixed;
+}
+.cal th, .cal td { border: 1px solid var(--border); }
+.cal thead th {
+  background: var(--bg-subtle);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-600);
+  padding: 8px 4px;
+  text-align: center;
+}
+.cal thead th .num { color: var(--ink-800); font-weight: 700; }
+.cal .cal-corner { width: 108px; background: transparent; border: 0; }
+.cal .cal-today { background: var(--brand-soft); color: var(--brand); }
+.cal .cal-ch {
+  width: 108px;
+  background: var(--bg-subtle);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 8px;
+  white-space: nowrap;
+}
+.cal .cal-ch i { vertical-align: -3px; color: var(--ink-500); }
+.cal-cell { vertical-align: top; height: 60px; padding: 4px; }
+
+/* === Evento / pill stato (border-left colorato) === */
+.ev {
+  font-size: 10.5px;
+  line-height: 1.25;
+  border-radius: 5px;
+  padding: 3px 6px;
+  margin-bottom: 3px;
+  border-left: 3px solid var(--ink-300);
+  background: var(--bg-subtle);
+  color: var(--ink-700);
+}
+.ev a { color: inherit; text-decoration: none; }
+.ev-post, .ev-pubblicato { border-left-color: #16a34a; background: #f0fdf4; color: #15803d; }
+.ev-bozza { border-left-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
+.ev-brief { border-left-color: #d97706; background: #fffbeb; color: #b45309; }
+.ev-idea  { border-left-color: var(--ink-400); }
+.ev-repurposed { border-left-color: #7c3aed; background: #f5f3ff; color: #6d28d9; }
+
+/* === Badge stato (pill arrotondata, lista piano) ===
+   Stessi colori semantici di .ev-<stato>: pubblicato=verde · bozza=brand/teal ·
+   brief=ambra · idea=grigio · repurposed=violetto. */
+.ed-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+/* select editabile che mantiene il look della pill (lista piano, write-back PIANO.md) */
+.ed-badge-select {
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  padding-right: 22px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
+}
+/* background-color (non shorthand) così il chevron .ed-badge-select sopravvive */
+.ed-badge-pubblicato { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.ed-badge-bozza      { background-color: var(--brand-soft); color: var(--brand); border-color: var(--brand-soft); }
+.ed-badge-brief      { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
+.ed-badge-idea       { background-color: var(--bg-subtle); color: var(--ink-600); border-color: var(--border); }
+.ed-badge-repurposed { background-color: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
+
+/* === Elenco piano (griglia, non card) === */
+.plan-list {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+.plan-row {
+  display: grid;
+  grid-template-columns: 1fr 130px 120px 150px 96px;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  margin: 0;
+}
+.plan-row:last-child { border-bottom: 0; }
+.plan-head {
+  background: var(--bg-subtle);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--ink-500);
+}
+.plan-row .t { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.plan-row .kw { font-size: 11.5px; color: var(--ink-500); margin-top: 2px; }
+.plan-row .form-select.sm, .plan-row .form-input.sm { font-size: 12px; padding: 4px 6px; width: 100%; height: auto; }
+.plan-c-act { display: flex; gap: 5px; justify-content: flex-end; }
+
+/* === Bottone small (toolbar + lista) === */
+.btn-sm { font-size: 11px; padding: 4px 9px; height: auto; }
+
+/* === Quick view voce (modal) === */
+.ev-click { cursor: pointer; }
+.ev-click:hover { filter: brightness(.97); }
+.ev-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, .4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+.ev-modal[hidden] { display: none; }
+.ev-modal-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 22px 24px;
+  width: min(420px, 92vw);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .22);
+  position: relative;
+}
+.ev-modal-x {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  border: 0;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-400);
+}
+.ev-modal-kind {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--brand);
+}

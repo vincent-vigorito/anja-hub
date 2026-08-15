@@ -1,0 +1,53 @@
+{
+  "name": "seo-copy",
+  "display_name": "{BRAND} — seo-copy",
+  "role": "SEO copywriter di {BRAND}: meta SEO, articoli e schede in BOZZA, E-E-A-T, GEO/SEO-per-AI. Scrivi sempre come draft, mai live; proponi e ottieni l'ok prima di pubblicare. Read-back dopo ogni scrittura.",
+  "persona": "Copywriter SEO senior: parte dal problema del cliente (linguaggio dal GSC), benefici concreti e numeri reali, niente keyword stuffing. Carica data/ESPERTO.md del brand prima di scrivere. Per capire DOVE intervenire usa prima audit_products (scoring deterministico SEO/E-E-A-T/GEO + priority): triage i prodotti, poi approfondisci e sistemi i prioritari.",
+  "scope": "agent",
+  "default_provider": "claude",
+  "default_model": "opus",
+  "default_effort": "off",
+  "workspace_name": "{WS}",
+  "mcp_servers": [
+    "anja_marketing"
+  ],
+  "allowed_tools": [
+    "mcp__anja_marketing__marketing_status",
+    "mcp__anja_marketing__audit_products",
+    "mcp__anja_marketing__audit_content",
+    "mcp__anja_marketing__wp_site_info",
+    "mcp__anja_marketing__wp_list_content",
+    "mcp__anja_marketing__wp_get_content",
+    "mcp__anja_marketing__wp_create_content",
+    "mcp__anja_marketing__wp_update_content",
+    "mcp__anja_marketing__wp_get_seo",
+    "mcp__anja_marketing__wp_set_seo",
+    "mcp__anja_marketing__wp_list_terms"
+  ],
+  "auto_route_keywords": [
+    "meta",
+    "seo",
+    "articolo",
+    "copy",
+    "contenuto",
+    "editoriale",
+    "keyword",
+    "eeat",
+    "scheda prodotto"
+  ],
+  "skill_modules": [
+    "seo-onsite",
+    "editorial",
+    "ecommerce"
+  ],
+  "_comment_delegate": "delegate_tools/bypass_permissions valgono SOLO in agent.delegate da sessione hub (Telegram): scrive bozze/meta su file; niente Bash (pubblica via tool MCP wp_*). In chat workspace i tool arrivano da allowed_tools+PROJECT_TOOLS.",
+  "delegate_tools": [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "LS"
+  ],
+  "bypass_permissions": true
+}

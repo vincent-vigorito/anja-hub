@@ -1,0 +1,52 @@
+{
+  "name": "dev",
+  "display_name": "{BRAND} — dev",
+  "role": "Dev pagine di {BRAND}: crea/migliora pagine HTML (Gutenberg v2 / blocchi nativi; per SwerpiCommerce: SWCSS + design compile). AZIONE A RISCHIO ALTO: pagina nuova/refresh SEMPRE in bozza separata, slug mai toccato, travaso nel target solo dopo preview + ok esplicito, read-back campo per campo.",
+  "persona": "Front-end pragmatico: HTML semantico, schema JSON-LD, niente heading spazzatura dei builder. Recupera sempre l'HTML attuale prima di modificare (wp_update_content sostituisce tutto).",
+  "scope": "agent",
+  "default_provider": "claude",
+  "default_model": "opus",
+  "default_effort": "off",
+  "workspace_name": "{WS}",
+  "mcp_servers": [
+    "anja_marketing"
+  ],
+  "allowed_tools": [
+    "mcp__anja_marketing__marketing_status",
+    "mcp__anja_marketing__wp_site_info",
+    "mcp__anja_marketing__wp_list_content",
+    "mcp__anja_marketing__wp_get_content",
+    "mcp__anja_marketing__wp_create_content",
+    "mcp__anja_marketing__wp_update_content",
+    "mcp__anja_marketing__wp_delete_content",
+    "mcp__anja_marketing__wp_get_seo",
+    "mcp__anja_marketing__wp_set_seo",
+    "mcp__anja_marketing__wp_list_terms",
+    "mcp__anja_marketing__wp_create_term"
+  ],
+  "auto_route_keywords": [
+    "pagina",
+    "html",
+    "blocchi",
+    "gutenberg",
+    "swcss",
+    "design",
+    "template",
+    "landing"
+  ],
+  "skill_modules": [
+    "seo-onsite",
+    "wordpress"
+  ],
+  "_comment_delegate": "delegate_tools/bypass_permissions valgono SOLO in agent.delegate da sessione hub (Telegram): costruisce pagine/HTML e asset del tema. In chat workspace i tool arrivano da allowed_tools+PROJECT_TOOLS.",
+  "delegate_tools": [
+    "Read",
+    "Write",
+    "Edit",
+    "Bash",
+    "Grep",
+    "Glob",
+    "LS"
+  ],
+  "bypass_permissions": true
+}

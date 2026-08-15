@@ -1,0 +1,26 @@
+{
+  "name": "{AGENT_NAME}",
+  "role": "{AGENT_ROLE_DESCRIPTION}",
+  "default_provider": "claude",
+  "default_model": "{AGENT_MODEL}",
+  "default_effort": "off",
+  "scope": "hub",
+  "soul_inheritance": ["hub"],
+  "allowed_tools": [],
+  "auto_route_keywords": [],
+  "providers": [
+    {
+      "provider": "claude",
+      "model": "{AGENT_MODEL}",
+      "effort": "off"
+    }
+  ],
+  "no_fallback": false,
+  "memory": {
+    "hot_budget_tokens": 1500,
+    "warm_budget_tokens": 3000,
+    "log_entries_count": 3,
+    "session_summaries_count": 5,
+    "wiki_match_max_pages": 3
+  }
+}

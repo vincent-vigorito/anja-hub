@@ -1,0 +1,60 @@
+# Template per una routine anja. Salva in <hub>/routines/<name>.yaml
+#
+# Campi obbligatori: name, scope, schedule, prompt
+# Campi opzionali: enabled, model, tools, context, output, timeout_sec, max_retries, tags, description
+
+name: my-routine                          # unique identifier (kebab-case)
+description: Cosa fa questa routine       # human-readable
+
+# === SCOPE ===
+# hub      → gira nel hub (cwd = hub_path), niente MCP del progetto
+# project:<name> → gira nel progetto (cwd = project_path), MCP/skill del progetto auto-attivi
+scope: hub
+
+# === SCHEDULING ===
+# cron 5-field: min hour day month weekday
+# esempi: "0 8 * * *" (ogni giorno 8:00), "*/30 * * * *" (ogni 30min), "0 9 * * 1" (ogni lunedì 9:00)
+schedule: "0 8 * * *"
+enabled: true
+
+# === LLM ===
+model: sonnet                             # haiku | sonnet | opus
+prompt: |
+  Sostituisci con il prompt vero. Multi-line OK.
+  Puoi usare segnaposti come {date} che vengono sostituiti a runtime.
+
+# === CONTEXT (opzionale) ===
+# context:
+#   - hub_page: "<project>/wiki/<page>"      # pagine wiki da pre-loadare nel prompt
+
+# === TOOLS (opzionale, default basato su scope) ===
+# tools:
+#   - web_search
+#   - web_fetch
+# Per scope project, gli MCP del progetto sono SEMPRE auto-disponibili.
+
+# === OUTPUT ACTIONS ===
+output:
+  - type: email
+    to: you@example.com
+    subject: "[anja] {name} — {date}"
+  # - type: google_chat
+  #   webhook_url: "{{GCHAT_WEBHOOK_URL}}"      # da .secrets.env del hub
+  # - type: slack
+  #   webhook_url: "{{SLACK_WEBHOOK_URL}}"
+  # - type: wiki_ingest
+  #   target_project: <project-name>
+  #   raw_subdir: news-daily
+  #   auto_ingest: true                        # invoca anche /anja-ingest workflow
+  # - type: wiki_page_hub
+  #   slug: my-analysis-{date}                 # scrive in <hub>/cross/analysis/<slug>.md
+  # - type: file
+  #   path: /tmp/output-{date}.txt
+  #   mode: overwrite                          # overwrite | append
+
+# === LIMITS (opzionale) ===
+timeout_sec: 300                          # max 5 min, kill se supera
+max_retries: 1                            # retry on failure
+
+# === META ===
+tags: [example, daily]

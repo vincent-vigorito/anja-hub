@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>anja · Decision Trail</title>
+<style>
+  :root { --bg:#f7fafc; --card:#ffffff; --line:#e3e8ee; --fg:#1a1f36; --mut:#697386; --acc:#0b887b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.5 -apple-system,system-ui,sans-serif; padding:24px; }
+  h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--mut); font-size:12px; margin-bottom:16px; }
+  .filters { margin-bottom:16px; display:flex; gap:6px; flex-wrap:wrap; }
+  .chip { background:var(--card); border:1px solid var(--line); color:var(--mut); border-radius:16px; padding:4px 12px; cursor:pointer; font-size:12px; }
+  .chip.on { background:var(--acc); color:#ffffff; border-color:var(--acc); font-weight:600; }
+  .d { background:var(--card); border:1px solid #ebeff3; border-radius:8px; padding:12px 14px; margin-bottom:10px; box-shadow:0 2px 5px 0 rgba(18,42,66,.04), 0 0 0 1px rgba(18,42,66,.06); }
+  .d-head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .actor { font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.05em; padding:2px 8px; border-radius:5px; background:#e0faf5; color:var(--acc); }
+  .when { color:var(--mut); font-size:12px; margin-left:auto; }
+  .conf { font-size:12px; color:var(--mut); }
+  .decision { font-weight:600; margin:2px 0; }
+  .line { font-size:13px; margin:3px 0; } .k { color:var(--mut); }
+  .arrow { color:#5fb87a; } .alt { color:#e0b15f; }
+  a { color:var(--acc); } .muted { color:var(--mut); font-size:12px; }
+</style>
+</head>
+<body>
+  <h1>ᛗ Decision Trail</h1>
+  <div class="sub">M-DecisionTrail · il <i>perché</i> delle azioni autonome — <span id="total"></span></div>
+  <div class="filters" id="filters"></div>
+  <div id="list"></div>
+  <p class="muted" style="margin-top:16px"><a href="/">← Mission Control</a> · <a href="/health">Health</a> · <a href="/costs">Costi</a></p>
+
+<script>
+const $ = s => document.querySelector(s);
+let actor = null;
+function conf(c){ return c==null ? "" : `· conf ${Math.round(c*100)}%`; }
+async function load() {
+  const url = "/api/decisions?limit=200" + (actor ? "&actor="+encodeURIComponent(actor) : "");
+  const r = await fetch(url).then(x=>x.json()).catch(()=>null);
+  if (!r) { $("#list").innerHTML = "errore"; return; }
+  $("#total").textContent = `${r.stats.total||0} decisioni registrate`;
+  const acts = (r.stats.by_actor||[]).map(a => `${a.actor} (${a.n})`);
+  $("#filters").innerHTML = [`<span class="chip ${!actor?'on':''}" onclick="setActor(null)">tutti</span>`]
+    .concat((r.stats.by_actor||[]).map(a =>
+      `<span class="chip ${actor===a.actor?'on':''}" onclick="setActor('${jsq(a.actor)}')">${esc(a.actor)} · ${a.n}</span>`)).join("");
+  $("#list").innerHTML = (r.items||[]).map(d => `
+    <div class="d">
+      <div class="d-head"><span class="actor">${esc(d.actor)}</span>
+        <span class="conf">${conf(d.confidence)}</span>
+        <span class="when">${(d.ts||'').replace('T',' ').replace('+00:00','')}</span></div>
+      <div class="line"><span class="k">trigger:</span> ${esc(d.trigger)}</div>
+      <div class="decision"><span class="arrow">→</span> ${esc(d.decision)}</div>
+      ${d.rationale ? `<div class="line"><span class="k">perché:</span> ${esc(d.rationale)}</div>` : ""}
+      ${d.alternative ? `<div class="line alt"><span class="k">scartato:</span> ${esc(d.alternative)}</div>` : ""}
+    </div>`).join("") || `<div class="muted">nessuna decisione registrata ancora</div>`;
+}
+function esc(s){ return (s||"").replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
+function jsq(s){ return (s||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+function setActor(a){ actor = a; load(); }
+load(); setInterval(load, 15000);
+</script>
+</body>
+</html>

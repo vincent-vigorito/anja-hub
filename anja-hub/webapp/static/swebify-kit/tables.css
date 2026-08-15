@@ -1,0 +1,1158 @@
+/* ===========================================
+   SWCSS Custom - Tables
+   Table row styles e hover per il gestionale
+   =========================================== */
+
+/* === TABLE CONTAINER — pannello tabella desktop === */
+.sw-table {
+    display: none;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    overflow-x: auto;
+}
+@media (--lg) {
+    .sw-table {
+        display: block;
+    }
+}
+.sw-table table {
+    width: 100%;
+}
+
+/* === TABLE ROW (generic hover) === */
+.table-row {
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+.table-row:hover {
+    background-color: #f8fafc;
+}
+
+/* === TABLE ACTIONS TRIGGER (three dots button) === */
+.sw-table [data-sw-actions],
+.sw-table [data-action-menu] {
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+}
+.sw-table-actions-btn {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    color: #9ca3af;
+}
+.sw-table-actions-btn:hover {
+    background-color: #f3f4f6;
+}
+.sw-table-actions-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #9ca3af;
+}
+
+/* === ORDER ROW (ordini fornitore) === */
+.order-row {
+    transition: all 0.15s ease;
+}
+.order-row:hover {
+    background: #f8fafc;
+}
+
+/* === RDA ROW (richieste di acquisto) === */
+.rda-row {
+    transition: all 0.15s ease;
+}
+.rda-row:hover {
+    background: #f8fafc;
+}
+
+/* === RIGA ROW (righe documento vendita) === */
+.riga-row:hover {
+    background: #f8fafc;
+}
+
+/* === MAPPING ROW (fatture da registrare) === */
+.mapping-row {
+    padding: 1.25rem;
+    transition: background 0.2s ease;
+}
+.mapping-row + .mapping-row {
+    border-top: 1px solid #f1f5f9;
+}
+.mapping-row:hover {
+    background: rgba(16, 185, 129, 0.03);
+}
+.mapping-row.mapped {
+    border-left: 3px solid #10b981;
+}
+.mapping-row.unmapped {
+    border-left: 3px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.05);
+}
+.mapping-row.unmapped:hover {
+    background: rgba(245, 158, 11, 0.08);
+}
+.mapping-row-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+.mapping-row-head .sw-entity {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.mapping-row-head .sw-entity-info {
+    min-width: 0;
+}
+.mapping-row-total {
+    text-align: right;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.mapping-row-link {
+    margin-left: 2.75rem;
+}
+.mapping-row-footer-totals {
+    margin-left: auto;
+    min-width: 18rem;
+}
+@media (max-width: 640px) {
+    .mapping-row-head {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .mapping-row-total {
+        text-align: left;
+        margin-left: 2.75rem;
+    }
+    .mapping-row-link {
+        margin-left: 0;
+    }
+    .mapping-row-footer-totals {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+/* === ROW ACTIONS (hidden by default, shown on hover) === */
+.row-actions {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+.table-row-hover:hover .row-actions {
+    opacity: 1;
+}
+
+/* === REPORT ROW (whistleblower segnalazioni) === */
+.report-row {
+    transition: all 0.2s ease;
+}
+.report-row:hover {
+    background: rgba(244, 63, 94, 0.05);
+}
+
+/* === TAB PILLS — filtri a pillole === */
+.sw-tab-pills {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    background-color: #f3f4f6;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.sw-tab-pills::-webkit-scrollbar {
+    display: none;
+}
+.sw-tab-pills button {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    cursor: pointer;
+    color: #4b5563;
+}
+.sw-tab-pills button:hover {
+    color: #111827;
+    background-color: #ffffff;
+}
+.sw-tab-pills button.active {
+    background-color: var(--sw-primario);
+    color: #ffffff;
+}
+.sw-tab-pills-fatturazione button.active {
+    background-color: var(--sw-fatturazione);
+}
+.sw-tab-pills-wrap {
+    flex-wrap: wrap;
+    overflow-x: visible;
+}
+.sw-tab-count { opacity: 0.7; }
+
+/* === TABLE TOOLBAR — filtri e azioni sopra tabella === */
+.sw-table-toolbar {
+    position: relative;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+@media (--lg) {
+    .sw-table-toolbar {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+.sw-table-toolbar-left {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+}
+@media (--lg) {
+    .sw-table-toolbar-left {
+        display: flex;
+    }
+}
+
+/* === MOBILE FILTER PANEL (chip selezionabili, stile app) === */
+.sw-mobile-filter-panel {
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+}
+.sw-mobile-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.sw-mobile-filter-chip {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border-radius: 9999px;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.sw-mobile-filter-chip:hover {
+    border-color: #cbd5e1;
+}
+.sw-mobile-filter-chip.active {
+    background: var(--sw-primario, #3b82f6);
+    color: #fff;
+    border-color: var(--sw-primario, #3b82f6);
+}
+
+.sw-table-toolbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Mobile toolbar — search + filter toggle su mobile */
+.sw-table-toolbar-mobile {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+.sw-input-icon-grow {
+    flex: 1;
+    min-width: 0;
+}
+
+/* === TOOLBAR MOBILE/DESKTOP — visibilità responsiva dentro toolbar === */
+.sw-toolbar-mobile {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+.sw-toolbar-mobile .sw-input-icon {
+    flex: 1;
+    min-width: 0;
+}
+.sw-toolbar-mobile-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+.sw-toolbar-desktop {
+    display: none;
+}
+@media (--lg) {
+    .sw-toolbar-mobile {
+        display: none;
+    }
+    .sw-toolbar-desktop {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: nowrap;
+    }
+}
+
+/* === TABELLA DESKTOP ONLY — nasconde contenuto tabella sotto lg === */
+.sw-table-desktop-only {
+    display: none;
+}
+@media (--lg) {
+    .sw-table-desktop-only { display: block; }
+}
+
+/* === TOOLBAR SEARCH — campo ricerca nella toolbar === */
+.sw-toolbar-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+    min-width: 10rem;
+}
+@media (--lg) {
+    .sw-toolbar-search {
+        min-width: 14rem;
+    }
+}
+.sw-toolbar-search:focus-within {
+    border-color: var(--sw-primario);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--sw-primario) 20%, transparent);
+}
+.sw-toolbar-search svg,
+.sw-toolbar-search > i {
+    width: 1rem;
+    height: 1rem;
+    color: #9ca3af;
+    flex-shrink: 0;
+}
+.sw-toolbar-search input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #374151;
+    font-size: 0.875rem;
+    width: 100%;
+}
+.sw-toolbar-search input::placeholder {
+    color: #9ca3af;
+}
+
+/* === TABLE HEADING — titolo sezione tabella === */
+.sw-table-heading {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* === TABLE COUNT — conteggio risultati === */
+.sw-table-count {
+    display: none;
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: #94a3b8;
+}
+@media (--lg) {
+    .sw-table-count {
+        display: inline;
+    }
+}
+
+/* === TABLE PAGINATION — footer paginazione sotto tabella === */
+.sw-table-pagination {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+@media (--sm) {
+    .sw-table-pagination {
+        flex-direction: row;
+    }
+}
+.sw-pagination-info {
+    font-size: 0.875rem;
+    color: #6b7280;
+    order: 2;
+}
+@media (--sm) {
+    .sw-pagination-info { order: 1; }
+}
+.sw-pagination-info strong {
+    font-weight: 500;
+    color: #111827;
+}
+.sw-pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    order: 1;
+}
+@media (--sm) {
+    .sw-pagination-nav { order: 2; }
+}
+.sw-pagination-select {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+}
+.sw-pagination-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #e5e7eb;
+    border-color: #9ca3af;
+}
+.sw-pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.sw-pagination-btn {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+    border-radius: 0.5rem;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+.sw-pagination-btn:hover {
+    color: #374151;
+    background-color: #f3f4f6;
+}
+.sw-pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.sw-pagination-btn:disabled:hover {
+    background-color: transparent;
+}
+.sw-pagination-btn svg {
+    width: 1rem;
+    height: 1rem;
+}
+.sw-pagination-page {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    border-radius: 0.5rem;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    color: #4b5563;
+}
+.sw-pagination-page:hover {
+    font-weight: 500;
+}
+.sw-pagination-page.active {
+    font-weight: 500;
+    color: #ffffff;
+    background-color: var(--sw-primario);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.sw-pagination-ellipsis {
+    padding: 0 0.5rem;
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+
+/* === TABLE THUMB — thumbnail prodotto in tabella === */
+.sw-table-thumb {
+    width: 3rem;
+    height: 3rem;
+    background-color: #f3f4f6;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.sw-table-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* === BULK BAR — barra azioni selezione multipla === */
+.sw-bulk-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    background-color: color-mix(in srgb, var(--sw-primario) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--sw-primario) 30%, transparent);
+}
+.sw-bulk-bar-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--sw-primario) 85%, #000);
+}
+.sw-bulk-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+}
+.sw-bulk-bar-actions a {
+    padding: 0.25rem 0.5rem;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--sw-primario) 85%, #000);
+}
+.sw-bulk-bar-actions a:hover {
+    text-decoration: underline;
+}
+.sw-bulk-bar-actions a.danger {
+    color: #dc2626;
+}
+.sw-bulk-bar-actions a.neutral {
+    color: #6b7280;
+    font-weight: 400;
+}
+.sw-bulk-bar-actions .sw-bulk-sep {
+    color: #d1d5db;
+}
+
+/* === MOBILE FILTER TOGGLE — pulsante filtri mobile === */
+.sw-mobile-filter-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #6b7280;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.sw-mobile-filter-toggle.active {
+    border-color: var(--sw-primario);
+    color: var(--sw-primario);
+}
+
+/* === MOBILE FILTERS PANEL — pannello filtri espandibile mobile === */
+.sw-mobile-filters-panel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background-color: #f9fafb;
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+/* === TABLE ACTION ICON (edit/delete buttons in simple tables) === */
+.sw-table-action-icon {
+    padding: 0.5rem;
+    color: var(--sw-slate-400);
+    border-radius: 0.5rem;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+}
+.sw-table-action-icon > i[class*="sw-icon-"] {
+    font-size: inherit;
+}
+.sw-table-action-icon:hover {
+    color: var(--sw-slate-600);
+    background-color: var(--sw-slate-100);
+}
+.sw-table-action-icon.danger {
+    color: #ef4444;
+}
+.sw-table-action-icon.danger:hover {
+    color: #dc2626;
+    background-color: #fef2f2;
+}
+
+/* === TABLE COLUMN VISIBILITY — responsive === */
+
+/* Colonna visibile da lg+ (1024px) */
+.sw-col-lg {
+    display: none;
+}
+@media (--lg) {
+    .sw-col-lg { display: table-cell; }
+}
+
+/* Colonna visibile da xl+ (1280px) */
+.sw-col-xl {
+    display: none;
+}
+@media (--xl) {
+    .sw-col-xl { display: table-cell; }
+}
+
+/* Colonna visibile da 2xl+ (1536px) */
+.sw-col-2xl {
+    display: none;
+}
+@media (--2xl) {
+    .sw-col-2xl { display: table-cell; }
+}
+
+/* Cella con padding responsive per schermi grandi */
+.sw-cell {
+    padding: 1rem;
+    font-size: 0.875rem;
+}
+@media (--2xl) {
+    .sw-cell { padding-left: 1.25rem; padding-right: 1.25rem; }
+}
+@media (--3xl) {
+    .sw-cell { padding-left: 1.5rem; padding-right: 1.5rem; }
+}
+
+/* Header cella con padding responsive + stili tipografici */
+.sw-cell-header {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s ease;
+}
+.sw-cell-header:hover {
+    color: #374151;
+}
+@media (--2xl) {
+    .sw-cell-header { padding-left: 1.25rem; padding-right: 1.25rem; }
+}
+@media (--3xl) {
+    .sw-cell-header { padding-left: 1.5rem; padding-right: 1.5rem; }
+}
+
+/* === CELL MODIFIERS — varianti semantiche per celle body === */
+
+/* Testo secondario (grigio piccolo) — pattern: text-sm text-gray-500/600 */
+.sw-cell-muted {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Testo primario bold — pattern: text-sm font-medium text-gray-900 */
+.sw-cell-bold {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #111827;
+}
+.sw-cell-light {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+/* Prezzi inline (prezzo unitario, qty, totale) */
+.sw-cell-prices {
+    font-size: 0.875rem;
+}
+.sw-cell-price {
+    color: #475569;
+}
+.sw-cell-price-qty {
+    color: #94a3b8;
+}
+.sw-cell-price-total {
+    font-weight: 500;
+    color: #0f172a;
+}
+
+/* Testo semibold — pattern: text-sm font-semibold */
+.sw-cell-semibold {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--sw-slate-900);
+}
+
+/* Allineamento destra — pattern: text-right */
+.sw-cell-right {
+    text-align: right;
+}
+
+/* No wrap — pattern: whitespace-nowrap */
+.sw-cell-nowrap {
+    white-space: nowrap;
+}
+
+/* Layout prodotto con thumb + testo — pattern: flex align-center gap-3 */
+.sw-cell-product {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Titolo cella — pattern: font-medium text-gray-900 */
+.sw-cell-title {
+    font-weight: 500;
+    color: #111827;
+}
+
+/* Sottotitolo cella (grigio piccolo) — pattern: text-xs text-gray-500 */
+.sw-cell-sub {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* Cella inline (icona + testo su riga) — pattern: flex items-center gap-1 text-sm */
+.sw-cell-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    color: #4b5563;
+}
+
+/* Layout utente con avatar + testo — pattern: flex align-center gap-3 */
+.sw-cell-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Cella azioni (allineata a destra, larghezza fissa) */
+.sw-cell-actions {
+    text-align: right;
+    width: 5rem;
+}
+.sw-cell-actions-header {
+    text-align: right;
+    width: 5rem;
+}
+
+/* Header cella allineata a destra */
+.sw-cell-header-right {
+    text-align: right;
+}
+
+/* Cella/header allineata al centro (colonne azioni) */
+.sw-cell-center {
+    text-align: center;
+}
+
+/* Stato vuoto tabella — pattern: td colspan text-center py-12 */
+.sw-table-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6b7280;
+}
+.sw-table-empty i {
+    color: #d1d5db;
+    margin-bottom: 0.75rem;
+}
+.sw-table-empty p:first-of-type {
+    font-weight: 500;
+}
+.sw-table-empty p + p {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Valore cella (semibold) — pattern: text-sm font-semibold text-gray-900 */
+.sw-cell-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* Status dot — pallino colorato stato */
+.sw-status-dot {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 9999px;
+    display: inline-block;
+}
+.sw-status-dot-sm {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    display: inline-block;
+}
+
+/* Testo cella standard — pattern: text-sm text-gray-600 */
+.sw-cell-text {
+    font-size: 0.875rem;
+    color: #475569;
+}
+
+/* Font monospace — pattern: font-mono text-xs */
+.sw-cell-mono {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    color: #4b5563;
+}
+
+/* Riga cliccabile */
+.sw-table-row-clickable {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+.sw-table-row-clickable:hover {
+    background-color: #f9fafb;
+}
+
+/* Header row e body */
+.sw-table thead tr {
+    border-bottom: 1px solid #e5e7eb;
+    background-color: rgba(249, 250, 251, 0.5);
+}
+.sw-table tbody tr + tr {
+    border-top: 1px solid #f3f4f6;
+}
+
+/* === FILTER DROPDOWN — pulsante filtri + pannello dropdown === */
+
+/* Wrapper relativo */
+.sw-filter-wrap {
+    position: relative;
+}
+
+/* Pulsante toggle filtri */
+.sw-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    color: #475569;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    height: 2rem;
+}
+.sw-filter-btn:hover {
+    border-color: #cbd5e1;
+    background-color: #f8fafc;
+}
+.sw-filter-btn.active {
+    background-color: color-mix(in srgb, var(--sw-primario) 8%, #ffffff);
+    border-color: color-mix(in srgb, var(--sw-primario) 50%, transparent);
+    color: var(--sw-primario);
+}
+.sw-filter-btn svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+}
+.sw-filter-btn svg:last-child {
+    width: 0.625rem;
+    height: 0.625rem;
+}
+
+/* Badge conteggio filtri attivi */
+.sw-filter-badge {
+    padding: 0.125rem 0.375rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1;
+    background-color: var(--sw-primario);
+    color: #ffffff;
+    border-radius: 9999px;
+}
+
+/* Date range inline (coppia di date con separatore) */
+.sw-filter-date-range {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+.sw-filter-date-sep {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* Dropdown menu compatto (sort, azioni rapide) */
+.sw-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    margin-top: 0.25rem;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    padding: 0.25rem 0;
+    z-index: 20;
+}
+.sw-dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: #374151;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+.sw-dropdown-item:hover {
+    background-color: #f8fafc;
+}
+.sw-dropdown-item-active,
+.sw-dropdown-item.sw-dropdown-item-active {
+    color: var(--sw-primario);
+    font-weight: 500;
+}
+
+/* Pannello dropdown (default: largo per filtri avanzati) */
+.sw-filter-panel {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    margin-top: 0.5rem;
+    width: calc(100vw - 3rem);
+    max-width: 20rem;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    z-index: 50;
+}
+@media (--lg) {
+    .sw-filter-panel {
+        left: auto;
+        right: 0;
+        width: 20rem;
+    }
+}
+
+/* Variante compatta — bottone più piccolo (toolbar tabelle) */
+
+
+/* Pannello stretto (per filtri stato semplici) */
+.sw-filter-panel-sm {
+    width: 10rem;
+    padding: 0.25rem 0;
+}
+.sw-filter-panel-sm .sw-filter-option {
+    font-size: 0.8125rem;
+    padding: 0.375rem 0.75rem;
+}
+
+/* Header pannello filtri */
+.sw-filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+.sw-filter-header span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+/* Pulsante reset filtri */
+.sw-filter-reset {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--sw-primario);
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+.sw-filter-reset:hover {
+    opacity: 0.8;
+}
+
+/* Griglia filtri (2 colonne) */
+.sw-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+/* Label campo filtro */
+.sw-filter-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+}
+
+/* Opzione in dropdown stato (per filtri semplici) */
+.sw-filter-option {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.1s ease;
+    cursor: pointer;
+}
+.sw-filter-option:hover {
+    background-color: #f8fafc;
+}
+.sw-filter-option.active {
+    background-color: #f1f5f9;
+}
+
+/* Dot colorato dentro filter-option */
+.sw-filter-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.sw-filter-dot-neutral { background-color: #9ca3af; }
+.sw-filter-dot-whistleblower { background-color: var(--sw-whistleblower); }
+.sw-filter-dot.sw-dot-rifiutato { background: var(--sw-st-rifiutato); }
+.sw-filter-dot.sw-dot-parziale { background: var(--sw-st-parziale); }
+.sw-filter-dot.sw-dot-confermato { background: var(--sw-st-confermato); }
+
+/* === SW-RIGHE-GRID — griglia inline righe documento (fattura, ordine, ecc.) === */
+/* === SW-EDITABLE-GRID (inline editable table, e.g. righe fattura) === */
+.sw-editable-grid-header,
+.sw-editable-grid-row {
+    display: grid;
+    grid-template-columns: 2rem 9rem 1fr 8rem 12rem 4.5rem 5.5rem 6rem 2.25rem;
+    gap: 0.75rem;
+    align-items: center;
+}
+.sw-editable-grid-header {
+    padding: 0.75rem 1rem;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.sw-editable-grid-row {
+    padding: 0.75rem 1rem;
+    transition: background-color 0.15s ease;
+    min-width: 0;
+}
+.sw-editable-grid-row > * {
+    min-width: 0;
+}
+.sw-editable-grid-row:hover {
+    background-color: rgba(249, 250, 251, 0.5);
+}
+.sw-editable-grid-row + .sw-editable-grid-row {
+    border-top: 1px solid #f3f4f6;
+}
+.sw-editable-grid-row .sw-icon-btn i {
+    transition: transform 0.15s ease;
+}
+.sw-editable-grid-detail {
+    margin: 0.75rem 1rem 0.75rem 3rem;
+    padding-left: 1rem;
+    border-left: 2px solid #e5e7eb;
+}
+.sw-editable-grid-detail-row {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.sw-editable-grid-detail-row:last-child {
+    margin-bottom: 0;
+}
+.sw-editable-grid-detail-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+.sw-editable-grid-detail-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+.sw-editable-grid-span {
+    grid-column: 3 / -2;
+}
+
+/* Variante DDT: meno colonne (no prezzo, IVA, totale) + colonna Lotto */
+.sw-editable-grid-ddt .sw-editable-grid-header,
+.sw-editable-grid-ddt .sw-editable-grid-row {
+    grid-template-columns: 2rem 9rem 1fr 6rem 5rem 10rem 2.25rem;
+}
+
+/* Variante Acquisto: chevron, SKU, Nome, Prezzo, IVA, Qta, Totale, Cestino (no Evasi) */
+.sw-editable-grid-acquisto .sw-editable-grid-header,
+.sw-editable-grid-acquisto .sw-editable-grid-row {
+    grid-template-columns: 2rem 9rem 1fr 8rem 11rem 4.5rem 6rem 2.25rem;
+}
+.sw-editable-grid-ddt .sw-editable-grid-span {
+    grid-column: 3 / -2;
+}
+
+/* Drag&drop riordino righe: il chevron funge anche da handle */
+.sw-riga-drag-handle {
+    cursor: grab;
+}
+.sw-riga-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Cella tabella che combina drag handle + label inline (configurazioni con sortable) */
+.sw-cell-handle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.sw-cell-handle {
+    display: inline-flex;
+    align-items: center;
+    color: #94a3b8;
+    cursor: grab;
+    flex-shrink: 0;
+}
+.sw-cell-handle:active {
+    cursor: grabbing;
+}
+.sw-editable-grid [data-riga-index].sortable-chosen .sw-editable-grid-row {
+    cursor: grabbing;
+}
+
+/* Variante Verifica Ricezione: blocchi prodotto separati */
+.sw-editable-grid-item {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+.sw-editable-grid-item:last-child {
+    border-bottom: none;
+}
+.sw-editable-grid-item-ok {
+    background-color: color-mix(in srgb, var(--sw-success) 5%, transparent);
+}
+.sw-editable-grid-item-issue {
+    background-color: color-mix(in srgb, var(--sw-alert) 5%, transparent);
+}
+.sw-editable-grid-detail-2 {
+    grid-template-columns: repeat(2, 1fr);
+}

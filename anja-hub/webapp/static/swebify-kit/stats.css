@@ -1,0 +1,80 @@
+/* ============================================================
+   stats.css — Statistiche/dashboard workspace marketing (F1c)
+   Riusa stat-card / data-table / tabs-filter / tag del kit;
+   aggiunge solo: contenitore grafico Chart.js, delta KPI colorato,
+   griglia 2-colonne per le tabelle insight SEO.
+   ============================================================ */
+
+/* tabs-filter: il componente vive solo in app-shell.css (NON caricato nell'app)
+   → lo replico qui (file caricato) così i tab pill funzionano ovunque
+   (Statistiche, Catalogo, Brain, Identità, vault Connettori). */
+.tabs-filter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-soft);
+  border-radius: 9px;
+  width: fit-content;
+}
+.tabs-filter button {
+  background: transparent;
+  border: none;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-600);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .12s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.tabs-filter button:hover { color: var(--ink-900); }
+.tabs-filter button.active {
+  background: #fff;
+  color: var(--brand);
+  box-shadow: var(--shadow-xs);
+  font-weight: 600;
+}
+.tabs-filter button .count { font-size: 11px; color: var(--ink-400); }
+.tabs-filter button.active .count { color: var(--brand); opacity: .8; }
+
+/* contenitore a altezza fissa per i canvas Chart.js (responsive width) */
+.stat-chart-wrap {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+
+/* delta KPI: verde = miglioramento, rosso = peggioramento, grigio = invariato.
+   Il segno semantico (su/giù) è deciso lato JS in base a kpi.better. */
+.stat-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 6px;
+}
+.stat-delta.up      { color: #16a34a; }
+.stat-delta.down    { color: #dc2626; }
+.stat-delta.neutral { color: var(--ink-400); }
+.stat-card-primary .stat-delta.up,
+.stat-card-primary .stat-delta.down,
+.stat-card-primary .stat-delta.neutral { color: rgba(255, 255, 255, .85); }
+
+/* griglia 2 colonne per le tabelle insight (quick-win | anomalie, salita | calo) */
+.stats-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) { .stats-grid-2 { grid-template-columns: 1fr; } }
+
+/* le data-table della dashboard non hanno bisogno di larghezza minima fissa */
+.stats-grid-2 .data-table { width: 100%; }

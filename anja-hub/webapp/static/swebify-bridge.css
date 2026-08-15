@@ -1,0 +1,258 @@
+/* ============================================================
+   swebify-bridge.css — ponte AnjaHub ⇄ swebify-ui-kit
+   Caricato PER ULTIMO. Fa rendere il markup AnjaHub esistente con il look del
+   kit, senza riscrivere il markup: (1) rimappa i design token AnjaHub sui valori
+   del kit, (2) aliassa le classi strutturali AnjaHub (BEM) ai componenti del kit,
+   (3) sana le collisioni .btn/.card. Migrazione incrementale → nuovo default.
+   ============================================================ */
+
+/* ---------- 1) Token AnjaHub → valori kit (recolor globale) ---------- */
+:root,
+:root[data-theme="light"] {
+  --bg-1: #ffffff;
+  --bg-2: #f7fafc;
+  --bg-3: #f0f4f9;
+  --bg-4: #e3e8ee;
+  --bg-5: #c1c9d2;
+  --text-1: #1a1f36;
+  --text-2: #4f566b;
+  --text-3: #8792a2;
+  --accent: #0b887b;
+  --accent-soft: #e0faf5;
+  --accent-hover: #08ab98;
+  --accent-warm: #e11d48;
+  --accent-aurora: #0f6fde;
+  --accent-glow: #16a34a;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --error: #e11d48;
+  --border: #e3e8ee;
+  --border-strong: #c1c9d2;
+  --border-soft: #ebeff3;
+  --border-1: var(--border);
+  --border-2: var(--border-strong);
+  --bg-hover: #f0f4f9;
+  --r-sm: 5px; --r-md: 6px; --r-lg: 8px; --r-xl: 12px;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --shadow-xs: 0 1px 1px 0 rgba(18,42,66,.02), 0 0 1px 0 rgba(18,42,66,.1);
+  --shadow-sm: 0 2px 5px 0 rgba(18,42,66,.04), 0 0 0 1px rgba(18,42,66,.06);
+  --shadow-btn: 0 0 0 1px rgba(18,42,66,.08), 0 1px 1px rgba(18,42,66,.06), 0 1px 2px rgba(18,42,66,.08);
+}
+
+/* ---------- 2) Shell: alias struttura AnjaHub → componenti kit ---------- */
+
+/* NON toccare .app: style.css usa flex + height:100vh per lo scroll interno (.content overflow:auto).
+   Sovrascriverlo rompe lo scroll e spinge il footer sotto il fold. */
+.sidebar { border-right: 1px solid var(--border-soft); }
+
+/* Brand — NON toccare .sidebar__brand-mark (box turchese + runa BIANCA via currentColor;
+   forzare color:accent rende la runa invisibile = quadrato verde) */
+.sidebar__brand-text { font-size: 15px; font-weight: 600; color: var(--text-1); letter-spacing: -.01em; }
+.sidebar__brand-tagline, .sidebar__brand-meta { color: var(--text-3); font-size: 10.5px; }
+
+/* Nav container */
+.sidebar__nav { padding: 4px 10px 20px; }
+
+/* Section labels → nav-section-label */
+.sidebar__section { margin-top: 16px; }
+.sidebar__section-title, .sidebar__item--label span {
+  font-size: 10.5px !important; font-weight: 600 !important; color: var(--text-3) !important;
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.sidebar__section-header { padding: 0 10px 6px; }
+.sidebar__section-action { color: var(--accent); font-size: 11px; font-weight: 600; }
+
+/* Nav items → .nav-item */
+.sidebar__entry, .sidebar__item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; margin: 1px 0; border-radius: 6px;
+  font-size: 13px; font-weight: 500; color: var(--text-2);
+  cursor: pointer; transition: background .12s, color .12s;
+}
+.sidebar__entry .icon, .sidebar__item .icon { color: var(--text-3); transition: color .12s; }
+.sidebar__entry:hover, .sidebar__item:hover { background: var(--accent-soft); color: var(--accent); }
+.sidebar__entry:hover .icon, .sidebar__item:hover .icon { color: var(--accent); }
+.sidebar__entry.is-active, .sidebar__item.is-active {
+  background: var(--accent-soft); color: var(--accent); font-weight: 600;
+}
+.sidebar__entry.is-active .icon, .sidebar__item.is-active .icon { color: var(--accent); }
+.sidebar__item--label { padding: 14px 10px 4px !important; pointer-events: none; }
+.sidebar__item--label:hover { background: transparent; }
+
+/* Footer */
+.sidebar__footer { border-top: 1px solid var(--border-soft); padding: 12px 14px; }
+.sidebar__user-avatar { background: var(--accent); color: #fff; }
+.sidebar__user-email { color: var(--text-2); font-size: 12.5px; }
+
+/* Topbar */
+.topbar { height: 56px; border-bottom: 1px solid var(--border-soft); background: #fff; }
+.breadcrumb { font-size: 12.5px; color: var(--text-3); }
+.breadcrumb__item.is-current { color: var(--text-1); font-weight: 600; }
+
+/* Workspace switcher → pill kit (elemento primario topbar) */
+.workspace-switcher__btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 12px;
+  background: #fff; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 13.5px; font-weight: 600; color: var(--text-1); box-shadow: var(--shadow-xs); cursor: pointer;
+}
+.workspace-switcher__btn:hover { background: var(--bg-2); border-color: var(--border-strong); }
+.workspace-switcher__btn .icon { color: var(--accent); }
+.workspace-switcher__chevron { color: var(--text-3) !important; }
+.workspace-switcher__badge { background: var(--accent-soft); color: var(--accent); font-size: 10px; padding: 1px 6px; border-radius: 4px; }
+.workspace-switcher__menu {
+  background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-md, 0 15px 35px rgba(43,45,80,.12));
+}
+.workspace-switcher__item.is-active { background: var(--accent-soft); color: var(--accent); }
+
+/* Topbar action buttons → icon-btn kit (niente bordo/ombra ghost) */
+.topbar__actions .btn--ghost {
+  border: none !important; box-shadow: none !important; background: transparent; color: var(--text-2);
+}
+.topbar__actions .btn--ghost:hover { background: var(--bg-hover); color: var(--text-1); }
+
+/* ---------- 3) Componenti condivisi: card + bottoni ---------- */
+.card { background: #fff; border: 1px solid var(--border-soft); border-radius: 8px; box-shadow: var(--shadow-sm); }
+.card.is-clickable:hover { background: #fff; border-color: var(--border-strong); box-shadow: var(--shadow-sm), 0 4px 10px rgba(18,42,66,.06); }
+
+.btn { border: none; border-radius: 6px; box-shadow: var(--shadow-btn); background: #fff; color: var(--text-2); }
+.btn:hover { background: var(--bg-2); }
+.btn--primary { background: var(--accent); color: #fff; box-shadow: none; }
+.btn--primary:hover { background: var(--accent-hover); box-shadow: none; }
+.btn--ghost { background: transparent; box-shadow: none; border: none; color: var(--text-2); }
+.btn--ghost:hover { background: var(--bg-hover); color: var(--text-1); }
+.btn--danger { background: #e11d48; color: #fff; box-shadow: none; }
+.btn:disabled { opacity: .55; }
+
+/* Focus ring "Stripe" */
+input:focus, textarea:focus, select:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,136,123,.12);
+}
+
+/* ---------- 4) Componenti vista kit: stat-card (da app-shell, evita collisioni) ---------- */
+.stat-card-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+@media (max-width: 1100px) { .stat-card-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .stat-card-grid { grid-template-columns: 1fr; } }
+.stat-card { background: #fff; border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; min-height: 120px; box-shadow: var(--shadow-xs); }
+.stat-card-label { font-size: 11px; font-weight: 600; color: var(--ink-400); text-transform: uppercase; letter-spacing: .08em; }
+.stat-card-value { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.stat-card-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--brand-soft); color: var(--brand); flex-shrink: 0; }
+.stat-card-icon svg { width: 16px; height: 16px; }
+.stat-card-num { font-size: 28px; font-weight: 700; color: var(--ink-900); letter-spacing: -.02em; line-height: 1; }
+.stat-card-sub { font-size: 12px; color: var(--ink-500); margin-top: auto; }
+.stat-card-primary { background: linear-gradient(135deg, var(--brand-700) 0%, var(--brand-800) 100%); border-color: transparent; color: #fff; position: relative; overflow: hidden; }
+.stat-card-primary::after { content: ""; position: absolute; right: -30px; top: -30px; width: 140px; height: 140px; background: radial-gradient(circle, rgba(255,255,255,.15) 0%, transparent 70%); pointer-events: none; }
+.stat-card-primary .stat-card-label { color: rgba(255,255,255,.75); }
+.stat-card-primary .stat-card-num   { color: #fff; }
+.stat-card-primary .stat-card-sub   { color: rgba(255,255,255,.7); }
+.stat-card-primary .stat-card-icon  { background: rgba(255,255,255,.18); color: #fff; }
+
+/* status-badge (pill con dot) */
+.status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; line-height: 1.4; }
+.status-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status-badge.success { background: var(--success-bg, #cbf4c9); color: var(--success); }
+.status-badge.warn { background: var(--warn-bg, #f8e5b9); color: var(--warn, #983705); }
+.status-badge.danger { background: var(--danger-bg, #fde2dd); color: var(--danger, #a41c4e); }
+.status-badge.neutral { background: var(--ink-100, #f0f4f9); color: var(--ink-600, #4f566b); }
+
+/* data-table (da app-shell) */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 600; color: var(--ink-400); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--bg-subtle); }
+.data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+.data-table tr:hover td { background: var(--bg-subtle); }
+.data-table tr:last-child td { border-bottom: none; }
+.product-card .data-table td { padding: 7px 4px; }
+
+/* File browser: righe lista col feel nav-item (hover/active brand-soft) */
+.pfile-entry:hover { background: var(--accent-soft); color: var(--accent); }
+.pfile-entry:hover .icon { color: var(--accent); }
+.pfile-entry--active { background: var(--accent-soft); color: var(--accent); }
+.pfile-entry--active .icon { color: var(--accent); }
+
+/* ============================================================
+   F-UIPolish — select nativi ridisegnati (chevron custom).
+   Nel bridge (caricato per ultimo) + !important mirati: vincono
+   sugli shorthand `background:` delle varianti (.wizard-input,
+   .form-input, inline style) senza toccare 66 markup diversi.
+   ============================================================ */
+:root {
+  --select-chevron: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23697586' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: var(--select-chevron) !important;
+  background-repeat: no-repeat !important;
+  background-position: right 8px center !important;
+  background-size: 14px !important;
+  padding-right: 28px !important;
+  cursor: pointer;
+}
+/* base look SOLO per i select senza una classe/stile proprio (:where = specificità 0) */
+:where(select) {
+  background-color: var(--bg-1, #fff);
+  border: 1px solid var(--border-strong, #d1d5db);
+  border-radius: var(--r-sm, 6px);
+  color: var(--text-1, #111827);
+  font: inherit;
+  font-size: var(--t-sm, 13px);
+  padding: 6px 28px 6px 10px;
+}
+select:focus { outline: none; border-color: var(--accent, #0d9488); }
+/* varianti compatte: chevron ridotto */
+.chat__input-meta select, .select--xs {
+  background-size: 12px !important;
+  background-position: right 6px center !important;
+  padding-right: 22px !important;
+}
+/* chip di stato editoriali: restano badge, niente chevron */
+select.ed-badge-select { background-image: none !important; padding-right: 8px !important; }
+
+/* Campanella notifiche: bottone quadrato centrato, badge fuori dall'icona */
+.notif-bell-btn {
+  width: 32px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.notif-bell-badge {
+  top: -5px; right: -5px;
+  min-width: 15px; height: 15px; padding: 0 3px;
+  font-size: 9.5px; line-height: 12px;
+  border: 1.5px solid var(--bg-1, #fff);
+  pointer-events: none;
+}
+
+/* F-DeepResearch — lista task cliccabile con affordance chiara */
+.research-item {
+  display: flex; align-items: center; gap: var(--s-3, 12px);
+  padding: var(--s-3, 12px) var(--s-4, 16px);
+  border-bottom: 1px solid var(--border-1, #e5e7eb);
+  cursor: pointer;
+  transition: background .12s;
+}
+.research-item:last-child { border-bottom: none; }
+.research-item:hover { background: var(--accent-soft, rgba(13,148,136,.08)); }
+.research-item.is-active {
+  background: var(--accent-soft, rgba(13,148,136,.08));
+  box-shadow: inset 3px 0 0 var(--accent, #0d9488);
+}
+.research-item__status {
+  width: 20px; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.research-item__main { flex: 1; min-width: 0; }
+.research-item__title {
+  font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.research-item__meta { font-size: var(--t-xs, 11.5px); color: var(--text-3, #6b7280); margin-top: 2px; }
+.research-item__open {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: var(--t-xs, 11.5px); font-weight: 500;
+  color: var(--text-2, #4b5563);
+  border: 1px solid var(--border-1, #e5e7eb); border-radius: 6px;
+  padding: 3px 8px; white-space: nowrap;
+}
+.research-item:hover .research-item__open {
+  color: var(--accent, #0d9488); border-color: var(--accent, #0d9488);
+}

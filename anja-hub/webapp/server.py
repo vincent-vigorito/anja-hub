@@ -9372,6 +9372,49 @@ async def api_claude_oauth_status():
     return JSONResponse(claude_auth_summary())
 
 
+@app.post("/api/claude-oauth/login/start")
+async def api_claude_oauth_login_start(request: Request):
+    """Login della subscription Claude DALLA UI: lancia `claude auth login`
+    sull'host (PTY) e ritorna l'URL OAuth da aprire. Il browser mostra un
+    codice → l'utente lo incolla in /login/complete. Admin only."""
+    _require_admin(request)
+    import claude_oauth
+    res = await asyncio.to_thread(claude_oauth.login_start)
+    if not res.get("ok"):
+        raise HTTPException(502, res.get("error", "login start failed"))
+    return JSONResponse(res)
+
+
+@app.post("/api/claude-oauth/login/complete")
+async def api_claude_oauth_login_complete(request: Request, payload: dict = Body(...)):
+    _require_admin(request)
+    import claude_oauth
+    res = await asyncio.to_thread(claude_oauth.login_complete, payload.get("code", ""))
+    if not res.get("ok"):
+        raise HTTPException(400, res.get("error", "login failed"))
+    # le sessioni SDK vive hanno il vecchio token: riciclo pigro al prossimo turno
+    try:
+        import claude_session
+        await claude_session.pool.close_all()
+    except Exception:
+        pass
+    return JSONResponse(res)
+
+
+@app.post("/api/claude-oauth/login/cancel")
+async def api_claude_oauth_login_cancel(request: Request):
+    _require_admin(request)
+    import claude_oauth
+    claude_oauth.login_cancel()
+    return JSONResponse({"ok": True})
+
+
+@app.get("/api/claude-oauth/login/pending")
+async def api_claude_oauth_login_pending():
+    import claude_oauth
+    return JSONResponse(claude_oauth.login_pending())
+
+
 # ============================================================
 # OpenAI ChatGPT subscription OAuth (Fase 7v)
 # ============================================================

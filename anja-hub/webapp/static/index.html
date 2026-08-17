@@ -6381,23 +6381,60 @@ No research yet — launch the first one above, or ask for it in chat.
               Symmetric pattern to ChatGPT subscription.
             </p>
 
-            <div x-show="!claudeOauthState.subscription_active" class="text-muted" style="padding: var(--s-3); background: var(--bg-2); border-radius: var(--r-1); font-size: var(--t-sm);">
-              <strong>Claude CLI not authenticated.</strong> To enable:
-              <ol style="margin: var(--s-2) 0 0 0; padding-left: var(--s-4);">
-                <li>Install Claude Code if you don't have it: <code>npm install -g @anthropic-ai/claude-code</code></li>
-                <li>Login: <code>claude</code> → follow the browser OAuth flow</li>
-                <li>Refresh this page</li>
-              </ol>
+            <!-- Not authenticated: guided login from the UI (no shell on the host needed) -->
+            <div x-show="!claudeOauthState.subscription_active" style="padding: var(--s-3); background: var(--bg-2); border-radius: var(--r-1); font-size: var(--t-sm);">
+              <div style="display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap;">
+                <span class="badge badge--error">● not authenticated</span>
+                <span class="text-muted">The Claude CLI on the host is logged out or its token expired — Claude chats and the Telegram bot won't work until you sign in.</span>
+              </div>
+              <div x-show="!claudeLogin.pending" style="margin-top: var(--s-3); display: flex; gap: var(--s-2); align-items: center; flex-wrap: wrap;">
+                <button class="btn btn--primary btn--xs" @click="startClaudeLogin()" :disabled="claudeLogin.busy">
+                  <span class="spinner" x-show="claudeLogin.busy"></span>
+                  <i data-lucide="log-in" class="icon icon--sm" x-show="!claudeLogin.busy"></i> Sign in with your Claude subscription
+                </button>
+                <button class="btn btn--ghost btn--xs" @click="loadClaudeOauthStatus()"><i data-lucide="refresh-cw" class="icon icon--sm"></i> Re-check</button>
+              </div>
+              <div x-show="claudeLogin.pending" style="margin-top: var(--s-3);">
+                <ol style="margin: 0 0 var(--s-2) 0; padding-left: var(--s-4); line-height: 1.7;">
+                  <li>A Claude sign-in page opened in a new tab (<a :href="claudeLogin.authUrl" target="_blank" rel="noopener" style="color: var(--accent);">open it again</a> if not). Sign in and authorize.</li>
+                  <li>The page shows a <strong>code</strong> — copy it and paste it here:</li>
+                </ol>
+                <div style="display: flex; gap: var(--s-2); flex-wrap: wrap;">
+                  <input class="form-input" style="flex: 1; min-width: 260px;" placeholder="paste the code from the browser…" x-model="claudeLogin.code" @keydown.enter="completeClaudeLogin()">
+                  <button class="btn btn--primary" @click="completeClaudeLogin()" :disabled="claudeLogin.busy || !claudeLogin.code.trim()">
+                    <span class="spinner" x-show="claudeLogin.busy"></span> Complete
+                  </button>
+                  <button class="btn btn--ghost" @click="cancelClaudeLogin()">Cancel</button>
+                </div>
+              </div>
+              <div x-show="claudeLogin.msg" x-text="claudeLogin.msg" style="margin-top: var(--s-2); font-size: var(--t-sm); color: #b91c1c;"></div>
+              <div x-show="!claudeOauthState.cli_installed" class="text-muted" style="margin-top: var(--s-2); font-size: var(--t-xs);">
+                Claude Code CLI not found on the host: <code>npm install -g @anthropic-ai/claude-code</code>, then re-check.
+              </div>
             </div>
 
             <div x-show="claudeOauthState.subscription_active">
               <div style="display: flex; gap: var(--s-3); align-items: center; flex-wrap: wrap; margin-bottom: var(--s-3); padding: var(--s-2); background: var(--bg-2); border-radius: var(--r-1); font-size: var(--t-sm);">
                 <span class="badge badge--success">● subscription active</span>
+                <span class="text-muted" x-show="claudeOauthState.account" x-text="claudeOauthState.account"></span>
                 <span class="text-muted">storage: <code class="text-mono" style="font-size: var(--t-xs);" x-text="claudeOauthState.storage_hint"></code></span>
                 <button class="btn btn--ghost btn--xs" @click="loadClaudeOauthStatus()" title="Re-check" style="margin-left: auto;">
                   <i data-lucide="refresh-cw" class="icon icon--sm"></i>
                   Refresh status
                 </button>
+                <button class="btn btn--ghost btn--xs" @click="startClaudeLogin()" title="Sign in again (e.g. switch account or refresh an expiring token)">
+                  <i data-lucide="log-in" class="icon icon--sm"></i>
+                  Re-sign in
+                </button>
+              </div>
+              <div x-show="claudeLogin.pending" style="margin-bottom: var(--s-3); padding: var(--s-3); background: var(--bg-2); border-radius: var(--r-1); font-size: var(--t-sm);">
+                Sign in in the new tab (<a :href="claudeLogin.authUrl" target="_blank" rel="noopener" style="color: var(--accent);">open again</a>), then paste the code:
+                <div style="display: flex; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-2);">
+                  <input class="form-input" style="flex: 1; min-width: 260px;" placeholder="paste the code from the browser…" x-model="claudeLogin.code" @keydown.enter="completeClaudeLogin()">
+                  <button class="btn btn--primary" @click="completeClaudeLogin()" :disabled="claudeLogin.busy || !claudeLogin.code.trim()">Complete</button>
+                  <button class="btn btn--ghost" @click="cancelClaudeLogin()">Cancel</button>
+                </div>
+                <div x-show="claudeLogin.msg" x-text="claudeLogin.msg" style="margin-top: var(--s-2); color: #b91c1c;"></div>
               </div>
 
               <!-- Precedence warning -->

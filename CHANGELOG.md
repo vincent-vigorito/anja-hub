@@ -14,6 +14,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Added
 
+- **Claude subscription sign-in from the UI**: Settings → Providers now shows
+  the real CLI auth state (`claude auth status`, not just credential-file
+  presence) and lets you sign in without a shell on the host — opens the
+  OAuth page, you paste the code back. Live SDK sessions are recycled after
+  login. Fixes the "OAuth session expired" dead end on remote hubs.
 - **Blueprint authoring (Forge, step 1)**: agents can now design and create
   new workspace blueprints in `<hub>/blueprints/` — `blueprint-authoring`
   skill documents the full format, and `POST /api/blueprints/{name}/validate`

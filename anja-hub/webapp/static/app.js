@@ -644,8 +644,11 @@ function app() {
     unifiedModelsRefreshing: false,
 
     // Fase 7v.b — Anthropic Claude subscription state (detection-only)
+    claudeLogin: { pending: false, busy: false, authUrl: '', code: '', msg: '' },
     claudeOauthState: {
       subscription_active: false,
+      cli_installed: true,
+      account: '',
       api_key_set: false,
       platform: '',
       storage_hint: '',
@@ -6897,10 +6900,56 @@ function app() {
     },
 
     // ===== Fase 7v.b — Anthropic Claude subscription (detection-only) =====
+    // --- Claude subscription: sign-in from the UI (CLI login via host PTY) ---
+    async startClaudeLogin() {
+      this.claudeLogin.msg = ''; this.claudeLogin.busy = true;
+      try {
+        const res = await fetch('/api/claude-oauth/login/start', { method: 'POST' });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'could not start login');
+        this.claudeLogin.authUrl = d.auth_url;
+        this.claudeLogin.code = '';
+        this.claudeLogin.pending = true;
+        window.open(d.auth_url, '_blank');
+      } catch (e) {
+        this.claudeLogin.msg = 'Error: ' + (e.message || e);
+      } finally {
+        this.claudeLogin.busy = false;
+        this.$nextTick(() => this.refreshIcons());
+      }
+    },
+
+    async completeClaudeLogin() {
+      this.claudeLogin.msg = ''; this.claudeLogin.busy = true;
+      try {
+        const res = await fetch('/api/claude-oauth/login/complete', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: this.claudeLogin.code }),
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'login failed');
+        this.claudeLogin.pending = false;
+        this.claudeLogin.code = '';
+        this.showToast('success', 'Claude subscription connected', 'Chats and Telegram are back on the subscription.');
+        await this.loadClaudeOauthStatus();
+      } catch (e) {
+        this.claudeLogin.msg = 'Error: ' + (e.message || e) + ' — check the code and try again.';
+      } finally {
+        this.claudeLogin.busy = false;
+      }
+    },
+
+    async cancelClaudeLogin() {
+      try { await fetch('/api/claude-oauth/login/cancel', { method: 'POST' }); } catch (e) { /* best-effort */ }
+      this.claudeLogin.pending = false; this.claudeLogin.code = ''; this.claudeLogin.msg = '';
+    },
+
     async loadClaudeOauthStatus() {
       try {
         const s = await this.fetchJson('/api/claude-oauth/status');
         this.claudeOauthState.subscription_active = !!s.subscription_active;
+        this.claudeOauthState.cli_installed = s.cli_installed !== false;
+        this.claudeOauthState.account = s.account || '';
         this.claudeOauthState.api_key_set = !!s.api_key_set;
         this.claudeOauthState.platform = s.platform || '';
         this.claudeOauthState.storage_hint = s.storage_hint || '';

@@ -2286,6 +2286,8 @@ function app() {
     },
 
     connStatusLabel(con) {
+      // gruppi tutti-opzionali (es. key immagini): conta, non "connected" con 1 su 6
+      if (con.all_optional) return `${con.set_count} of ${con.total} configured`;
       if (con.status === 'connected') return 'connected';
       if (con.status === 'partial') return `partial ${con.set_count}/${con.total}`;
       return 'missing';

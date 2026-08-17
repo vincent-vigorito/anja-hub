@@ -3511,7 +3511,7 @@
                   <div style="margin-bottom:12px">
                     <label class="form-label">
                       <span x-text="f.label"></span>
-                      <span class="tag success" x-show="f.secret && f.set" style="margin-left:6px">set</span>
+                      <span class="conn-pill" :class="f.set ? 'is-set' : 'is-unset'" x-show="f.secret" style="margin-left:8px" x-text="f.set ? '✓ Connected' : 'Not configured'"></span>
                     </label>
                     <template x-if="connFieldOptions(f.key)">
                       <select class="form-input" style="width:100%" x-model="connDraft[f.key]"
@@ -6940,7 +6940,7 @@ No research yet — launch the first one above, or ask for it in chat.
                     <div style="margin-bottom:8px">
                       <label class="form-label" style="font-size:var(--t-xs)">
                         <span x-text="f.label"></span>
-                        <span class="tag success" x-show="f.secret && f.set" style="margin-left:6px">set</span>
+                        <span class="conn-pill" :class="f.set ? 'is-set' : 'is-unset'" x-show="f.secret" style="margin-left:8px" x-text="f.set ? '✓ Connected' : 'Not configured'"></span>
                       </label>
                       <input class="form-input" style="width:100%"
                              :type="f.secret ? 'password' : 'text'"

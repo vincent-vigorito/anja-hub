@@ -256,3 +256,12 @@ select.ed-badge-select { background-image: none !important; padding-right: 8px !
 .research-item:hover .research-item__open {
   color: var(--accent, #0d9488); border-color: var(--accent, #0d9488);
 }
+
+/* Connettori: stato per-campo leggibile (prima un micro "set" grigio) */
+.conn-pill {
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 600; letter-spacing: .01em;
+  padding: 1px 8px; border-radius: 999px; vertical-align: middle;
+}
+.conn-pill.is-set { background: var(--success-bg, #dcfce7); color: var(--success, #15803d); }
+.conn-pill.is-unset { background: var(--bg-3, #f1f5f9); color: var(--text-3, #94a3b8); font-weight: 500; }

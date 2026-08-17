@@ -27,6 +27,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Fixed
 
+- Connectors: per-field "✓ Connected / Not configured" badges and an honest
+  group counter ("1 of 7 configured") for all-optional groups like image
+  generation keys — previously a single key showed as "connected".
 - Hub home / sidebar "+ Add" buttons now open the blueprint Marketplace
   instead of a legacy alert stub.
 

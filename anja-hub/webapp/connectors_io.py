@@ -39,10 +39,10 @@ CONNECTORS = [
         "key": "swerpicommerce", "label": "SwerpiCommerce", "icon": "shopping-cart",
         "fields": [
             {"key": "SWERPICOMMERCE_BASE_URL", "label": "Base URL", "secret": False, "placeholder": "https://<tenant>/api/v2"},
-            {"key": "SWERPICOMMERCE_API_ID", "label": "API ID", "secret": False, "placeholder": "dal pannello tenant → chiavi API"},
-            {"key": "SWERPICOMMERCE_API_SECRET", "label": "API secret", "secret": True, "placeholder": "dal pannello tenant → chiavi API"},
+            {"key": "SWERPICOMMERCE_API_ID", "label": "API ID", "secret": False, "placeholder": "from the tenant panel → API keys"},
+            {"key": "SWERPICOMMERCE_API_SECRET", "label": "API secret", "secret": True, "placeholder": "from the tenant panel → API keys"},
             {"key": "SWERPICOMMERCE_BEARER_AUTH", "label": "Bearer token", "secret": True, "optional": True,
-             "placeholder": "(opzionale — l'agente lo genera da API ID+secret)"},
+             "placeholder": "(optional — the agent derives it from API ID+secret)"},
         ],
     },
     {
@@ -51,8 +51,8 @@ CONNECTORS = [
             {"key": "META_ACCESS_TOKEN", "label": "Access token", "secret": True, "placeholder": "EAAB…"},
             {"key": "META_PAGE_ID", "label": "Page ID", "secret": False, "placeholder": ""},
             {"key": "META_IG_USER_ID", "label": "IG User ID", "secret": False, "placeholder": ""},
-            {"key": "META_ADS_TOKEN", "label": "Ads token", "secret": True, "optional": True, "placeholder": "(solo se fai advertising)"},
-            {"key": "META_AD_ACCOUNT_ID", "label": "Ad account ID", "secret": False, "optional": True, "placeholder": "(solo se fai advertising)"},
+            {"key": "META_ADS_TOKEN", "label": "Ads token", "secret": True, "optional": True, "placeholder": "(only if you run ads)"},
+            {"key": "META_AD_ACCOUNT_ID", "label": "Ad account ID", "secret": False, "optional": True, "placeholder": "(only if you run ads)"},
         ],
     },
     {
@@ -60,23 +60,23 @@ CONNECTORS = [
         "fields": [
             {"key": "GA4_PROPERTY_ID", "label": "GA4 Property ID", "secret": False, "placeholder": ""},
             {"key": "GSC_SITE", "label": "GSC site", "secret": False, "placeholder": "sc-domain:esempio.it"},
-            {"key": "GOOGLE_ADS_CUSTOMER_ID", "label": "Google Ads customer ID", "secret": False, "optional": True, "placeholder": "(solo se fai advertising)"},
-            {"key": "MERCHANT_ACCOUNT_ID", "label": "Merchant Center account ID", "secret": False, "optional": True, "placeholder": "(solo e-commerce con Google Shopping)"},
+            {"key": "GOOGLE_ADS_CUSTOMER_ID", "label": "Google Ads customer ID", "secret": False, "optional": True, "placeholder": "(only if you run ads)"},
+            {"key": "MERCHANT_ACCOUNT_ID", "label": "Merchant Center account ID", "secret": False, "optional": True, "placeholder": "(e-commerce with Google Shopping only)"},
         ],
     },
     {
         # Chiavi dei generatori immagini: risorsa HUB (Settings → Integrations),
         # condivisa da tutti i workspace — la vista workspace la esclude (shared).
-        "key": "ai_images", "label": "Generazione immagini (API dirette)",
+        "key": "ai_images", "label": "Image generation (direct APIs)",
         "icon": "sparkles", "shared": True,
         "fields": [
             {"key": "OPENAI_API_KEY", "label": "OpenAI — GPT Image / DALL·E", "secret": True, "optional": True, "placeholder": "sk-…"},
-            {"key": "GEMINI_API_KEY", "label": "Google AI Studio — Nano Banana / Imagen", "secret": True, "optional": True, "placeholder": "AIza… (da aistudio.google.com)"},
+            {"key": "GEMINI_API_KEY", "label": "Google AI Studio — Nano Banana / Imagen", "secret": True, "optional": True, "placeholder": "AIza… (from aistudio.google.com)"},
             {"key": "XAI_API_KEY", "label": "xAI — Grok Imagine", "secret": True, "optional": True, "placeholder": "xai-…"},
             {"key": "OPENROUTER_API_KEY", "label": "OpenRouter — Seedream / Seedance + video", "secret": True, "optional": True, "placeholder": "sk-or-…"},
             {"key": "STABILITY_API_KEY", "label": "Stability — SD 3.5", "secret": True, "optional": True, "placeholder": "sk-…"},
             {"key": "DASHSCOPE_API_KEY", "label": "Alibaba DashScope — Qwen Image", "secret": True, "optional": True, "placeholder": ""},
-            {"key": "IMAGE_DEFAULT_MODEL", "label": "Modello di default per gli agent", "secret": False, "optional": True, "placeholder": "es. nano-banana-3, gpt-image-1, grok-image"},
+            {"key": "IMAGE_DEFAULT_MODEL", "label": "Default model for agents", "secret": False, "optional": True, "placeholder": "e.g. nano-banana-3, gpt-image-1, grok-image"},
         ],
     },
 ]
@@ -184,10 +184,14 @@ def _build_groups(values: dict, backend: str = "") -> list[dict]:
                 "set": is_set,
             })
         total = len(con["fields"])
-        status = "connected" if req_set == req_total else ("partial" if n_set else "missing")
+        if req_total == 0:   # tutti opzionali (es. key immagini): stato = quante configurate
+            status = "connected" if n_set == total else ("partial" if n_set else "missing")
+        else:
+            status = "connected" if req_set == req_total else ("partial" if n_set else "missing")
         groups.append({
             "key": con["key"], "label": con["label"], "icon": con["icon"],
             "fields": fields, "status": status, "set_count": n_set, "total": total,
+            "all_optional": req_total == 0,
             "shared": con.get("shared", False),
         })
     return groups

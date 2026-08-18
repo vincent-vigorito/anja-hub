@@ -5689,7 +5689,9 @@ async def api_project_metrics_refresh(request: Request, payload: dict = Body(...
         import connectors_io
     except Exception as e:
         raise HTTPException(500, f"module not available: {e}")
-    vals = connectors_io._load_values(HUB_PATH, proj_root / ".anjawiki")
+    # resolve_values: vault del workspace + FALLBACK hub — le chiavi condivise
+    # (developer token Google Ads, key AI) vivono nel vault hub
+    vals = connectors_io.resolve_values(HUB_PATH, proj_root / ".anjawiki")
     res = await asyncio.get_event_loop().run_in_executor(
         None, lambda: metrics_collector.refresh(
             proj_root / "data" / "metrics.db", vals,

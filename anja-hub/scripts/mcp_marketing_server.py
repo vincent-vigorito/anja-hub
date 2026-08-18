@@ -10,7 +10,7 @@ del workspace). Vedi anja-marketing-workspace-design.md §3/§6.
 Tool-group via env `ANJA_TOOL_GROUPS` (default "cms,analytics,social"):
   - cms:       wp_site_info, wp_list/get/create/update/delete_content,
                wp_get/set_seo, wp_list/create_term
-  - analytics: gsc_list_properties, gsc_query, ga_list_properties, ga_report
+  - analytics: gsc_list_properties, gsc_query, ga_list_properties, ga_report, ads_check, ads_report
                (read-only; query/report PINNED ai resource-ID del brand)
   - social:    meta_check, meta_publish_fb, meta_publish_ig
 
@@ -76,7 +76,8 @@ async def marketing_status() -> dict[str, Any]:
     else:
         cms_keys = ["WP_BASE_URL", "WP_USERNAME", "WP_APP_PASSWORD"]
     keys = cms_keys + ["META_ACCESS_TOKEN", "META_PAGE_ID", "META_IG_USER_ID",
-                       "GA4_PROPERTY_ID", "GSC_SITE", "MERCHANT_ACCOUNT_ID"]
+                       "GA4_PROPERTY_ID", "GSC_SITE", "MERCHANT_ACCOUNT_ID",
+                       "GOOGLE_ADS_CUSTOMER_ID", "GOOGLE_ADS_DEVELOPER_TOKEN"]
     return {
         "scope": vault.scope(),
         "backend": backend or "wp (assunto)",
@@ -542,6 +543,105 @@ async def merchant_report(
             v["conversionValue"] = round(int(cv.get("amountMicros", 0) or 0) / 1e6, 2)
         rows.append(v)
     return {"account_id": acc, "count": len(rows), "rows": rows}
+
+
+# ----------------------------------------------------------------------
+# GOOGLE ADS — Ads API nativa (GAQL), sola lettura
+# ----------------------------------------------------------------------
+
+_ads = None
+
+
+def get_ads():
+    global _ads
+    if _ads is None:
+        from marketing.ads_client import AdsClient
+        _ads = AdsClient()
+    return _ads
+
+
+def _ads_gaql_where(start_date: str, end_date: str) -> str:
+    return f"segments.date BETWEEN '{_mql_date(start_date)}' AND '{_mql_date(end_date)}'"
+
+
+def _ads_row(r: dict) -> dict:
+    """Appiattisce una riga searchStream in un dict leggibile (costi in valuta)."""
+    seg, met = r.get("segments") or {}, r.get("metrics") or {}
+    out: dict[str, Any] = {}
+    for key in ("campaign", "adGroup", "adGroupCriterion", "searchTermView"):
+        if key in r:
+            out.update({f"{key}.{k}": v for k, v in (r[key] or {}).items() if k != "resourceName"})
+    if seg.get("date"):
+        out["date"] = seg["date"]
+    if "costMicros" in met:
+        out["cost"] = round(int(met.get("costMicros", 0) or 0) / 1e6, 2)
+    for k in ("impressions", "clicks", "conversions", "conversionsValue", "ctr", "averageCpc"):
+        if k in met:
+            v = met[k]
+            out[k] = round(int(v) / 1e6, 2) if k == "averageCpc" else v
+    return out
+
+
+@_maybe("analytics")
+async def ads_check() -> dict[str, Any]:
+    """Verifica la connessione Google Ads del brand: developer token, account raggiungibili, customer configurato. Primo check prima dei report."""
+    client = get_ads()
+    try:
+        accessible = await asyncio.to_thread(client.list_accessible_customers)
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc),
+                "hint": "developer token 'test access' legge solo account di test: per dati reali "
+                        "serve 'basic access' (Google Ads → Tools → API Center)"}
+    cid = ""
+    try:
+        cid = client.customer_id()
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "accessible_customers": accessible, "error": str(exc)}
+    return {"ok": True, "customer_id": cid, "accessible_customers": accessible,
+            "customer_reachable": cid in accessible or bool(client._headers.get("login-customer-id"))}
+
+
+@_maybe("analytics")
+async def ads_report(
+    start_date: str,
+    end_date: str,
+    level: str = "campaign",
+    top: int = 100,
+) -> dict[str, Any]:
+    """Performance Google Ads del brand (dati NATIVI: spesa, impression, click, CTR, CPC medio, conversioni e valore). L'account è PINNED al brand (GOOGLE_ADS_CUSTOMER_ID del vault).
+
+    Args:
+        start_date: "YYYY-MM-DD".
+        end_date: "YYYY-MM-DD".
+        level: "campaign" (default) | "ad_group" | "keyword" | "search_term" (query reali degli utenti) | "daily" (totali per giorno).
+        top: max righe (default 100), ordinate per spesa decrescente.
+    """
+    client = get_ads()
+    cid = client.customer_id()
+    where = _ads_gaql_where(start_date, end_date)
+    metrics = ("metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.ctr, "
+               "metrics.average_cpc, metrics.conversions, metrics.conversions_value")
+    queries = {
+        "campaign": f"SELECT campaign.name, campaign.status, campaign.advertising_channel_type, {metrics} "
+                    f"FROM campaign WHERE {where} AND metrics.impressions > 0 ORDER BY metrics.cost_micros DESC",
+        "ad_group": f"SELECT campaign.name, ad_group.name, ad_group.status, {metrics} "
+                    f"FROM ad_group WHERE {where} AND metrics.impressions > 0 ORDER BY metrics.cost_micros DESC",
+        "keyword": f"SELECT campaign.name, ad_group.name, ad_group_criterion.keyword.text, "
+                   f"ad_group_criterion.keyword.match_type, ad_group_criterion.quality_info.quality_score, {metrics} "
+                   f"FROM keyword_view WHERE {where} AND metrics.impressions > 0 ORDER BY metrics.cost_micros DESC",
+        "search_term": f"SELECT campaign.name, search_term_view.search_term, search_term_view.status, {metrics} "
+                       f"FROM search_term_view WHERE {where} AND metrics.impressions > 0 ORDER BY metrics.cost_micros DESC",
+        "daily": f"SELECT segments.date, {metrics} FROM customer WHERE {where} ORDER BY segments.date",
+    }
+    gaql = queries.get(level)
+    if not gaql:
+        raise ValueError(f"level non valido: {level} (ammessi: {sorted(queries)})")
+    gaql += f" LIMIT {max(1, min(int(top), 1000))}"
+    raw = await asyncio.to_thread(client.search, cid, gaql)
+    rows = [_ads_row(r) for r in raw]
+    total_cost = round(sum(r.get("cost", 0) for r in rows), 2)
+    return {"customer_id": cid, "level": level, "count": len(rows),
+            "total_cost": total_cost, "rows": rows}
 
 
 # ----------------------------------------------------------------------

@@ -29,11 +29,16 @@ _cache: dict[str, str] | None = None
 def _load() -> dict[str, str]:
     global _cache
     if _cache is None:
+        _cache = {}
+        # fallback hub-level PRIMA: le chiavi condivise (developer token Ads,
+        # key AI…) vivono in <hub>/.secrets.env; il vault del brand vince.
+        hub = os.environ.get("ANJA_HUB", "")
+        hub_env = Path(hub) / ".secrets.env" if hub else None
+        if hub_env and hub_env.is_file():
+            _cache.update({k: (v or "").strip() for k, v in dotenv_values(hub_env).items()})
         path = os.environ.get("ANJA_MARKETING_VAULT", "")
         if path and Path(path).is_file():
-            _cache = {k: (v or "").strip() for k, v in dotenv_values(path).items()}
-        else:
-            _cache = {}
+            _cache.update({k: (v or "").strip() for k, v in dotenv_values(path).items() if (v or "").strip()})
     return _cache
 
 

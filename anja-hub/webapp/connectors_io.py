@@ -60,8 +60,18 @@ CONNECTORS = [
         "fields": [
             {"key": "GA4_PROPERTY_ID", "label": "GA4 Property ID", "secret": False, "placeholder": ""},
             {"key": "GSC_SITE", "label": "GSC site", "secret": False, "placeholder": "sc-domain:esempio.it"},
-            {"key": "GOOGLE_ADS_CUSTOMER_ID", "label": "Google Ads customer ID", "secret": False, "optional": True, "placeholder": "(only if you run ads)"},
+            {"key": "GOOGLE_ADS_CUSTOMER_ID", "label": "Google Ads customer ID", "secret": False, "optional": True, "placeholder": "123-456-7890 (only if you run ads)"},
             {"key": "MERCHANT_ACCOUNT_ID", "label": "Merchant Center account ID", "secret": False, "optional": True, "placeholder": "(e-commerce with Google Shopping only)"},
+        ],
+    },
+    {
+        # Google Ads API: developer token e MCC sono per-organizzazione (hub),
+        # il customer ID per-brand sta nel gruppo google del workspace.
+        "key": "google_ads_api", "label": "Google Ads API (developer token)",
+        "icon": "megaphone", "shared": True,
+        "fields": [
+            {"key": "GOOGLE_ADS_DEVELOPER_TOKEN", "label": "Developer token (Google Ads API Center)", "secret": True, "optional": True, "placeholder": "from ads.google.com → Tools → API Center"},
+            {"key": "GOOGLE_ADS_LOGIN_CUSTOMER_ID", "label": "Manager account (MCC) ID", "secret": False, "optional": True, "placeholder": "123-456-7890 (only if accounts are under a manager)"},
         ],
     },
     {

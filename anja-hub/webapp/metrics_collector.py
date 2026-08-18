@@ -17,6 +17,7 @@ def connection_status(vault_values: dict, token_present: bool = False) -> list[d
     gsc = (vault_values.get("GSC_SITE") or "").strip()
     ga4 = (vault_values.get("GA4_PROPERTY_ID") or "").strip()
     ads = (vault_values.get("GOOGLE_ADS_CUSTOMER_ID") or "").strip()
+    ads_dev = (vault_values.get("GOOGLE_ADS_DEVELOPER_TOKEN") or "").strip()
     merchant = (vault_values.get("MERCHANT_ACCOUNT_ID") or "").strip()
     meta_ads = bool((vault_values.get("META_ADS_TOKEN") or "").strip()
                     and (vault_values.get("META_AD_ACCOUNT_ID") or "").strip())
@@ -26,7 +27,9 @@ def connection_status(vault_values: dict, token_present: bool = False) -> list[d
     return [
         {"key": "gsc", "label": "Search Console", "configured": bool(gsc), "connected": bool(gsc and token_present)},
         {"key": "ga", "label": "Analytics GA4", "configured": bool(ga4), "connected": bool(ga4 and token_present)},
-        {"key": "ads", "label": "Google Ads", "configured": bool(ads), "connected": bool(ads and token_present)},
+        # senza developer token la spesa ads arriva come STIMA da GA4 (fallback)
+        {"key": "ads", "label": "Google Ads" + ("" if ads_dev else " (GA4 estimate)"),
+         "configured": bool(ads), "connected": bool(ads and token_present)},
         {"key": "merchant", "label": "Google Merchant", "configured": bool(merchant), "connected": bool(merchant and token_present)},
         {"key": "meta_ads", "label": "Meta Ads", "configured": meta_ads, "connected": meta_ads},
         {"key": "social", "label": "Social (FB/IG)", "configured": social, "connected": social},
@@ -82,6 +85,9 @@ def refresh(db_path: Path, vault_values: dict, *, scope_dir: Path | None = None,
     gsc = (vault_values.get("GSC_SITE") or "").strip()
     ga4 = (vault_values.get("GA4_PROPERTY_ID") or "").strip()
     merchant = (vault_values.get("MERCHANT_ACCOUNT_ID") or "").strip()
+    ads_customer = (vault_values.get("GOOGLE_ADS_CUSTOMER_ID") or "").strip()
+    ads_dev_token = (vault_values.get("GOOGLE_ADS_DEVELOPER_TOKEN") or "").strip()
+    ads_login = (vault_values.get("GOOGLE_ADS_LOGIN_CUSTOMER_ID") or "").strip()
 
     if not token:
         configured = [s["label"] for s in sources if s["configured"]]
@@ -97,13 +103,17 @@ def refresh(db_path: Path, vault_values: dict, *, scope_dir: Path | None = None,
                     "(GSC_SITE / GA4_PROPERTY_ID / MERCHANT_ACCOUNT_ID nei Connettori Google)."}))
 
     res = google_collect.collect(Path(db_path), token, gsc_site=gsc, ga_property=ga4,
-                                 merchant_account=merchant, days=days)
+                                 merchant_account=merchant, ads_customer=ads_customer,
+                                 ads_dev_token=ads_dev_token, ads_login_customer=ads_login,
+                                 days=days)
     collected = (res["gsc_daily"] + res["gsc_queries"] + res.get("gsc_pages", 0)
                  + res["ga_daily"] + res["ads_daily"]
                  + res.get("merchant_products", 0) + res.get("merchant_daily", 0))
     note = (f"Raccolti {res['gsc_daily']} gg GSC · {res['gsc_queries']} query · "
             f"{res.get('gsc_pages', 0)} pagine · {res['ga_daily']} righe GA · "
-            f"{res['ads_daily']} righe Ads ({res['range'][0]} → {res['range'][1]}).")
+            f"{res['ads_daily']} righe Ads"
+            + (f" [{res['ads_source']}]" if res.get("ads_source") else "")
+            + f" ({res['range'][0]} → {res['range'][1]}).")
     if merchant:
         note += (f" Merchant: {res.get('merchant_products', 0)} prodotti · "
                  f"{res.get('merchant_issues', 0)} issues · "

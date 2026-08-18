@@ -22,6 +22,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/webmasters.readonly",
     "https://www.googleapis.com/auth/analytics.readonly",
     "https://www.googleapis.com/auth/content",
+    "https://www.googleapis.com/auth/adwords",
 ]
 CLIENT_NAME = "google-oauth-client.json"
 TOKEN_NAME = "google-token.json"

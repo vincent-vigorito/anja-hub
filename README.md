@@ -80,6 +80,36 @@ the UI (Settings → Integrations) and stored in an encrypted vault inside your
 hub directory. See `.secrets.env.example` in your hub for the env-file
 alternative.
 
+## Google connectors (Search Console, GA4, Merchant Center, Ads)
+
+Anja calls the Google REST APIs directly with **your own OAuth client** — no
+third-party service in between, and no shared credentials shipped with the
+code (each installation brings its own client, as with any self-hosted app).
+One-time setup:
+
+1. In [Google Cloud Console](https://console.cloud.google.com/) create a
+   project, enable the APIs you need (*Search Console API*, *Google Analytics
+   Data API*, *Merchant API*, *Google Ads API*), and create an **OAuth client
+   ID** of type *Web application* with redirect URI
+   `http://<your-hub-host>:8765/api/google/oauth/callback`
+   (`http://127.0.0.1:8765/...` for a local hub).
+2. Download the client JSON and save it as
+   `<hub>/.anjawiki/google-oauth-client.json`.
+3. In the app: workspace → **Connectors → Connect Google** → consent → pick
+   your Search Console site / GA4 property / Merchant account from the
+   dropdowns. Tokens refresh automatically.
+
+**Google Ads** has two modes:
+- *Default*: spend, clicks and revenue per campaign are read from **GA4**
+  (`advertiserAdCost`), which needs nothing beyond the GA4 link — but it is
+  an estimate.
+- *Native Google Ads API*: set a **developer token** in Settings →
+  Integrations → Google Ads API (from Google Ads → Tools → API Center; needs
+  *basic access* to read real accounts) plus the customer ID in the
+  workspace connectors. You get native metrics (impressions, CTR, CPC,
+  conversions, keyword and search-term reports) via the `ads_report` agent
+  tool and the statistics collector. Read-only for now.
+
 ## Architecture
 
 ```

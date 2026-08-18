@@ -14,6 +14,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Added
 
+- **Native Google Ads API** (GAQL, v22): `google_ads_collect` writes real
+  spend/impressions/clicks/conversions per campaign to `ads_daily` (prefix
+  `gads:`), replacing the GA4 estimate when a developer token is configured;
+  `ads_check` / `ads_report` agent tools (campaign, ad_group, keyword,
+  search_term, daily levels); `adwords` OAuth scope; hub-level "Google Ads
+  API" connector group. README section on Google connectors setup.
 - **Claude subscription sign-in from the UI**: Settings → Providers now shows
   the real CLI auth state (`claude auth status`, not just credential-file
   presence) and lets you sign in without a shell on the host — opens the

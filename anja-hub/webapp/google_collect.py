@@ -41,6 +41,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/webmasters.readonly",
     "https://www.googleapis.com/auth/analytics.readonly",
     "https://www.googleapis.com/auth/content",
+    "https://www.googleapis.com/auth/adwords",
 ]
 GSC_URL = "https://www.googleapis.com/webmasters/v3/sites/{site}/searchAnalytics/query"
 GA_URL = "https://analyticsdata.googleapis.com/v1beta/properties/{pid}:runReport"
@@ -144,7 +145,9 @@ def _ga_report(session, pid, start, end, dims, metrics, limit=100000):
     return out
 
 
-def collect_ga(session, pid, start, end, conn, site) -> tuple[int, int]:
+def collect_ga(session, pid, start, end, conn, site, *, ads_estimate: bool = True) -> tuple[int, int]:
+    """`ads_estimate`: la spesa ads via GA4 (advertiserAdCost) è una STIMA usata
+    come fallback; con la Google Ads API nativa configurata va saltata."""
     rows = _ga_report(session, pid, start, end, ["date", "sessionDefaultChannelGroup"],
                       ["sessions", "activeUsers", "keyEvents", "totalRevenue"])
     for r in rows:
@@ -152,6 +155,8 @@ def collect_ga(session, pid, start, end, conn, site) -> tuple[int, int]:
                      (site, _ga_date(r["keys"][0]), r["keys"][1], int(float(r["sessions"] or 0)),
                       int(float(r["activeUsers"] or 0)), int(float(r["keyEvents"] or 0)),
                       float(r["totalRevenue"] or 0)))
+    if not ads_estimate:
+        return len(rows), 0
     arows = _ga_report(session, pid, start, end, ["date", "sessionCampaignName"],
                        ["advertiserAdCost", "advertiserAdClicks", "totalRevenue"])
     na = 0
@@ -296,6 +301,7 @@ def collect_merchant(session, account_id, start, end, conn, site) -> tuple[int, 
 
 def collect(db_path: Path, token_file: Path, *, gsc_site: str = "",
             ga_property: str = "", merchant_account: str = "",
+            ads_customer: str = "", ads_dev_token: str = "", ads_login_customer: str = "",
             days: int = 90, replace: bool = True) -> dict:
     """Raccolta reale GSC+GA+Merchant → metrics.db. `replace` svuota le tabelle
     prima (refresh pulito: niente residui demo/vecchi). Ritorna {ok, gsc_daily,
@@ -307,8 +313,9 @@ def collect(db_path: Path, token_file: Path, *, gsc_site: str = "",
     site = (gsc_site or ga_property or "site").strip()
     conn = metrics_io._conn(Path(db_path))
     out = {"ok": True, "gsc_daily": 0, "gsc_queries": 0, "gsc_pages": 0, "ga_daily": 0,
-           "ads_daily": 0, "merchant_products": 0, "merchant_issues": 0,
+           "ads_daily": 0, "ads_source": "", "merchant_products": 0, "merchant_issues": 0,
            "merchant_daily": 0, "range": [s, e], "errors": []}
+    native_ads = bool(ads_customer and ads_dev_token)
     try:
         if replace:
             # NB: merchant_products/merchant_issues NON si svuotano — sono
@@ -324,9 +331,32 @@ def collect(db_path: Path, token_file: Path, *, gsc_site: str = "",
                 out["errors"].append(f"GSC: {ex}")
         if ga_property:
             try:
-                out["ga_daily"], out["ads_daily"] = collect_ga(session, ga_property, s, e, conn, site)
+                out["ga_daily"], out["ads_daily"] = collect_ga(
+                    session, ga_property, s, e, conn, site, ads_estimate=not native_ads)
+                if out["ads_daily"]:
+                    out["ads_source"] = "ga4-estimate"
             except Exception as ex:  # noqa: BLE001
                 out["errors"].append(f"GA4: {ex}")
+        if native_ads:
+            try:
+                token_scopes = json.loads(Path(token_file).read_text()).get("scopes") or []
+            except Exception:  # noqa: BLE001
+                token_scopes = []
+            if token_scopes and "https://www.googleapis.com/auth/adwords" not in token_scopes:
+                out["errors"].append("Google Ads: the Google token lacks the adwords scope — "
+                                     "reconnect Google from Connectors to grant it")
+            else:
+                import google_ads_collect
+                conn.commit()
+                ads_res = google_ads_collect.collect(
+                    Path(db_path), session, ads_customer, ads_dev_token,
+                    login_customer_id=ads_login_customer, days=days, site=site)
+                if ads_res.get("ok"):
+                    out["ads_daily"] = ads_res["ads_daily"]
+                    out["ads_source"] = "google-ads-api"
+                    out["ads_campaigns"] = ads_res.get("campaigns", 0)
+                else:
+                    out["errors"].append(f"Google Ads API: {ads_res.get('error')}")
         if merchant_account:
             try:
                 token_scopes = json.loads(Path(token_file).read_text()).get("scopes") or []

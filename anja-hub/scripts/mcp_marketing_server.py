@@ -66,6 +66,22 @@ def _maybe_any(*groups: str):
 # Diagnostica (sempre attiva)
 # ----------------------------------------------------------------------
 
+def _google_token_candidates():
+    from marketing.google_creds import _oauth_token_candidates
+    return _oauth_token_candidates()
+
+
+def _google_token_scopes() -> list[str]:
+    import json as _json
+    for t in _google_token_candidates():
+        if t.is_file():
+            try:
+                return [s.rsplit("/", 1)[-1] for s in (_json.loads(t.read_text()).get("scopes") or [])]
+            except Exception:
+                return []
+    return []
+
+
 @mcp.tool()
 async def marketing_status() -> dict[str, Any]:
     """Stato del marketing server per il brand corrente: scope, tool-group attivi, presenza delle chiavi nel vault (booleani, mai i valori) e connettore Google. Usalo come primo check."""
@@ -85,7 +101,8 @@ async def marketing_status() -> dict[str, Any]:
         "vault_path": os.environ.get("ANJA_MARKETING_VAULT", "<unset>"),
         "vault_keys_present": {k: bool(vault.get(k)) for k in keys},
         "connectors_dir": str(vault.connectors_dir()),
-        "google_oauth_token_present": (vault.connectors_dir() / "gsc-token.json").is_file(),
+        "google_oauth_token_present": any(t.is_file() for t in _google_token_candidates()),
+        "google_oauth_token_scopes": _google_token_scopes(),
     }
 
 

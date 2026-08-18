@@ -48,16 +48,34 @@ def sa_path() -> Path:
     return Path(os.environ.get("GSC_CREDENTIALS", "") or SA_PATH_DEFAULT)
 
 
+def _oauth_token_candidates() -> list[Path]:
+    """Token OAuth in ordine di precedenza. Il consenso "Connect Google" della
+    webapp scrive `<scope>/.anjawiki/google-token.json` (workspace, poi hub):
+    è QUELLO che va usato — il legacy `config/connectors/gsc-token.json`
+    resta come fallback (bug storico: agent su token stantio senza gli scope
+    nuovi mentre la UI li aveva — trovato 2026-08-18 con adwords)."""
+    out: list[Path] = []
+    vault = os.environ.get("ANJA_MARKETING_VAULT", "")
+    if vault:                                        # <ws>/.anjawiki/.secrets.env
+        out.append(Path(vault).parent / "google-token.json")
+    hub = os.environ.get("ANJA_HUB") or os.environ.get("ANJA_ROOT") or ""
+    if hub:
+        out.append(Path(hub) / ".anjawiki" / "google-token.json")
+    out.append(TOKEN_PATH)
+    return out
+
+
 def load_credentials() -> tuple[Credentials, str]:
     """Restituisce (credenziali, modalità) — modalità: "oauth" | "service_account"."""
-    if TOKEN_PATH.is_file():
-        # Niente override di scope al load: il refresh chiederebbe a Google anche
-        # scope mai concessi a QUESTO token (invalid_scope su tutte le API).
-        # SCOPES resta la lista da concedere quando si (ri)genera il token.
-        return (
-            UserCredentials.from_authorized_user_file(str(TOKEN_PATH)),
-            "oauth",
-        )
+    for tok in _oauth_token_candidates():
+        if tok.is_file():
+            # Niente override di scope al load: il refresh chiederebbe a Google anche
+            # scope mai concessi a QUESTO token (invalid_scope su tutte le API).
+            # SCOPES resta la lista da concedere quando si (ri)genera il token.
+            return (
+                UserCredentials.from_authorized_user_file(str(tok)),
+                "oauth",
+            )
     path = sa_path()
     if path.is_file():
         return (
@@ -65,6 +83,7 @@ def load_credentials() -> tuple[Credentials, str]:
             "service_account",
         )
     raise GoogleAuthError(
-        f"Nessuna credenziale Google nel connettore agency ({CREDENTIALS_DIR}). "
-        f"Attesi: gsc-token.json (OAuth) oppure {path.name} (service account)."
+        "Nessuna credenziale Google: collega Google dai Connettori del workspace "
+        f"(cercati: {', '.join(str(t) for t in _oauth_token_candidates())}) "
+        f"oppure service account {path.name} in {CREDENTIALS_DIR}."
     )

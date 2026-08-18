@@ -3631,13 +3631,10 @@
                 <div class="text-muted" style="font-size:12.5px;margin-top:5px">
                   <span x-show="googleOauth.connected">Search Console + Analytics authorized: Statistics collect real data.</span>
                   <span x-show="!googleOauth.connected && googleOauth.client_configured">Authorize GSC/GA access for this workspace.</span>
-                  <span x-show="!googleOauth.client_configured">One-time setup: this hub needs its own Google OAuth client (2 minutes, guide below).</span>
+                  <span x-show="!googleOauth.client_configured">Waiting for the hub's Google OAuth client (see below).</span>
                 </div>
               </div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <button class="btn btn--ghost" x-show="googleOauth.client_configured" @click="gclientSetup.open = !gclientSetup.open" title="Replace the OAuth client">
-                  <i data-lucide="key-round" style="width:15px;height:15px"></i> OAuth client
-                </button>
                 <button class="btn" :class="googleOauth.connected ? '' : 'btn-primary'" @click="connectGoogle()" :disabled="!googleOauth.client_configured">
                   <i :data-lucide="googleOauth.connected ? 'refresh-cw' : 'link'" style="width:15px;height:15px"></i>
                   <span x-text="googleOauth.connected ? 'Reconnect' : 'Connect Google'"></span>
@@ -3645,29 +3642,9 @@
               </div>
             </div>
 
-            <!-- F-ConnectorUX: setup guidato dell'OAuth client, tutto da UI -->
-            <div x-show="!googleOauth.client_configured || gclientSetup.open" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-1)">
-              <div style="font-weight:600;font-size:13px;margin-bottom:8px">Set up the Google OAuth client</div>
-              <ol style="margin:0 0 12px 0;padding-left:20px;font-size:12.5px;line-height:1.75;color:var(--text-2)">
-                <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style="color:var(--accent)">Google Cloud Console → APIs & Services → Credentials</a> (create a project if you have none).</li>
-                <li>Under <b>Library</b>, enable the APIs you'll use: <i>Google Search Console API</i>, <i>Google Analytics Data API</i>, <i>Merchant API</i>, <i>Google Ads API</i>.</li>
-                <li><b>Create Credentials → OAuth client ID</b> → type <b>Web application</b> → add this <b>Authorized redirect URI</b>:
-                  <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
-                    <code style="flex:1;font-size:11.5px;padding:4px 8px;background:var(--bg-2);border-radius:6px;overflow-x:auto;white-space:nowrap" x-text="googleOauth.redirect_uri"></code>
-                    <button class="btn btn--xs" @click="copyText(googleOauth.redirect_uri); showToast('success', 'Redirect URI copied', '')"><i data-lucide="copy" style="width:13px;height:13px"></i></button>
-                  </div>
-                  <span class="text-muted">(OAuth consent screen: External, Testing — add your own Google account as test user; no verification needed for self-hosting.)</span>
-                </li>
-                <li><b>Download JSON</b> of the client and upload it here:</li>
-              </ol>
-              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <label class="btn btn-primary" style="cursor:pointer">
-                  <i data-lucide="upload" style="width:15px;height:15px"></i> Upload client JSON
-                  <input type="file" accept=".json,application/json" style="display:none" @change="uploadGoogleClient($event)">
-                </label>
-                <span class="text-muted" style="font-size:12px">Stored on the hub as <code>.anjawiki/google-oauth-client.json</code> (owner-only), used by all workspaces.</span>
-              </div>
-              <div x-show="gclientSetup.msg" x-text="gclientSetup.msg" style="margin-top:8px;font-size:12.5px" :style="gclientSetup.ok ? 'color:#15803d' : 'color:#b91c1c'"></div>
+            <div x-show="!googleOauth.client_configured" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-1);font-size:12.5px" class="text-muted">
+              The hub has no Google OAuth client yet (one per installation, shared by all workspaces).
+              <a @click="view='settings'; settingsTab='integrations'; loadHubConnectors(); loadGoogleOauth(); refreshIcons()" style="color:var(--accent);cursor:pointer">Set it up in Settings → Integrations</a> (2 minutes, guided), then come back and click <em>Connect Google</em>.
             </div>
           </div>
 
@@ -6312,7 +6289,7 @@ No research yet — launch the first one above, or ask for it in chat.
               ...(isAdmin() ? [{id: 'backup', label: 'Backup & DR', icon: 'archive'}] : []),
               {id: 'help', label: 'Help', icon: 'info'}
             ]" :key="t.id">
-              <button @click="settingsTab = t.id; refreshIcons(); if (t.id === 'audio') loadAudioConfig(); if (t.id === 'project') { loadProjectPrefs(); loadAutoIngest(); } if (t.id === 'notifications') loadNotifSettings(); if (t.id === 'research') loadResearchSettings(); if (t.id === 'profile') loadProfileSettings(); if (t.id === 'integrations') loadHubConnectors(); if (t.id === 'backup') loadBackupDR();"
+              <button @click="settingsTab = t.id; refreshIcons(); if (t.id === 'audio') loadAudioConfig(); if (t.id === 'project') { loadProjectPrefs(); loadAutoIngest(); } if (t.id === 'notifications') loadNotifSettings(); if (t.id === 'research') loadResearchSettings(); if (t.id === 'profile') loadProfileSettings(); if (t.id === 'integrations') { loadHubConnectors(); loadGoogleOauth(); } if (t.id === 'backup') loadBackupDR();"
                       class="settings-tab"
                       :class="{'settings-tab--active': settingsTab === t.id}">
                 <i :data-lucide="t.icon" class="icon icon--sm"></i>
@@ -7110,14 +7087,52 @@ No research yet — launch the first one above, or ask for it in chat.
           <!-- ===== TAB: Integrations ===== -->
           <div x-show="settingsTab === 'integrations'">
 
+          <!-- Google OAuth client: risorsa HUB (un client per installazione, tutti i workspace lo usano) -->
+          <div class="card" style="padding: var(--s-4); margin-bottom: var(--s-4);">
+            <h2 style="font-size: var(--t-lg); margin: 0 0 var(--s-2) 0; display:flex; align-items:center; gap: var(--s-2);">
+              <i data-lucide="line-chart" class="icon icon--sm"></i>
+              <span>Google OAuth client (shared)</span>
+              <span class="tag" :class="googleOauth.client_configured ? 'success' : 'neutral'" x-text="googleOauth.client_configured ? 'configured' : 'not configured'"></span>
+            </h2>
+            <p class="text-muted" style="margin: 0 0 var(--s-3) 0; font-size: var(--t-sm);">
+              One OAuth client per installation, created in <strong>your</strong> Google Cloud project. It enables Search Console, GA4, Merchant Center and Google Ads for <strong>every workspace</strong> — each workspace then authorizes its own account with <em>Connect Google</em> in its Connectors.
+            </p>
+            <div x-show="!googleOauth.client_configured || gclientSetup.open">
+              <ol style="margin:0 0 12px 0;padding-left:20px;font-size:12.5px;line-height:1.75;color:var(--text-2)">
+                <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style="color:var(--accent)">Google Cloud Console → APIs & Services → Credentials</a> (create a project if you have none).</li>
+                <li>Under <b>Library</b>, enable: <i>Google Search Console API</i>, <i>Google Analytics Data API</i>, <i>Merchant API</i>, <i>Google Ads API</i>.</li>
+                <li><b>Create Credentials → OAuth client ID</b> → type <b>Web application</b> → add this <b>Authorized redirect URI</b>:
+                  <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+                    <code style="flex:1;font-size:11.5px;padding:4px 8px;background:var(--bg-2);border-radius:6px;overflow-x:auto;white-space:nowrap" x-text="googleOauth.redirect_uri"></code>
+                    <button class="btn btn--xs" @click="copyText(googleOauth.redirect_uri); showToast('success', 'Redirect URI copied', '')"><i data-lucide="copy" style="width:13px;height:13px"></i></button>
+                  </div>
+                  <span class="text-muted">OAuth consent screen: External, Testing — add your Google account as test user (no verification needed for self-hosting).</span>
+                </li>
+                <li><b>Download JSON</b> of the client and upload it here:</li>
+              </ol>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <label class="btn btn-primary" style="cursor:pointer">
+                  <i data-lucide="upload" style="width:15px;height:15px"></i> Upload client JSON
+                  <input type="file" accept=".json,application/json" style="display:none" @change="uploadGoogleClient($event)">
+                </label>
+                <span class="text-muted" style="font-size:12px">Stored as <code>.anjawiki/google-oauth-client.json</code> on the hub (owner-only).</span>
+              </div>
+            </div>
+            <div x-show="googleOauth.client_configured && !gclientSetup.open" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span class="text-muted" style="font-size:12.5px">Client in place. Workspaces can now use <em>Connect Google</em>.</span>
+              <button class="btn btn--ghost btn--xs" @click="gclientSetup.open = true"><i data-lucide="key-round" style="width:13px;height:13px"></i> Replace client</button>
+            </div>
+            <div x-show="gclientSetup.msg" x-text="gclientSetup.msg" style="margin-top:8px;font-size:12.5px" :style="gclientSetup.ok ? 'color:#15803d' : 'color:#b91c1c'"></div>
+          </div>
+
           <!-- Generazione immagini: credenziali condivise hub (key modelli immagine) -->
           <div class="card" style="padding: var(--s-4); margin-bottom: var(--s-4);">
             <h2 style="font-size: var(--t-lg); margin: 0 0 var(--s-2) 0;">
               <i data-lucide="sparkles" class="icon icon--sm"></i>
-              <span>Image generation (shared)</span>
+              <span>Shared API keys</span>
             </h2>
             <p class="text-muted" style="margin: 0 0 var(--s-3) 0; font-size: var(--t-sm);">
-              Credentials used by <strong>the whole hub</strong> to generate images (Media → Generate). Workspaces use them by default and can <strong>override</strong> them in their own Connectors.
+              Credentials used by <strong>the whole hub</strong>: image/video generation (Media → Generate, agents' <code>giv</code>) and the Google Ads API developer token. Workspaces use them by default and can <strong>override</strong> them in their own Connectors.
             </p>
             <div x-show="!hubConnectors" class="text-muted" style="font-size: var(--t-sm);">Loading…</div>
             <template x-if="hubConnectors">

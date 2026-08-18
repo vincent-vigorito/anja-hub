@@ -2108,8 +2108,8 @@ function app() {
     },
 
     async loadGoogleOauth() {
-      const proj = this.currentProjectScopeName;
-      if (!proj) return;
+      // scope: il workspace corrente, altrimenti hub (Settings → Integrations)
+      const proj = this.currentProjectScopeName || 'hub';
       try {
         const d = await this.fetchJson('/api/google/oauth/status?scope=' + encodeURIComponent(proj));
         this.googleOauth = d || { connected: false, client_configured: false, token_scope: '', redirect_uri: '' };

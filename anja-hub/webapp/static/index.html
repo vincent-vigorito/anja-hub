@@ -3109,6 +3109,7 @@
               <button :class="{ active: statsTab==='seo' }" @click="setStatsTab('seo')">SEO</button>
               <button :class="{ active: statsTab==='analytics' }" @click="setStatsTab('analytics')">Analytics</button>
               <button :class="{ active: statsTab==='ads' }" @click="setStatsTab('ads')">Ads</button>
+              <button :class="{ active: statsTab==='sales' }" @click="setStatsTab('sales')" x-show="statsData?.sales">Sales</button>
               <button :class="{ active: statsTab==='shopping' }" @click="setStatsTab('shopping')" x-show="statsData?.merchant">Shopping</button>
               <button :class="{ active: statsTab==='social' }" @click="setStatsTab('social')" x-show="socialPerf.posts.length || statsData?.social">Social <span class="count" x-show="socialPerf.posts.length" x-text="socialPerf.posts.length"></span></button>
             </div>
@@ -3430,6 +3431,82 @@
                 <div style="font-size:14px;font-weight:600;margin-top:8px">No active campaigns</div>
                 <div class="text-muted" style="font-size:13px;margin-top:6px">Once you connect Google/Meta Ads, you'll see spend, conversions and ROAS here.</div>
               </div>
+            </div>
+
+            <!-- TAB: Sales (ordini WooCommerce — dato di cassa) -->
+            <div x-show="statsTab==='sales'">
+              <template x-if="statsData?.sales">
+                <div>
+                  <div class="text-muted" style="font-size:12.5px;margin-bottom:10px">
+                    <span class="tag success">WooCommerce orders · real sales</span>
+                    <span x-text="'latest order day: ' + statsData.sales.anchor"></span>
+                    · paid orders (completed + processing), incl. tax
+                  </div>
+                  <div class="stat-card-grid" style="margin-bottom:14px">
+                    <template x-for="k in salesKpis" :key="k.key">
+                      <div class="stat-card" :class="{ 'stat-card-primary': k.primary }">
+                        <div class="stat-card-label" x-text="k.label"></div>
+                        <div class="stat-card-value"><div class="stat-card-num" x-text="k.value"></div></div>
+                        <div class="stat-card-sub">
+                          <span class="stat-delta" :class="k.deltaClass" x-show="k.deltaLabel">
+                            <i :data-lucide="k.deltaIcon" style="width:13px;height:13px"></i><span x-text="k.deltaLabel"></span>
+                          </span>
+                          <span x-text="k.sub"></span>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                  <div class="card" style="padding:18px;margin-bottom:14px">
+                    <div class="dash-section-title" style="margin-bottom:12px">Revenue & orders (90d)</div>
+                    <div class="stat-chart-wrap"><canvas id="stat-chart-sales"></canvas></div>
+                  </div>
+                  <div class="stats-grid-2" style="display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:start">
+                    <div class="card" style="padding:18px">
+                      <div class="dash-section-title" style="margin-bottom:12px">Top products by revenue <span class="text-muted" style="font-weight:400">· 90d</span></div>
+                      <div style="overflow-x:auto">
+                        <table class="data-table" style="width:100%">
+                          <thead><tr><th>Product</th><th>SKU</th><th style="text-align:right">Qty</th><th style="text-align:right">Orders</th><th style="text-align:right">Revenue</th><th style="text-align:right">Share</th></tr></thead>
+                          <tbody>
+                            <template x-for="pr in statsData.sales.top_products" :key="pr.product_id">
+                              <tr>
+                                <td x-text="pr.name.length > 60 ? pr.name.slice(0, 60) + '…' : pr.name" :title="pr.name"></td>
+                                <td class="text-muted text-mono" style="font-size:11px" x-text="pr.sku"></td>
+                                <td style="text-align:right" x-text="pr.quantity"></td>
+                                <td style="text-align:right" x-text="pr.orders"></td>
+                                <td style="text-align:right" x-text="'€' + _fmtNum(pr.revenue)"></td>
+                                <td style="text-align:right" x-text="pr.share + '%'"></td>
+                              </tr>
+                            </template>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="card" style="padding:18px;margin-bottom:14px">
+                        <div class="dash-section-title" style="margin-bottom:10px">By region <span class="text-muted" style="font-weight:400" x-text="'· ' + statsRange + 'd'"></span></div>
+                        <template x-for="g in statsData.sales.geo" :key="g.region">
+                          <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;border-bottom:1px solid var(--border-1)">
+                            <span x-text="g.region"></span>
+                            <span><span class="text-muted" x-text="g.orders + ' · '"></span><b x-text="'€' + _fmtNum(g.revenue)"></b></span>
+                          </div>
+                        </template>
+                      </div>
+                      <div class="card" style="padding:18px">
+                        <div class="dash-section-title" style="margin-bottom:10px">Payment methods</div>
+                        <template x-for="pm in statsData.sales.payments" :key="pm.payment">
+                          <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;border-bottom:1px solid var(--border-1)">
+                            <span x-text="pm.payment"></span>
+                            <span><span class="text-muted" x-text="pm.orders + ' · '"></span><b x-text="'€' + _fmtNum(pm.revenue)"></b></span>
+                          </div>
+                        </template>
+                        <div class="text-muted" style="font-size:12px;margin-top:8px" x-show="statsData.sales.returning_share !== null">
+                          Returning customers: <b x-text="statsData.sales.returning_share + '%'"></b> of orders
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
             </div>
 
             <!-- TAB: Social (Performance organica) -->

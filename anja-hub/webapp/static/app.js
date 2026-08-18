@@ -1850,6 +1850,21 @@ function app() {
       return cards;
     },
 
+    get salesKpis() {
+      const p = `vs prev. ${this.statsRange}d`;
+      const k = this.statsData?.sales?.kpis || {};
+      return [
+        this._kpiFrom(k.revenue, 'srev', 'Revenue (orders)', 'eur', p, true),
+        this._kpiFrom(k.orders, 'sord', 'Orders', 'num', p),
+        this._kpiFrom(k.aov, 'saov', 'Avg. order value', 'eur', p),
+        this._kpiFrom(k.new_customers, 'snew', 'New customers', 'num', p),
+        this._kpiFrom(k.net_revenue, 'snet', 'Net revenue', 'eur', 'excl. tax & shipping'),
+        this._kpiFrom(k.items, 'sitems', 'Items sold', 'num', p),
+        this._kpiFrom({ value: this.statsData?.sales?.cash_roas ?? null, delta: null }, 'sroas', 'Cash ROAS', 'num', 'orders revenue / ads spend'),
+        this._kpiFrom({ value: this.statsData?.sales?.b2b_share ?? null, delta: null }, 'sb2b', 'B2B share', 'pct', 'orders with company'),
+      ];
+    },
+
     get shoppingKpis() {
       const p = `vs prev. ${this.statsRange}d`;
       const m = this.statsData?.merchant?.kpis || {};
@@ -1941,6 +1956,17 @@ function app() {
             y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Impressions' } },
             x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } },
           } }),
+        });
+      }
+      if (this.statsTab === 'sales' && this.statsData.sales) {
+        const s = this.statsData.sales.series || [];
+        mk('stat-chart-sales', {
+          type: 'bar',
+          data: { labels: s.map(p => p.date), datasets: [
+            { type: 'bar', label: 'Revenue €', data: s.map(p => p.revenue), backgroundColor: 'rgba(11,136,123,.5)', yAxisID: 'y' },
+            { type: 'line', label: 'Orders', data: s.map(p => p.orders), borderColor: INK, tension: .3, pointRadius: 0, yAxisID: 'y1' },
+          ] },
+          options: baseOpts({ scales: { y: { beginAtZero: true, position: 'left' }, y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { precision: 0 } }, x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } } } }),
         });
       }
       if (this.statsTab === 'ads' && this.statsData.has_ads) {

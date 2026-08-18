@@ -203,8 +203,8 @@ def _groups_for_agent(allowed_tools: list[str], default: str) -> str:
     if "__gsc_" in blob or "__ga_" in blob or "__merchant_" in blob:
         groups.append("analytics")
     # wp_upload_media è social-oriented (URL pubblici per IG), non un tool CMS di contenuto
-    if any("__wp_" in t for t in allowed_tools if "wp_upload_media" not in t):
-        groups.append("cms")
+    if any(("__wp_" in t or "__wc_" in t) for t in allowed_tools if "wp_upload_media" not in t):
+        groups.append("cms")   # wc_* (ordini Woo) vivono nel gruppo cms
     if "__meta_" in blob or "__social_kit" in blob or "wp_upload_media" in blob:
         groups.append("social")
     return ",".join(dict.fromkeys(groups)) or default
@@ -225,7 +225,7 @@ def _adapt_agent_for_backend(cfg: dict, backend: str) -> dict:
     _wp_meta = ("wp_site_info", "wp_list_sites", "wp_use_site")
     had_cms = any("__wp_" in t and "wp_upload_media" not in t
                   and not any(m in t for m in _wp_meta) for t in tools)
-    kept = [t for t in tools if "__wp_" not in t or "wp_upload_media" in t]
+    kept = [t for t in tools if ("__wp_" not in t and "__wc_" not in t) or "wp_upload_media" in t]
     mods = [("swerpicommerce" if m == "wordpress" else m) for m in cfg.get("skill_modules", [])]
     if had_cms:  # chi scriveva sul CMS opera via CLI: serve Bash + il modulo metodologico
         if "Bash" not in kept:

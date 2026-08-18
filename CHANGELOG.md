@@ -14,6 +14,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Added
 
+- **WooCommerce orders — real sales data**: `woo_collect` reads paid orders
+  via `wc/v3` with the existing WP Application Password (no extra keys) into
+  `wc_orders_daily` / `wc_order_products` / `wc_orders`; new **Sales** tab
+  (revenue, orders, AOV, new customers, net revenue, cash ROAS = orders
+  revenue / ads spend, B2B share, 90d chart, top products, regions, payment
+  methods); agent tools `wc_sales_report` / `wc_orders`; blueprint lead/analyst
+  get ads + woo tools. GA4 was under-counting orders by ~40% on a real shop.
 - **Ads tab rebuilt on native data**: 8 KPI cards (spend, conversions, value,
   ROAS, CPA, CTR, CPC, clicks) with deltas, campaigns table with source badge,
   and a **Search terms** panel ("wasted spend" = queries that cost without

@@ -19,7 +19,11 @@
     "mcp__anja_marketing__ga_list_properties",
     "mcp__anja_marketing__merchant_status",
     "mcp__anja_marketing__merchant_issues",
-    "mcp__anja_marketing__merchant_report"
+    "mcp__anja_marketing__merchant_report",
+    "mcp__anja_marketing__ads_check",
+    "mcp__anja_marketing__ads_report",
+    "mcp__anja_marketing__wc_sales_report",
+    "mcp__anja_marketing__wc_orders"
   ],
   "auto_route_keywords": [
     "gsc",

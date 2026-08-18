@@ -563,6 +563,68 @@ async def merchant_report(
 
 
 # ----------------------------------------------------------------------
+# WOOCOMMERCE — ordini reali (dato di cassa), sola lettura
+# ----------------------------------------------------------------------
+
+@_maybe("cms")
+async def wc_sales_report(start_date: str, end_date: str) -> dict[str, Any]:
+    """Vendite REALI WooCommerce nel periodo (dato di cassa: ordini, fatturato lordo/netto, tasse, spedizioni, resi, AOV, pezzi) + top prodotti venduti. È la fonte di verità per il fatturato: GA4 sottostima (consent mode, adblock). Solo backend woo.
+
+    Args:
+        start_date: "YYYY-MM-DD".
+        end_date: "YYYY-MM-DD".
+    """
+    s, e = _mql_date(start_date), _mql_date(end_date)
+    wp = get_wp()
+    rep = await wp.wc_sales_report(s, e)
+    top = await wp.wc_top_sellers(s, e)
+    r = rep[0] if rep else {}
+    out = {
+        "period": [s, e],
+        "orders": int(r.get("total_orders") or 0),
+        "revenue": float(r.get("total_sales") or 0),
+        "net_revenue": float(r.get("net_sales") or 0),
+        "tax": float(r.get("total_tax") or 0), "shipping": float(r.get("total_shipping") or 0),
+        "refunds": float(r.get("total_refunds") or 0), "discount": float(r.get("total_discount") or 0),
+        "items": int(r.get("total_items") or 0), "customers": int(r.get("total_customers") or 0),
+        "aov": round(float(r.get("total_sales") or 0) / int(r.get("total_orders") or 1), 2) if r.get("total_orders") else None,
+        "daily": [{"date": d, "orders": v.get("orders", 0), "revenue": float(v.get("sales") or 0)}
+                  for d, v in sorted((r.get("totals") or {}).items())],
+        "top_sellers": [{"product_id": t.get("product_id"), "name": t.get("name"), "quantity": t.get("quantity")}
+                        for t in top[:20]],
+    }
+    return out
+
+
+@_maybe("cms")
+async def wc_orders(start_date: str, end_date: str, status: str = "completed", top: int = 50) -> dict[str, Any]:
+    """Elenco ordini WooCommerce nel periodo con righe prodotto, cliente (azienda/città), pagamento. Per analisi B2B/geografiche/prodotto o per rispondere "chi ha comprato X". Solo backend woo.
+
+    Args:
+        start_date: "YYYY-MM-DD".
+        end_date: "YYYY-MM-DD".
+        status: "completed" (default) | "processing" | "on-hold" | "cancelled" | "refunded" | "any".
+        top: max ordini (default 50, max 100).
+    """
+    s, e = _mql_date(start_date), _mql_date(end_date)
+    raw = await get_wp().wc_orders(s, e, status=status, per_page=min(max(int(top), 1), 100))
+    orders = []
+    for o in raw:
+        b = o.get("billing") or {}
+        orders.append({
+            "id": o.get("id"), "date": (o.get("date_paid") or o.get("date_created") or "")[:16],
+            "status": o.get("status"), "total": float(o.get("total") or 0),
+            "tax": float(o.get("total_tax") or 0), "shipping": float(o.get("shipping_total") or 0),
+            "payment": o.get("payment_method_title"), "customer_id": o.get("customer_id"),
+            "company": b.get("company") or "", "city": b.get("city") or "", "region": b.get("state") or "",
+            "items": [{"name": (li.get("name") or "")[:80], "sku": li.get("sku"), "qty": li.get("quantity"),
+                       "total": float(li.get("total") or 0)} for li in o.get("line_items") or []],
+        })
+    return {"period": [s, e], "status": status, "count": len(orders),
+            "revenue": round(sum(o["total"] for o in orders), 2), "orders": orders}
+
+
+# ----------------------------------------------------------------------
 # GOOGLE ADS — Ads API nativa (GAQL), sola lettura
 # ----------------------------------------------------------------------
 

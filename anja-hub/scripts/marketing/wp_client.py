@@ -89,6 +89,29 @@ class WordPressClient:
         return response.json()
 
     # ------------------------------------------------------------------
+    # WooCommerce (wc/v3) — stesse credenziali WP (Application Password
+    # con permessi shop). Sola lettura.
+    # ------------------------------------------------------------------
+
+    async def wc_orders(self, after: str, before: str, status: str = "completed",
+                        per_page: int = 100, page: int = 1) -> list[dict[str, Any]]:
+        """Ordini nel periodo (date ISO YYYY-MM-DD). `status`: completed|processing|any."""
+        params = {"per_page": min(max(per_page, 1), 100), "page": page, "orderby": "date",
+                  "order": "desc", "after": f"{after}T00:00:00", "before": f"{before}T23:59:59"}
+        if status and status != "any":
+            params["status"] = status
+        return await self._request("GET", "/wc/v3/orders", params=params) or []
+
+    async def wc_sales_report(self, date_min: str, date_max: str) -> list[dict[str, Any]]:
+        """Report vendite aggregato Woo (totali + serie giornaliera) nel periodo."""
+        return await self._request("GET", "/wc/v3/reports/sales",
+                                   params={"date_min": date_min, "date_max": date_max}) or []
+
+    async def wc_top_sellers(self, date_min: str, date_max: str) -> list[dict[str, Any]]:
+        return await self._request("GET", "/wc/v3/reports/top_sellers",
+                                   params={"date_min": date_min, "date_max": date_max}) or []
+
+    # ------------------------------------------------------------------
     # Diagnostica / informazioni sito
     # ------------------------------------------------------------------
 

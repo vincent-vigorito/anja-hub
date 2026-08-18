@@ -21,6 +21,9 @@ def connection_status(vault_values: dict, token_present: bool = False) -> list[d
     merchant = (vault_values.get("MERCHANT_ACCOUNT_ID") or "").strip()
     meta_ads = bool((vault_values.get("META_ADS_TOKEN") or "").strip()
                     and (vault_values.get("META_AD_ACCOUNT_ID") or "").strip())
+    woo = bool((vault_values.get("WP_BASE_URL") or "").strip()
+               and (vault_values.get("WP_APP_PASSWORD") or "").strip()
+               and (vault_values.get("_backend") or "") == "woo")
     social = bool((vault_values.get("META_ACCESS_TOKEN") or "").strip()
                   and ((vault_values.get("META_PAGE_ID") or "").strip()
                        or (vault_values.get("META_IG_USER_ID") or "").strip()))
@@ -33,7 +36,36 @@ def connection_status(vault_values: dict, token_present: bool = False) -> list[d
         {"key": "merchant", "label": "Google Merchant", "configured": bool(merchant), "connected": bool(merchant and token_present)},
         {"key": "meta_ads", "label": "Meta Ads", "configured": meta_ads, "connected": meta_ads},
         {"key": "social", "label": "Social (FB/IG)", "configured": social, "connected": social},
+        {"key": "woo", "label": "WooCommerce orders", "configured": woo, "connected": woo},
     ]
+
+
+def _collect_woo(db_path: Path, vault_values: dict, days: int, result: dict,
+                 scope_dir: Path | None = None) -> dict:
+    """Ordini WooCommerce (dato di cassa) — solo backend woo con credenziali WP."""
+    base = (vault_values.get("WP_BASE_URL") or "").strip()
+    user = (vault_values.get("WP_USERNAME") or "").strip()
+    pw = (vault_values.get("WP_APP_PASSWORD") or "").strip()
+    backend = ""
+    if scope_dir and (Path(scope_dir) / "meta.yaml").is_file():
+        for ln in (Path(scope_dir) / "meta.yaml").read_text(encoding="utf-8", errors="replace").splitlines():
+            if ln.startswith("backend:"):
+                backend = ln.split(":", 1)[1].strip()
+    if backend != "woo" or not (base and user and pw):
+        return result
+    try:
+        import woo_collect
+        r = woo_collect.collect(Path(db_path), base, user, pw, days=days)
+    except Exception as e:  # noqa: BLE001
+        r = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+    result.setdefault("detail", {})["woo"] = r
+    if r.get("ok"):
+        result["note"] = (result.get("note") or "") + (
+            f" Woo: {r['orders']} ordini · €{r['revenue']} ({r['range'][0]} → {r['range'][1]}).")
+        result["collected"] = (result.get("collected") or 0) + r["orders"]
+    else:
+        result["note"] = (result.get("note") or "") + f" ⚠️ Woo: {r.get('error')}"
+    return result
 
 
 def _collect_social(db_path: Path, vault_values: dict, days: int, result: dict) -> dict:
@@ -81,6 +113,11 @@ def refresh(db_path: Path, vault_values: dict, *, scope_dir: Path | None = None,
     sources, note, detail?}."""
     import google_collect
     token = google_collect.find_token(scope_dir, hub_dir)
+    # backend del workspace (meta.yaml) → connection_status sa se Woo è applicabile
+    if scope_dir and (Path(scope_dir) / "meta.yaml").is_file():
+        for ln in (Path(scope_dir) / "meta.yaml").read_text(encoding="utf-8", errors="replace").splitlines():
+            if ln.startswith("backend:"):
+                vault_values = {**vault_values, "_backend": ln.split(":", 1)[1].strip()}
     sources = connection_status(vault_values, token_present=bool(token))
     gsc = (vault_values.get("GSC_SITE") or "").strip()
     ga4 = (vault_values.get("GA4_PROPERTY_ID") or "").strip()
@@ -91,16 +128,16 @@ def refresh(db_path: Path, vault_values: dict, *, scope_dir: Path | None = None,
 
     if not token:
         configured = [s["label"] for s in sources if s["configured"]]
-        return _collect_social(db_path, vault_values, days, _collect_meta(db_path, vault_values, days, {
+        return _collect_woo(db_path, vault_values, days, _collect_social(db_path, vault_values, days, _collect_meta(db_path, vault_values, days, {
             "ok": True, "collected": 0, "sources": sources, "note": (
                 "Sorgenti configurate (" + (", ".join(configured) if configured else "nessuna") +
                 ") ma manca il token OAuth Google: caricalo in <workspace>/.anjawiki/google-token.json "
-                "(o a livello hub).")}))
+                "(o a livello hub).")})), scope_dir=scope_dir)
     if not (gsc or ga4 or merchant):
-        return _collect_social(db_path, vault_values, days, _collect_meta(db_path, vault_values, days, {
+        return _collect_woo(db_path, vault_values, days, _collect_social(db_path, vault_values, days, _collect_meta(db_path, vault_values, days, {
             "ok": True, "collected": 0, "sources": sources,
             "note": "Token OAuth presente ma nessuna property configurata "
-                    "(GSC_SITE / GA4_PROPERTY_ID / MERCHANT_ACCOUNT_ID nei Connettori Google)."}))
+                    "(GSC_SITE / GA4_PROPERTY_ID / MERCHANT_ACCOUNT_ID nei Connettori Google)."})), scope_dir=scope_dir)
 
     res = google_collect.collect(Path(db_path), token, gsc_site=gsc, ga_property=ga4,
                                  merchant_account=merchant, ads_customer=ads_customer,
@@ -120,6 +157,6 @@ def refresh(db_path: Path, vault_values: dict, *, scope_dir: Path | None = None,
                  f"{res.get('merchant_daily', 0)} gg listing.")
     if res["errors"]:
         note += " ⚠️ " + "; ".join(res["errors"])
-    return _collect_social(db_path, vault_values, days, _collect_meta(db_path, vault_values, days, {
+    return _collect_woo(db_path, vault_values, days, _collect_social(db_path, vault_values, days, _collect_meta(db_path, vault_values, days, {
         "ok": res["ok"], "collected": collected, "sources": sources,
-        "note": note, "detail": res}))
+        "note": note, "detail": res})), scope_dir=scope_dir)

@@ -37,6 +37,18 @@ CREATE TABLE IF NOT EXISTS ga_daily(
 CREATE TABLE IF NOT EXISTS ads_daily(
   site TEXT, date TEXT, campaign TEXT, spend REAL, impressions INTEGER, clicks INTEGER, conversions REAL, revenue REAL,
   PRIMARY KEY(site, date, campaign));
+CREATE TABLE IF NOT EXISTS wc_orders_daily(
+  site TEXT, date TEXT, orders INTEGER, revenue REAL, net_revenue REAL, tax REAL, shipping REAL,
+  discount REAL, items INTEGER, new_customers INTEGER,
+  PRIMARY KEY(site, date));
+CREATE TABLE IF NOT EXISTS wc_order_products(
+  site TEXT, product_id INTEGER, name TEXT, sku TEXT, quantity INTEGER, revenue REAL, orders INTEGER,
+  period_start TEXT, period_end TEXT,
+  PRIMARY KEY(site, product_id));
+CREATE TABLE IF NOT EXISTS wc_orders(
+  site TEXT, order_id INTEGER, date TEXT, status TEXT, total REAL, net REAL, items INTEGER,
+  customer_id INTEGER, new_customer INTEGER, payment TEXT, city TEXT, region TEXT, country TEXT, company TEXT,
+  PRIMARY KEY(site, order_id));
 CREATE TABLE IF NOT EXISTS ads_terms(
   site TEXT, campaign TEXT, term TEXT, status TEXT, spend REAL, impressions INTEGER, clicks INTEGER,
   conversions REAL, revenue REAL, period_start TEXT, period_end TEXT,
@@ -142,6 +154,72 @@ def _ads_agg(c, start, end) -> dict:
         "ctr": round(clicks / imps * 100, 2) if imps else None,
         "cpc": round(spend / clicks, 2) if clicks else None,
         "cpa": round(spend / conv, 2) if conv else None,
+    }
+
+
+def _sales_agg(c, start, end) -> dict:
+    r = c.execute(
+        """SELECT COALESCE(SUM(orders),0) o, COALESCE(SUM(revenue),0) rev, COALESCE(SUM(net_revenue),0) net,
+                  COALESCE(SUM(items),0) it, COALESCE(SUM(new_customers),0) nc
+           FROM wc_orders_daily WHERE date BETWEEN ? AND ?""", (start, end)).fetchone()
+    o, rev = r["o"], round(r["rev"], 2)
+    return {"orders": o, "revenue": rev, "net_revenue": round(r["net"], 2), "items": r["it"],
+            "new_customers": r["nc"], "aov": round(rev / o, 2) if o else None,
+            "returning_share": round((o - r["nc"]) / o * 100, 1) if o else None}
+
+
+def _sales_block(c, days, series_days, kpi) -> dict | None:
+    """Ordini WooCommerce (dato di cassa). None se il collector non ha mai scritto.
+    Anchor PROPRIO (ultimo ordine, tipicamente ieri): l'anchor Google è indietro
+    di ~3 giorni e taglierebbe le vendite più recenti."""
+    try:
+        row = c.execute("SELECT MAX(date) d FROM wc_orders_daily").fetchone()
+    except Exception:
+        return None
+    if not row or not row["d"]:
+        return None
+    anchor = row["d"]
+    cur_start = _shift(anchor, -(days - 1))
+    prev_end = _shift(anchor, -days)
+    prev_start = _shift(anchor, -(2 * days - 1))
+    ser_start = _shift(anchor, -(series_days - 1))
+    cur, prev = _sales_agg(c, cur_start, anchor), _sales_agg(c, prev_start, prev_end)
+    ads = _ads_agg(c, cur_start, anchor)
+    prods = [dict(r) for r in c.execute(
+        """SELECT product_id, name, sku, quantity, revenue, orders FROM wc_order_products
+           ORDER BY revenue DESC LIMIT 25""")]
+    tot = sum(p["revenue"] for p in prods) or 1
+    for p in prods:
+        p["share"] = round(p["revenue"] / tot * 100, 1)
+    geo = [dict(r) for r in c.execute(
+        """SELECT COALESCE(NULLIF(region,''),'?') region, COUNT(*) orders, ROUND(SUM(total),2) revenue
+           FROM wc_orders WHERE date BETWEEN ? AND ? GROUP BY region ORDER BY revenue DESC LIMIT 12""",
+        (cur_start, anchor))]
+    pay = [dict(r) for r in c.execute(
+        """SELECT COALESCE(NULLIF(payment,''),'?') payment, COUNT(*) orders, ROUND(SUM(total),2) revenue
+           FROM wc_orders WHERE date BETWEEN ? AND ? GROUP BY payment ORDER BY orders DESC LIMIT 8""",
+        (cur_start, anchor))]
+    b2b = c.execute("""SELECT SUM(CASE WHEN company<>'' THEN 1 ELSE 0 END), COUNT(*)
+                       FROM wc_orders WHERE date BETWEEN ? AND ?""", (cur_start, anchor)).fetchone()
+    return {
+        "anchor": anchor,
+        "kpis": {
+            "orders": kpi(cur, prev, "orders"),
+            "revenue": kpi(cur, prev, "revenue"),
+            "aov": kpi(cur, prev, "aov"),
+            "new_customers": kpi(cur, prev, "new_customers"),
+            "items": kpi(cur, prev, "items"),
+            "net_revenue": kpi(cur, prev, "net_revenue"),
+        },
+        "returning_share": cur["returning_share"],
+        "b2b_share": round(b2b[0] / b2b[1] * 100, 1) if b2b and b2b[1] else None,
+        # ROAS di cassa: fatturato Woo / spesa ads del periodo (l'unico ROAS onesto)
+        "cash_roas": round(cur["revenue"] / ads["spend"], 2) if ads["spend"] else None,
+        "ads_spend": ads["spend"],
+        "series": _series(c, "wc_orders_daily", ("orders", "revenue"), ser_start, anchor),
+        "top_products": prods,
+        "geo": geo,
+        "payments": pay,
     }
 
 
@@ -386,7 +464,8 @@ def dashboard(db_path: Path, days: int = 28, series_days: int = 90) -> dict:
     try:
         if c.execute("SELECT COUNT(*) n FROM gsc_daily").fetchone()["n"] == 0 \
            and c.execute("SELECT COUNT(*) n FROM ga_daily").fetchone()["n"] == 0 \
-           and c.execute("SELECT COUNT(*) n FROM merchant_daily").fetchone()["n"] == 0:
+           and c.execute("SELECT COUNT(*) n FROM merchant_daily").fetchone()["n"] == 0 \
+           and c.execute("SELECT COUNT(*) n FROM wc_orders_daily").fetchone()["n"] == 0:
             return {"exists": False}
 
         anchor = _anchor_date(c)
@@ -447,6 +526,8 @@ def dashboard(db_path: Path, days: int = 28, series_days: int = 90) -> dict:
                 "campaigns": _ads_campaigns(c, cur_start, anchor),
                 "terms": _ads_terms(c),
             },
+            # Ordini WooCommerce (dato di cassa) — presente solo se raccolto
+            "sales": _sales_block(c, days, series_days, kpi),
             # Social account-level (IG/FB) — presente solo se raccolto
             "social": _social_block(c, ser_start, days),
             # Google Shopping — presente solo se il connettore Merchant ha raccolto

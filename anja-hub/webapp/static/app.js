@@ -192,7 +192,8 @@ function app() {
     hubConnSaving: false,
     hubConnMsg: '',
     mediaGen: { prompt: '', model: '', busy: false, msg: '', models: [] },
-    googleOauth: { connected: false, client_configured: false, token_scope: '' },
+    googleOauth: { connected: false, client_configured: false, token_scope: '', redirect_uri: '' },
+    gclientSetup: { open: false, msg: '', ok: false },
     googleResources: null,
     audit: { loading: false, products: [], summary: null, msg: '', kind: 'products' },
 
@@ -2081,14 +2082,39 @@ function app() {
       }
     },
 
+    async uploadGoogleClient(ev) {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      this.gclientSetup.msg = ''; this.gclientSetup.ok = false;
+      try {
+        const text = await file.text();
+        const res = await fetch('/api/google/oauth/client', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_json: text }),
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'upload failed');
+        this.gclientSetup.ok = true;
+        this.gclientSetup.msg = `✓ OAuth client saved (project ${d.project_id || '?'}, type ${d.kind}).`
+          + (d.redirect_uri_ok ? ' Now click "Connect Google".' : ` ⚠ The client has no redirect URI ${d.redirect_uri_expected} — add it in Cloud Console before connecting.`);
+        this.gclientSetup.open = false;
+        await this.loadGoogleOauth();
+      } catch (e) {
+        this.gclientSetup.msg = 'Error: ' + (e.message || e);
+      } finally {
+        ev.target.value = '';
+        this.$nextTick(() => this.refreshIcons());
+      }
+    },
+
     async loadGoogleOauth() {
       const proj = this.currentProjectScopeName;
       if (!proj) return;
       try {
         const d = await this.fetchJson('/api/google/oauth/status?scope=' + encodeURIComponent(proj));
-        this.googleOauth = d || { connected: false, client_configured: false, token_scope: '' };
+        this.googleOauth = d || { connected: false, client_configured: false, token_scope: '', redirect_uri: '' };
       } catch (e) {
-        this.googleOauth = { connected: false, client_configured: false, token_scope: '' };
+        this.googleOauth = { connected: false, client_configured: false, token_scope: '', redirect_uri: '' };
       }
     },
 

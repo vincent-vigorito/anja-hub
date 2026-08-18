@@ -6054,7 +6054,46 @@ async def api_google_oauth_status(request: Request, scope: str = "hub"):
     _require_scope_access(request, scope)   # scope non è nel path/query 'project' → gate esplicito
     import google_oauth
     secrets_dir, _ = _media_scope_dirs(scope)
-    return JSONResponse(google_oauth.status(secrets_dir, HUB_PATH / ".anjawiki"))
+    st = google_oauth.status(secrets_dir, HUB_PATH / ".anjawiki")
+    # F-ConnectorUX: la UI mostra la redirect URI da incollare in Cloud Console
+    st["redirect_uri"] = _oauth_redirect_uri(request)
+    return JSONResponse(st)
+
+
+@app.post("/api/google/oauth/client")
+async def api_google_oauth_client_upload(request: Request, payload: dict = Body(...)):
+    """F-ConnectorUX: carica l'OAuth client JSON (scaricato da Google Cloud
+    Console) dalla UI → <hub>/.anjawiki/google-oauth-client.json (0600).
+    Body: {client_json: "<contenuto del file>"}. Admin only, hub-level."""
+    if not HUB_PATH:
+        raise HTTPException(400, "hub not configured")
+    _require_admin(request)
+    raw = payload.get("client_json") or ""
+    if isinstance(raw, dict):
+        data = raw
+    else:
+        try:
+            data = json.loads(raw)
+        except Exception:
+            raise HTTPException(400, "not a valid JSON file")
+    kind = next((k for k in ("web", "installed") if isinstance(data.get(k), dict)), None)
+    if not kind:
+        raise HTTPException(400, "not a Google OAuth client file: expected a top-level "
+                                 "\"web\" or \"installed\" object (download it from Cloud "
+                                 "Console → Credentials → your OAuth client → Download JSON)")
+    c = data[kind]
+    if not c.get("client_id") or not c.get("client_secret"):
+        raise HTTPException(400, "client_id / client_secret missing in the file")
+    dest = HUB_PATH / ".anjawiki" / "google-oauth-client.json"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(str(dest), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+    uris = c.get("redirect_uris") or []
+    want = _oauth_redirect_uri(request)
+    return JSONResponse({"ok": True, "kind": kind, "project_id": c.get("project_id", ""),
+                         "redirect_uri_ok": (kind == "installed") or (want in uris),
+                         "redirect_uri_expected": want, "redirect_uris": uris})
 
 
 @app.get("/api/google/resources")

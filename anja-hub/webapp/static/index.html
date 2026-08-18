@@ -3631,13 +3631,43 @@
                 <div class="text-muted" style="font-size:12.5px;margin-top:5px">
                   <span x-show="googleOauth.connected">Search Console + Analytics authorized: Statistics collect real data.</span>
                   <span x-show="!googleOauth.connected && googleOauth.client_configured">Authorize GSC/GA access for this workspace.</span>
-                  <span x-show="!googleOauth.client_configured">OAuth client not configured: upload <code>google-oauth-client.json</code> to the hub (<code>.anjawiki/</code>).</span>
+                  <span x-show="!googleOauth.client_configured">One-time setup: this hub needs its own Google OAuth client (2 minutes, guide below).</span>
                 </div>
               </div>
-              <button class="btn" :class="googleOauth.connected ? '' : 'btn-primary'" @click="connectGoogle()" :disabled="!googleOauth.client_configured">
-                <i :data-lucide="googleOauth.connected ? 'refresh-cw' : 'link'" style="width:15px;height:15px"></i>
-                <span x-text="googleOauth.connected ? 'Reconnect' : 'Connect Google'"></span>
-              </button>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <button class="btn btn--ghost" x-show="googleOauth.client_configured" @click="gclientSetup.open = !gclientSetup.open" title="Replace the OAuth client">
+                  <i data-lucide="key-round" style="width:15px;height:15px"></i> OAuth client
+                </button>
+                <button class="btn" :class="googleOauth.connected ? '' : 'btn-primary'" @click="connectGoogle()" :disabled="!googleOauth.client_configured">
+                  <i :data-lucide="googleOauth.connected ? 'refresh-cw' : 'link'" style="width:15px;height:15px"></i>
+                  <span x-text="googleOauth.connected ? 'Reconnect' : 'Connect Google'"></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- F-ConnectorUX: setup guidato dell'OAuth client, tutto da UI -->
+            <div x-show="!googleOauth.client_configured || gclientSetup.open" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-1)">
+              <div style="font-weight:600;font-size:13px;margin-bottom:8px">Set up the Google OAuth client</div>
+              <ol style="margin:0 0 12px 0;padding-left:20px;font-size:12.5px;line-height:1.75;color:var(--text-2)">
+                <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style="color:var(--accent)">Google Cloud Console → APIs & Services → Credentials</a> (create a project if you have none).</li>
+                <li>Under <b>Library</b>, enable the APIs you'll use: <i>Google Search Console API</i>, <i>Google Analytics Data API</i>, <i>Merchant API</i>, <i>Google Ads API</i>.</li>
+                <li><b>Create Credentials → OAuth client ID</b> → type <b>Web application</b> → add this <b>Authorized redirect URI</b>:
+                  <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+                    <code style="flex:1;font-size:11.5px;padding:4px 8px;background:var(--bg-2);border-radius:6px;overflow-x:auto;white-space:nowrap" x-text="googleOauth.redirect_uri"></code>
+                    <button class="btn btn--xs" @click="copyText(googleOauth.redirect_uri); showToast('success', 'Redirect URI copied', '')"><i data-lucide="copy" style="width:13px;height:13px"></i></button>
+                  </div>
+                  <span class="text-muted">(OAuth consent screen: External, Testing — add your own Google account as test user; no verification needed for self-hosting.)</span>
+                </li>
+                <li><b>Download JSON</b> of the client and upload it here:</li>
+              </ol>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <label class="btn btn-primary" style="cursor:pointer">
+                  <i data-lucide="upload" style="width:15px;height:15px"></i> Upload client JSON
+                  <input type="file" accept=".json,application/json" style="display:none" @change="uploadGoogleClient($event)">
+                </label>
+                <span class="text-muted" style="font-size:12px">Stored on the hub as <code>.anjawiki/google-oauth-client.json</code> (owner-only), used by all workspaces.</span>
+              </div>
+              <div x-show="gclientSetup.msg" x-text="gclientSetup.msg" style="margin-top:8px;font-size:12.5px" :style="gclientSetup.ok ? 'color:#15803d' : 'color:#b91c1c'"></div>
             </div>
           </div>
 

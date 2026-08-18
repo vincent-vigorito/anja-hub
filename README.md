@@ -93,11 +93,12 @@ One-time setup:
    ID** of type *Web application* with redirect URI
    `http://<your-hub-host>:8765/api/google/oauth/callback`
    (`http://127.0.0.1:8765/...` for a local hub).
-2. Download the client JSON and save it as
-   `<hub>/.anjawiki/google-oauth-client.json`.
-3. In the app: workspace → **Connectors → Connect Google** → consent → pick
-   your Search Console site / GA4 property / Merchant account from the
-   dropdowns. Tokens refresh automatically.
+2. Download the client JSON and **upload it from the app**: workspace →
+   **Connectors → Google connection → Upload client JSON** (the card shows
+   the exact redirect URI to paste in Cloud Console and a step-by-step guide).
+3. **Connect Google** → consent → pick your Search Console site / GA4
+   property / Merchant account from the dropdowns. Tokens refresh
+   automatically. No shell access to the server needed at any point.
 
 **Google Ads** has two modes:
 - *Default*: spend, clicks and revenue per campaign are read from **GA4**

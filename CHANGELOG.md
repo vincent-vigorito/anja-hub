@@ -14,6 +14,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Added
 
+- **Google OAuth client from the UI**: Connectors → Google connection now
+  guides the one-time Cloud Console setup (redirect URI to copy, APIs to
+  enable) and accepts the client JSON upload — no filesystem access needed.
 - **WooCommerce orders — real sales data**: `woo_collect` reads paid orders
   via `wc/v3` with the existing WP Application Password (no extra keys) into
   `wc_orders_daily` / `wc_order_products` / `wc_orders`; new **Sales** tab

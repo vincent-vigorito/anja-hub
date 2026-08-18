@@ -14,9 +14,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Added
 
-- **Google OAuth client from the UI**: Connectors → Google connection now
-  guides the one-time Cloud Console setup (redirect URI to copy, APIs to
-  enable) and accepts the client JSON upload — no filesystem access needed.
+- **Google OAuth client from the UI**: Settings → Integrations guides the
+  one-time Cloud Console setup (redirect URI to copy, APIs to enable) and
+  accepts the client JSON upload — no filesystem access needed. Workspaces
+  only do the per-account *Connect Google*.
 - **WooCommerce orders — real sales data**: `woo_collect` reads paid orders
   via `wc/v3` with the existing WP Application Password (no extra keys) into
   `wc_orders_daily` / `wc_order_products` / `wc_orders`; new **Sales** tab
@@ -48,6 +49,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Fixed
 
+- Marketing agents were reading a stale legacy Google token
+  (`config/connectors/gsc-token.json`) instead of the one written by
+  *Connect Google* — new scopes (adwords, content) were invisible to
+  `ads_*`/`merchant_*` tools right after authorizing. Token lookup is now
+  workspace → hub → legacy; `marketing_status` reports token scopes.
+- Google Ads client: tries the manager (MCC) header and direct access,
+  remembers the working one; `ads_check` probes the customer for real.
+- Statistics refresh now resolves hub-level shared keys (e.g. the Google Ads
+  developer token) — previously only workspace vault values were passed.
 - Connectors: per-field "✓ Connected / Not configured" badges and an honest
   group counter ("1 of 7 configured") for all-optional groups like image
   generation keys — previously a single key showed as "connected".

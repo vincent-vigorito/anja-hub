@@ -32,9 +32,11 @@ isolation, and multi-LLM support — built on the
   image/video generation delivered as photos in chat.
 - **Routines daemon** — cron-like YAML routines with action handlers (email,
   Slack, Google Chat, wiki, file, webhook).
-- **Marketing integrations** — Google Search Console, GA4, Google Ads,
-  Merchant Center, Meta (Facebook/Instagram) insights and ads, WordPress —
-  collected into per-workspace SQLite metrics with audit scoring.
+- **Marketing integrations** — Google Search Console, GA4, Google Ads
+  (native API: campaigns, keywords, search terms), Merchant Center, Meta
+  (Facebook/Instagram) insights and ads, WordPress content + **WooCommerce
+  orders** (real sales: revenue, AOV, new customers, cash ROAS) — collected
+  into per-workspace SQLite metrics with dashboards and audit scoring.
 - **Media generation** — image/video generation via CLI on Gemini, OpenAI,
   xAI, OpenRouter (Seedream/Seedance/Veo), with a unified model catalog.
 - **Research** — web search skills (DuckDuckGo free, Google grounding via
@@ -54,8 +56,9 @@ isolation, and multi-LLM support — built on the
 ## Requirements
 
 - Python **3.12+**
-- [Claude Code](https://claude.com/claude-code) CLI installed and logged in
-  (the Claude provider uses your subscription — no API key needed)
+- [Claude Code](https://claude.com/claude-code) CLI installed on the host
+  (the Claude provider uses your subscription — no API key needed; you can
+  sign in from Settings → Providers, no shell needed)
 - macOS or Linux
 
 ## Quickstart
@@ -93,12 +96,19 @@ One-time setup:
    ID** of type *Web application* with redirect URI
    `http://<your-hub-host>:8765/api/google/oauth/callback`
    (`http://127.0.0.1:8765/...` for a local hub).
-2. Download the client JSON and **upload it from the app**: workspace →
-   **Connectors → Google connection → Upload client JSON** (the card shows
-   the exact redirect URI to paste in Cloud Console and a step-by-step guide).
-3. **Connect Google** → consent → pick your Search Console site / GA4
-   property / Merchant account from the dropdowns. Tokens refresh
-   automatically. No shell access to the server needed at any point.
+2. Download the client JSON and **upload it from the app**: **Settings →
+   Integrations → Google OAuth client** (the card shows the exact redirect
+   URI to paste in Cloud Console and a step-by-step guide). One client per
+   installation, shared by all workspaces.
+3. In each workspace: **Connectors → Connect Google** → consent → pick your
+   Search Console site / GA4 property / Merchant account from the dropdowns.
+   Tokens refresh automatically. No shell access to the server needed at any
+   point.
+
+**WooCommerce** needs nothing extra: the WordPress Application Password you
+already set in the workspace connectors also reads `wc/v3` orders (the WP
+user needs shop permissions). Set the workspace backend to `woo` and the
+Sales tab lights up on the next statistics refresh.
 
 **Google Ads** has two modes:
 - *Default*: spend, clicks and revenue per campaign are read from **GA4**

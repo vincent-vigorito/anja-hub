@@ -14,6 +14,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Added
 
+- **Ads tab rebuilt on native data**: 8 KPI cards (spend, conversions, value,
+  ROAS, CPA, CTR, CPC, clicks) with deltas, campaigns table with source badge,
+  and a **Search terms** panel ("wasted spend" = queries that cost without
+  converting → negative-keyword candidates); `ads_terms` table fed by the
+  collector (28-day snapshot).
 - **Native Google Ads API** (GAQL, v22): `google_ads_collect` writes real
   spend/impressions/clicks/conversions per campaign to `ads_daily` (prefix
   `gads:`), replacing the GA4 estimate when a developer token is configured;

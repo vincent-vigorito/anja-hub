@@ -37,6 +37,10 @@ CREATE TABLE IF NOT EXISTS ga_daily(
 CREATE TABLE IF NOT EXISTS ads_daily(
   site TEXT, date TEXT, campaign TEXT, spend REAL, impressions INTEGER, clicks INTEGER, conversions REAL, revenue REAL,
   PRIMARY KEY(site, date, campaign));
+CREATE TABLE IF NOT EXISTS ads_terms(
+  site TEXT, campaign TEXT, term TEXT, status TEXT, spend REAL, impressions INTEGER, clicks INTEGER,
+  conversions REAL, revenue REAL, period_start TEXT, period_end TEXT,
+  PRIMARY KEY(site, campaign, term));
 CREATE TABLE IF NOT EXISTS merchant_daily(
   site TEXT, date TEXT, marketing_method TEXT, clicks INTEGER, impressions INTEGER, ctr REAL,
   conversions REAL, conversion_value REAL,
@@ -126,13 +130,73 @@ def _ga_agg(c, start, end) -> dict:
 def _ads_agg(c, start, end) -> dict:
     r = c.execute(
         """SELECT COALESCE(SUM(spend),0) sp, COALESCE(SUM(conversions),0) cv,
-                  COALESCE(SUM(revenue),0) rev, COALESCE(SUM(clicks),0) cl
+                  COALESCE(SUM(revenue),0) rev, COALESCE(SUM(clicks),0) cl,
+                  COALESCE(SUM(impressions),0) im
            FROM ads_daily WHERE date BETWEEN ? AND ?""", (start, end)).fetchone()
-    spend = round(r["sp"], 2)
+    spend, clicks, imps, conv = round(r["sp"], 2), r["cl"], r["im"], r["cv"]
     return {
-        "spend": spend, "conversions": r["cv"], "clicks": r["cl"],
-        "revenue": round(r["rev"], 2),
+        "spend": spend, "conversions": round(conv, 1), "clicks": clicks,
+        "impressions": imps, "revenue": round(r["rev"], 2),
         "roas": round(r["rev"] / spend, 2) if spend else None,
+        # metriche native (0 quando la sorgente è la stima GA4: impressions vuote)
+        "ctr": round(clicks / imps * 100, 2) if imps else None,
+        "cpc": round(spend / clicks, 2) if clicks else None,
+        "cpa": round(spend / conv, 2) if conv else None,
+    }
+
+
+def _ads_campaigns(c, start, end) -> list[dict]:
+    """Righe per campagna nel periodo, ordinate per spesa. Il prefisso indica
+    la sorgente: gads: (Google Ads API), meta: (Meta), nessuno (stima GA4)."""
+    rows = c.execute(
+        """SELECT campaign, SUM(spend) sp, SUM(impressions) im, SUM(clicks) cl,
+                  SUM(conversions) cv, SUM(revenue) rev
+           FROM ads_daily WHERE date BETWEEN ? AND ? GROUP BY campaign
+           ORDER BY sp DESC LIMIT 50""", (start, end)).fetchall()
+    out = []
+    for r in rows:
+        name = r["campaign"] or "?"
+        src = "google" if name.startswith("gads:") else ("meta" if name.startswith("meta:") else "ga4")
+        sp, cl, im, cv = round(r["sp"] or 0, 2), r["cl"] or 0, r["im"] or 0, r["cv"] or 0
+        out.append({
+            "campaign": name.split(":", 1)[1] if ":" in name else name, "source": src,
+            "spend": sp, "impressions": im, "clicks": cl, "conversions": round(cv, 1),
+            "revenue": round(r["rev"] or 0, 2),
+            "ctr": round(cl / im * 100, 2) if im else None,
+            "cpc": round(sp / cl, 2) if cl else None,
+            "cpa": round(sp / cv, 2) if cv else None,
+            "roas": round((r["rev"] or 0) / sp, 2) if sp else None,
+        })
+    return out
+
+
+def _ads_terms(c, limit: int = 40) -> dict:
+    """Search terms nativi (ultimo snapshot del collector): top per spesa +
+    'wasted' = costano senza convertire (candidati negative keyword)."""
+    try:
+        rows = c.execute(
+            """SELECT campaign, term, status, spend, impressions, clicks, conversions, revenue,
+                      period_start, period_end
+               FROM ads_terms ORDER BY spend DESC""").fetchall()
+    except Exception:
+        return {"exists": False}
+    if not rows:
+        return {"exists": False}
+    items = [{"campaign": (r["campaign"] or "").split(":", 1)[-1], "term": r["term"],
+              "status": r["status"] or "", "spend": round(r["spend"] or 0, 2),
+              "impressions": r["impressions"] or 0, "clicks": r["clicks"] or 0,
+              "conversions": round(r["conversions"] or 0, 1),
+              "revenue": round(r["revenue"] or 0, 2)} for r in rows]
+    wasted = [t for t in items if t["spend"] >= 1 and t["conversions"] == 0]
+    wasted.sort(key=lambda t: t["spend"], reverse=True)
+    return {
+        "exists": True,
+        "period": [rows[0]["period_start"], rows[0]["period_end"]],
+        "count": len(items),
+        "top": items[:limit],
+        "wasted": wasted[:limit],
+        "wasted_spend": round(sum(t["spend"] for t in wasted), 2),
+        "total_spend": round(sum(t["spend"] for t in items), 2),
     }
 
 
@@ -365,6 +429,24 @@ def dashboard(db_path: Path, days: int = 28, series_days: int = 90) -> dict:
             "movers_up": up,
             "movers_down": down,
             "ga_channels": _ga_channels(c, cur_start, anchor),
+            # Google Ads nativo: KPI completi, campagne, search terms
+            "ads": {
+                "source": ("google" if c.execute(
+                    "SELECT 1 FROM ads_daily WHERE campaign LIKE 'gads:%' LIMIT 1").fetchone()
+                           else ("ga4" if ads["spend"] > 0 else "")),
+                "kpis": {
+                    "spend": kpi(ads, ads_prev, "spend", better="down"),
+                    "conversions": kpi(ads, ads_prev, "conversions"),
+                    "revenue": kpi(ads, ads_prev, "revenue"),
+                    "roas": kpi(ads, ads_prev, "roas"),
+                    "cpa": kpi(ads, ads_prev, "cpa", better="down"),
+                    "ctr": kpi(ads, ads_prev, "ctr"),
+                    "cpc": kpi(ads, ads_prev, "cpc", better="down"),
+                    "clicks": kpi(ads, ads_prev, "clicks"),
+                },
+                "campaigns": _ads_campaigns(c, cur_start, anchor),
+                "terms": _ads_terms(c),
+            },
             # Social account-level (IG/FB) — presente solo se raccolto
             "social": _social_block(c, ser_start, days),
             # Google Shopping — presente solo se il connettore Merchant ha raccolto

@@ -3323,18 +3323,106 @@
             <!-- TAB: Ads -->
             <div x-show="statsTab==='ads'">
               <div x-show="statsData.has_ads">
-                <div class="stat-card-grid">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:12.5px" class="text-muted">
+                  <span class="tag" :class="statsData.ads?.source === 'google' ? 'success' : 'neutral'"
+                        x-text="statsData.ads?.source === 'google' ? 'Google Ads API · native data' : 'GA4 estimate (connect the Google Ads API for native metrics)'"></span>
+                </div>
+                <div class="stat-card-grid" style="margin-bottom:14px">
                   <template x-for="k in adsKpis" :key="k.key">
-                    <div class="stat-card">
+                    <div class="stat-card" :class="{ 'stat-card-primary': k.primary }">
                       <div class="stat-card-label" x-text="k.label"></div>
                       <div class="stat-card-value"><div class="stat-card-num" x-text="k.value"></div></div>
-                      <div class="stat-card-sub"><span x-text="k.sub"></span></div>
+                      <div class="stat-card-sub">
+                        <span class="stat-delta" :class="k.deltaClass" x-show="k.deltaLabel">
+                          <i :data-lucide="k.deltaIcon" style="width:13px;height:13px"></i><span x-text="k.deltaLabel"></span>
+                        </span>
+                        <span x-text="k.sub"></span>
+                      </div>
                     </div>
                   </template>
                 </div>
-                <div class="card" style="padding:18px;margin-top:6px">
+                <div class="card" style="padding:18px;margin-bottom:14px">
                   <div class="dash-section-title" style="margin-bottom:12px">Spend vs revenue (90d)</div>
                   <div class="stat-chart-wrap"><canvas id="stat-chart-ads"></canvas></div>
+                </div>
+
+                <!-- Campagne -->
+                <div class="card" style="padding:18px;margin-bottom:14px" x-show="(statsData.ads?.campaigns || []).length">
+                  <div class="dash-section-title" style="margin-bottom:12px">Campaigns <span class="text-muted" style="font-weight:400" x-text="'· last ' + statsRange + 'd'"></span></div>
+                  <div style="overflow-x:auto">
+                    <table class="data-table" style="width:100%">
+                      <thead><tr>
+                        <th>Campaign</th><th>Source</th><th style="text-align:right">Spend</th><th style="text-align:right">Impr.</th>
+                        <th style="text-align:right">Clicks</th><th style="text-align:right">CTR</th><th style="text-align:right">CPC</th>
+                        <th style="text-align:right">Conv.</th><th style="text-align:right">CPA</th><th style="text-align:right">Revenue</th><th style="text-align:right">ROAS</th>
+                      </tr></thead>
+                      <tbody>
+                        <template x-for="c in statsData.ads.campaigns" :key="c.source + c.campaign">
+                          <tr>
+                            <td x-text="c.campaign"></td>
+                            <td><span class="tag neutral" x-text="c.source === 'google' ? 'Google' : (c.source === 'meta' ? 'Meta' : 'GA4 est.')"></span></td>
+                            <td style="text-align:right" x-text="'€' + _fmtNum(c.spend)"></td>
+                            <td style="text-align:right" x-text="c.impressions ? _fmtNum(c.impressions) : '—'"></td>
+                            <td style="text-align:right" x-text="_fmtNum(c.clicks)"></td>
+                            <td style="text-align:right" x-text="c.ctr !== null ? c.ctr.toFixed(2) + '%' : '—'"></td>
+                            <td style="text-align:right" x-text="c.cpc !== null ? '€' + c.cpc.toFixed(2) : '—'"></td>
+                            <td style="text-align:right" x-text="c.conversions"></td>
+                            <td style="text-align:right" x-text="c.cpa !== null ? '€' + c.cpa.toFixed(2) : '—'"></td>
+                            <td style="text-align:right" x-text="'€' + _fmtNum(c.revenue)"></td>
+                            <td style="text-align:right;font-weight:600" :style="c.roas !== null && c.roas < 1 ? 'color:#b91c1c' : ''" x-text="c.roas !== null ? c.roas.toFixed(2) : '—'"></td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Search terms (Google Ads API) -->
+                <template x-if="statsData.ads?.terms?.exists">
+                  <div class="card" style="padding:18px;margin-bottom:14px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+                      <div class="dash-section-title">Search terms <span class="text-muted" style="font-weight:400" x-text="'· ' + statsData.ads.terms.period[0] + ' → ' + statsData.ads.terms.period[1]"></span></div>
+                      <div style="display:flex;gap:6px">
+                        <button class="btn btn--xs" :class="{ 'btn--primary': adsTermsView === 'wasted' }" @click="adsTermsView = 'wasted'">
+                          Wasted spend <span x-text="'(' + statsData.ads.terms.wasted.length + ')'"></span>
+                        </button>
+                        <button class="btn btn--xs" :class="{ 'btn--primary': adsTermsView === 'top' }" @click="adsTermsView = 'top'">Top by spend</button>
+                      </div>
+                    </div>
+                    <div class="text-muted" style="font-size:12.5px;margin-bottom:12px" x-show="adsTermsView === 'wasted'">
+                      Real user queries that triggered your ads and cost money <b>without a single conversion</b>:
+                      <b x-text="'€' + _fmtNum(statsData.ads.terms.wasted_spend)"></b> of <span x-text="'€' + _fmtNum(statsData.ads.terms.total_spend)"></span>
+                      — the irrelevant ones are negative-keyword candidates.
+                    </div>
+                    <div class="text-muted" style="font-size:12.5px;margin-bottom:12px" x-show="adsTermsView === 'top'">
+                      What people actually searched before clicking your ads, by spend.
+                    </div>
+                    <div style="overflow-x:auto">
+                      <table class="data-table" style="width:100%">
+                        <thead><tr>
+                          <th>Search term</th><th>Campaign</th><th style="text-align:right">Spend</th><th style="text-align:right">Impr.</th>
+                          <th style="text-align:right">Clicks</th><th style="text-align:right">Conv.</th><th style="text-align:right">Revenue</th>
+                        </tr></thead>
+                        <tbody>
+                          <template x-for="t in (adsTermsView === 'wasted' ? statsData.ads.terms.wasted : statsData.ads.terms.top)" :key="t.campaign + '|' + t.term">
+                            <tr>
+                              <td x-text="t.term"></td>
+                              <td class="text-muted" x-text="t.campaign"></td>
+                              <td style="text-align:right" x-text="'€' + t.spend.toFixed(2)"></td>
+                              <td style="text-align:right" x-text="_fmtNum(t.impressions)"></td>
+                              <td style="text-align:right" x-text="_fmtNum(t.clicks)"></td>
+                              <td style="text-align:right" :style="t.conversions === 0 ? 'color:#b91c1c' : ''" x-text="t.conversions"></td>
+                              <td style="text-align:right" x-text="'€' + _fmtNum(t.revenue)"></td>
+                            </tr>
+                          </template>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="text-muted" style="font-size:12px;margin-top:8px" x-show="!(adsTermsView === 'wasted' ? statsData.ads.terms.wasted : statsData.ads.terms.top).length">No search terms in this view.</div>
+                  </div>
+                </template>
+                <div class="text-muted" style="font-size:12.5px;margin-bottom:14px" x-show="statsData.ads?.source === 'google' && !statsData.ads?.terms?.exists">
+                  No search terms available: Performance Max campaigns don't expose them via the API — they appear for Search/Shopping campaigns.
                 </div>
               </div>
               <div x-show="!statsData.has_ads" class="card" style="padding:28px;text-align:center;max-width:520px">

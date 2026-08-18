@@ -94,9 +94,42 @@ def collect(db_path: Path, session, customer_id: str, dev_token: str, *,
     except GoogleAdsError as e:
         return {"ok": False, "error": str(e)}
     site = site or cid
+    # search terms: query reali degli utenti (28gg — snapshot, non serie),
+    # per il pannello "negative keyword" del tab Ads. Non bloccante.
+    terms_rows, terms_err = [], ""
+    t_start = end - datetime.timedelta(days=27)
+    gaql_terms = (
+        "SELECT campaign.name, search_term_view.search_term, search_term_view.status, "
+        "metrics.cost_micros, metrics.impressions, metrics.clicks, "
+        "metrics.conversions, metrics.conversions_value "
+        "FROM search_term_view "
+        f"WHERE segments.date BETWEEN '{t_start.isoformat()}' AND '{end.isoformat()}' "
+        "AND metrics.impressions > 0 ORDER BY metrics.cost_micros DESC LIMIT 500"
+    )
+    try:
+        terms_rows = _search_stream(session, cid, gaql_terms, dev_token, _digits(login_customer_id))
+    except GoogleAdsError as e:   # PMax pure non espone search terms: ok vuoto
+        terms_err = str(e)
     conn = metrics_io._conn(Path(db_path))
     try:
         conn.execute("DELETE FROM ads_daily WHERE campaign LIKE ?", (PREFIX + "%",))
+        if terms_rows:
+            conn.execute("DELETE FROM ads_terms WHERE site=?", (site,))
+            agg: dict[tuple, list] = {}
+            for r in terms_rows:
+                camp = PREFIX + ((r.get("campaign") or {}).get("name") or "?")[:120]
+                stv, met = r.get("searchTermView") or {}, r.get("metrics") or {}
+                key = (camp, (stv.get("searchTerm") or "")[:200])
+                a = agg.setdefault(key, [stv.get("status", ""), 0.0, 0, 0, 0.0, 0.0])
+                a[1] += int(met.get("costMicros", 0) or 0) / 1e6
+                a[2] += int(met.get("impressions", 0) or 0)
+                a[3] += int(met.get("clicks", 0) or 0)
+                a[4] += float(met.get("conversions", 0) or 0)
+                a[5] += float(met.get("conversionsValue", 0) or 0)
+            for (camp, term), a in agg.items():
+                conn.execute("INSERT OR REPLACE INTO ads_terms VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                             (site, camp, term, a[0], round(a[1], 4), a[2], a[3], a[4], a[5],
+                              t_start.isoformat(), end.isoformat()))
         n, campaigns = 0, set()
         for r in rows:
             seg, camp, met = r.get("segments") or {}, r.get("campaign") or {}, r.get("metrics") or {}
@@ -114,5 +147,8 @@ def collect(db_path: Path, session, customer_id: str, dev_token: str, *,
         conn.commit()
     finally:
         conn.close()
-    return {"ok": True, "ads_daily": n, "campaigns": len(campaigns),
-            "range": [start.isoformat(), end.isoformat()]}
+    out = {"ok": True, "ads_daily": n, "campaigns": len(campaigns),
+           "terms": len(terms_rows), "range": [start.isoformat(), end.isoformat()]}
+    if terms_err:
+        out["terms_note"] = terms_err
+    return out

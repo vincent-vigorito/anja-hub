@@ -39,8 +39,10 @@ class FakeSession:
         if self.fail_mcc and "login-customer-id" in (headers or {}):
             return FakeResp(403, [{"error": {"code": 403, "message": "USER_PERMISSION_DENIED"}}],
                             text="USER_PERMISSION_DENIED")
+        is_terms = "search_term_view" in ((json or {}).get("query", ""))
         row = lambda d, c, cost, imp, clk, conv, val: {  # noqa: E731
             "segments": {"date": d}, "campaign": {"name": c, "status": "ENABLED"},
+            **({"searchTermView": {"searchTerm": f"term {c}".lower(), "status": "NONE"}} if is_terms else {}),
             "metrics": {"costMicros": str(cost), "impressions": str(imp), "clicks": str(clk),
                         "conversions": conv, "conversionsValue": val}}
         return FakeResp(200, [
@@ -68,8 +70,9 @@ def main():
         check("ok", r.get("ok"), str(r))
         check("3 righe", r.get("ads_daily") == 3, str(r))
         check("2 campagne", r.get("campaigns") == 2, str(r))
-        check("retry senza MCC (2 chiamate)", len(sess.calls) == 2, str(len(sess.calls)))
-        check("2a chiamata senza login-customer-id", "login-customer-id" not in sess.calls[1]["headers"])
+        check("2 query (campaign+terms) × retry MCC = 4 chiamate", len(sess.calls) == 4, str(len(sess.calls)))
+        check("retry senza login-customer-id", "login-customer-id" not in sess.calls[1]["headers"])
+        check("query terms su search_term_view", any("search_term_view" in c["gaql"] for c in sess.calls))
         check("customer id senza trattini nell'URL", "/customers/3861434233/" in sess.calls[0]["url"])
         check("GAQL su campaign con date", "FROM campaign" in sess.calls[0]["gaql"] and "segments.date BETWEEN" in sess.calls[0]["gaql"])
 
@@ -85,6 +88,11 @@ def main():
         check("riga meta: sopravvive", ("2026-08-10", "meta:Old") in rows)
         check("riga GA4 sopravvive", ("2026-08-10", "GA4Camp") in rows)
         check("gads: stale rimossa", ("2026-08-01", "gads:Stale") not in rows)
+        c = sqlite3.connect(db)
+        terms = c.execute("SELECT term, spend, conversions FROM ads_terms ORDER BY spend DESC").fetchall()
+        c.close()
+        check("ads_terms popolata (2 term aggregati)", len(terms) == 2, str(terms))
+        check("term aggregato su 2 giorni (12.34+9.99)", terms and abs(terms[0][1] - 22.33) < 1e-6, str(terms))
 
         print("errori configurazione:")
         check("customer vuoto", not gac.collect(db, sess, "", "devtok").get("ok"))

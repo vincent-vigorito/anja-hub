@@ -1828,11 +1828,26 @@ function app() {
       ];
     },
 
+    adsTermsView: 'wasted',
     get adsKpis() {
-      return [
-        this._kpi('spend', 'Spend', 'eur', `${this.statsRange}d`),
-        this._kpi('roas', 'ROAS', 'num', 'revenue / spend'),
+      const p = `vs prev. ${this.statsRange}d`;
+      const a = this.statsData?.ads?.kpis || {};
+      const native = this.statsData?.ads?.source === 'google';
+      const cards = [
+        this._kpiFrom(a.spend, 'aspend', 'Spend', 'eur', p, true),
+        this._kpiFrom(a.conversions, 'aconv', 'Conversions', 'num', p),
+        this._kpiFrom(a.revenue, 'arev', 'Conversion value', 'eur', p),
+        this._kpiFrom(a.roas, 'aroas', 'ROAS', 'num', 'value / spend'),
       ];
+      if (native) {
+        cards.push(
+          this._kpiFrom(a.cpa, 'acpa', 'CPA', 'eur', p),
+          this._kpiFrom(a.ctr, 'actr', 'CTR', 'pct', p),
+          this._kpiFrom(a.cpc, 'acpc', 'Avg. CPC', 'eur', p),
+          this._kpiFrom(a.clicks, 'aclicks', 'Clicks', 'num', p),
+        );
+      }
+      return cards;
     },
 
     get shoppingKpis() {

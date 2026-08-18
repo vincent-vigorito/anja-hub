@@ -53,23 +53,27 @@ class AdsClient:
             raise AdsError("GOOGLE_ADS_CUSTOMER_ID non è nel vault del brand (Connettori → Google)")
         return cid
 
+    @staticmethod
+    def _error_message(r) -> str:
+        msg = r.text[:400]
+        try:
+            err = r.json()
+            if isinstance(err, list):
+                err = err[0]
+            e = err.get("error") or {}
+            msg = e.get("message") or msg
+            for d in e.get("details") or []:
+                for x in d.get("errors") or []:
+                    if x.get("message"):
+                        msg = x["message"]
+        except Exception:
+            pass
+        return f"HTTP {r.status_code}: {msg}"
+
     def _request(self, method: str, url: str, json_body: dict | None = None) -> Any:
         r = self._session.request(method, url, headers=self._headers, json=json_body, timeout=90)
         if r.status_code >= 400:
-            msg = r.text[:400]
-            try:
-                err = r.json()
-                if isinstance(err, list):
-                    err = err[0]
-                e = err.get("error") or {}
-                msg = e.get("message") or msg
-                for d in e.get("details") or []:
-                    for x in d.get("errors") or []:
-                        if x.get("message"):
-                            msg = x["message"]
-            except Exception:
-                pass
-            raise AdsError(f"HTTP {r.status_code}: {msg}")
+            raise AdsError(self._error_message(r))
         return r.json() if r.text else {}
 
     def list_accessible_customers(self) -> list[str]:
@@ -77,20 +81,33 @@ class AdsClient:
         return [n.rsplit("/", 1)[-1] for n in data.get("resourceNames", [])]
 
     def search(self, customer_id: str, gaql: str) -> list[dict[str, Any]]:
-        """searchStream GAQL. Se l'account non è raggiungibile via MCC
-        (USER_PERMISSION_DENIED) ritenta senza login-customer-id."""
+        """searchStream GAQL. L'header login-customer-id (MCC) serve SOLO per
+        account raggiunti tramite manager: se la chiamata con MCC dà 403
+        (permission) si ritenta senza — l'utente può avere accesso diretto —
+        e viceversa. Il primo tentativo che funziona viene ricordato."""
         url = f"{API_BASE}/customers/{_digits(customer_id)}/googleAds:searchStream"
-        try:
-            batches = self._request("POST", url, {"query": gaql})
-        except AdsError as exc:
-            if "USER_PERMISSION_DENIED" in str(exc) and "login-customer-id" in self._headers:
-                saved = self._headers.pop("login-customer-id")
-                try:
-                    batches = self._request("POST", url, {"query": gaql})
-                finally:
-                    self._headers["login-customer-id"] = saved
-            else:
-                raise
+        mcc = self._headers.get("login-customer-id")
+        attempts = [dict(self._headers)]
+        if mcc:
+            attempts.append({k: v for k, v in self._headers.items() if k != "login-customer-id"})
+        last: AdsError | None = None
+        for hdrs in attempts:
+            try:
+                r = self._session.post(url, headers=hdrs, json={"query": gaql}, timeout=90)
+                if r.status_code == 403 and len(attempts) > 1 and hdrs is attempts[0]:
+                    last = AdsError(f"HTTP 403: {r.text[:200]}")
+                    continue
+                if r.status_code >= 400:
+                    raise AdsError(self._error_message(r))
+                self._headers = dict(hdrs)     # ricorda la variante che funziona
+                batches = r.json() if r.text else []
+                break
+            except AdsError as exc:
+                last = exc
+                if hdrs is attempts[-1]:
+                    raise
+        else:
+            raise last or AdsError("searchStream failed")
         rows: list[dict[str, Any]] = []
         for b in batches or []:
             rows.extend(b.get("results") or [])

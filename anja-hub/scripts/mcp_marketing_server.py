@@ -614,8 +614,19 @@ async def ads_check() -> dict[str, Any]:
         cid = client.customer_id()
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "accessible_customers": accessible, "error": str(exc)}
-    return {"ok": True, "customer_id": cid, "accessible_customers": accessible,
-            "customer_reachable": cid in accessible or bool(client._headers.get("login-customer-id"))}
+    # prova reale: una query minima sul customer (gestisce MCC/diretto da sola)
+    try:
+        rows = await asyncio.to_thread(
+            client.search, cid, "SELECT customer.descriptive_name, customer.currency_code FROM customer")
+        cust = (rows[0].get("customer") if rows else {}) or {}
+        return {"ok": True, "customer_id": cid, "customer_name": cust.get("descriptiveName", ""),
+                "currency": cust.get("currencyCode", ""), "accessible_customers": accessible,
+                "via_manager": "login-customer-id" in client._headers}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "customer_id": cid, "accessible_customers": accessible,
+                "error": str(exc),
+                "hint": "the user has no access to this customer, neither directly nor via the "
+                        "configured manager (GOOGLE_ADS_LOGIN_CUSTOMER_ID): check the ID or grant access"}
 
 
 @_maybe("analytics")

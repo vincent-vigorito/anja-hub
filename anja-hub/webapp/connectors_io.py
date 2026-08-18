@@ -71,7 +71,7 @@ CONNECTORS = [
         "icon": "megaphone", "shared": True,
         "fields": [
             {"key": "GOOGLE_ADS_DEVELOPER_TOKEN", "label": "Developer token (Google Ads API Center)", "secret": True, "optional": True, "placeholder": "from ads.google.com → Tools → API Center"},
-            {"key": "GOOGLE_ADS_LOGIN_CUSTOMER_ID", "label": "Manager account (MCC) ID", "secret": False, "optional": True, "placeholder": "123-456-7890 (only if accounts are under a manager)"},
+            {"key": "GOOGLE_ADS_LOGIN_CUSTOMER_ID", "label": "Manager account (MCC) ID", "secret": False, "optional": True, "placeholder": "123-456-7890 — leave EMPTY if your user accesses the account directly"},
         ],
     },
     {

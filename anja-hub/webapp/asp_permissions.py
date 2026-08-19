@@ -137,6 +137,13 @@ class PendingRequests:
                 best, best_ts = rid, m["ts"]
         return best
 
+    def get(self, request_id: str) -> Optional[dict]:
+        """Meta (senza future) di una richiesta ancora pendente, o None."""
+        m = self._pending.get(request_id)
+        if m is None or m["future"].done():
+            return None
+        return {k: v for k, v in m.items() if k != "future"}
+
     def drop(self, request_id: str) -> None:
         self._pending.pop(request_id, None)
 

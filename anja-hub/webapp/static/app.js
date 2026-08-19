@@ -507,6 +507,7 @@ function app() {
 
     // Fase 11 M-Tg — Telegram inbound
     telegramStatus: null,            // {running, enabled, has_token, allowed_chat_ids, ...}
+    telegramLink: { code: '', deep_link: '', bot_username: '', expires_at: 0, linked: false, loading: false, _timer: null, _tick: 0 },
     telegramConfig: {
       enabled: false,
       allowed_chat_ids_str: '',
@@ -7980,6 +7981,51 @@ function app() {
       } catch (e) {
         this.showToast('error', 'Save error', e.message);
       }
+    },
+
+    async telegramLinkCode() {
+      // Codice monouso dal server: la chat che lo manda al bot finisce in allow-list da sola.
+      this.telegramLink.loading = true;
+      try {
+        const r = await fetch('/api/telegram/link-code', { method: 'POST' });
+        const data = await r.json();
+        if (!r.ok) {
+          this.showToast('error', 'Link code failed', data.detail || JSON.stringify(data));
+          return;
+        }
+        const before = (this.telegramStatus?.allowed_chat_ids || []).length;
+        Object.assign(this.telegramLink, {
+          code: data.code, deep_link: data.deep_link || '', bot_username: data.bot_username || '',
+          expires_at: data.expires_at * 1000, linked: false,
+        });
+        if (this.telegramLink._timer) clearInterval(this.telegramLink._timer);
+        this.telegramLink._timer = setInterval(async () => {
+          this.telegramLink._tick++;
+          if (Date.now() > this.telegramLink.expires_at) {   // scaduto: chiudi il box
+            clearInterval(this.telegramLink._timer); this.telegramLink._timer = null;
+            this.telegramLink.code = '';
+            return;
+          }
+          if (this.telegramLink._tick % 3 !== 0) return;      // status ogni 3s
+          await this.loadTelegramStatus();
+          if ((this.telegramStatus?.allowed_chat_ids || []).length > before) {
+            this.telegramLink.linked = true;
+            clearInterval(this.telegramLink._timer); this.telegramLink._timer = null;
+            this.showToast('success', 'Telegram chat linked', 'added to the allow-list');
+          }
+        }, 1000);
+        this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+      } catch (e) {
+        this.showToast('error', 'Link code error', e.message);
+      } finally {
+        this.telegramLink.loading = false;
+      }
+    },
+
+    telegramLinkCountdown() {
+      void this.telegramLink._tick;   // dipendenza reattiva: si aggiorna col timer
+      const s = Math.max(0, Math.round((this.telegramLink.expires_at - Date.now()) / 1000));
+      return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
     },
 
     addChatIdToAllowList(cid) {

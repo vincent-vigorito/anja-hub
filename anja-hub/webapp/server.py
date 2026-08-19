@@ -6986,10 +6986,82 @@ async def _asp_notify_permission_ask(conv_id: str, tool: str, target: str,
     if chat_id is None:
         return
     from telegram_daemon import send_message as _tg_send
-    await _tg_send(token, chat_id,
-                   f"🔐 *Permission requested* — `{tool}`\n"
-                   f"`{target[:150]}`\n"
-                   f"Reply: /allow · /allow always · /deny")
+    # Bottoni inline con il request_id: risolvono ESATTAMENTE questa richiesta
+    # (anche se è di un'altra thread o di una conv della web UI), a differenza
+    # di /allow testuale che prende l'ultima pendente della thread attiva.
+    src = ""
+    if not conv_id.startswith("telegram-"):
+        title = ""
+        try:
+            chat = _get_chat_module()
+            title = ((chat.load_conversation(WEBAPP_DIR, conv_id) or {}).get("title") or "")
+        except Exception:
+            title = ""
+        title = re.sub(r"[`*_\[\]]", "", title)[:40]
+        src = "\n_source: web UI" + (f" · {title}_" if title else "_")
+    if tool == "ExitPlanMode":
+        import asp_permissions as _ap
+        plan_text = str(((_ap.pending.get(request_id) or {}).get("input") or {}).get("plan", ""))
+        excerpt = plan_text.replace("`", "'").strip()[:1200]
+        if len(plan_text) > 1200:
+            excerpt += "\n…"
+        text = ("📋 *Plan proposed* — approve to proceed, or reply `/replan <notes>` to revise"
+                + src + (f"\n```\n{excerpt}\n```" if excerpt else ""))
+        buttons = [[{"text": "✅ Approve", "callback_data": f"plan:approve:{request_id}"},
+                    {"text": "🔄 Replan", "callback_data": f"plan:replan:{request_id}"}]]
+    else:
+        text = (f"🔐 *Permission requested* — `{tool}`\n"
+                f"`{target[:150]}`" + src)
+        buttons = [[{"text": "✅ Allow", "callback_data": f"perm:allow:{request_id}"},
+                    {"text": "✅ Always", "callback_data": f"perm:always:{request_id}"},
+                    {"text": "🚫 Deny", "callback_data": f"perm:deny:{request_id}"}]]
+    await _tg_send(token, chat_id, text, reply_markup={"inline_keyboard": buttons})
+
+
+_TG_ASP_DECISIONS = {
+    "perm": {"allow": ("allow", "✅ allowed"), "always": ("always_allow", "✅ allowed (always)"),
+             "deny": ("deny", "🚫 denied")},
+    "plan": {"approve": ("approve", "✅ plan approved"), "replan": ("deny", "🔄 replan requested")},
+}
+
+
+async def _tg_asp_callback(cbq: dict) -> bool:
+    """Click sui bottoni 🔐/📋: `perm:<allow|always|deny>:<rid>` · `plan:<approve|replan>:<rid>`.
+    Risolve la pending, poi edita il messaggio (via i bottoni, esito in coda)."""
+    from telegram_daemon import answer_callback_query, edit_message_text
+    token = TELEGRAM_DAEMON.token if TELEGRAM_DAEMON else None
+    cb_id = cbq.get("id", "")
+    parts = (cbq.get("data") or "").split(":")
+    if len(parts) != 3 or parts[0] not in _TG_ASP_DECISIONS:
+        return False
+    kind, action, rid = parts
+    entry = _TG_ASP_DECISIONS[kind].get(action)
+    if not entry or not token:
+        return False
+    decision, label = entry
+    frm = cbq.get("from") or {}
+    who = frm.get("username") or frm.get("first_name") or str(frm.get("id", ""))
+    if os.environ.get("ANJA_ASP_PERMISSIONS") != "1":
+        await answer_callback_query(token, cb_id, "Control-plane not active")
+        return True
+    import asp_permissions as _ap
+    meta = _ap.pending.resolve(rid, decision, by=f"telegram:{frm.get('id', 0)}")
+    if meta is None:
+        await answer_callback_query(token, cb_id, "Already resolved or expired")
+        outcome = "⌛ already resolved or expired"
+    else:
+        await answer_callback_query(token, cb_id, label)
+        outcome = f"{label} by {who}"
+    msg = cbq.get("message") or {}
+    chat_id = int((msg.get("chat") or {}).get("id", 0))
+    message_id = int(msg.get("message_id") or 0)
+    if chat_id and message_id:
+        # Testo originale in plain (Telegram lo restituisce senza entities) + esito;
+        # `inline_keyboard: []` toglie i bottoni: niente click su richieste chiuse.
+        orig = (msg.get("text") or "").rstrip()
+        await edit_message_text(token, chat_id, message_id, f"{orig}\n\n{outcome}"[:4000],
+                                parse_mode=None, reply_markup={"inline_keyboard": []})
+    return True
 
 
 @app.on_event("shutdown")
@@ -11497,8 +11569,8 @@ TELEGRAM_HELP_TEXT = """*Anja commands via Telegram*
 `/voice on|off|auto` — Anja also replies with a voice message (auto: only if you send audio)
 `/retry` — retry the last interrupted or failed turn on this thread
 `/stop` — interrupt the current turn (the conversation stays alive)
-`/allow [always]` · `/deny` — answer a permission request (🔐) from the turn
-`/approve` · `/replan <note>` — answer a proposed plan (plan mode)
+`/allow [always]` · `/deny` — answer a permission request (🔐) — or tap its buttons
+`/approve` · `/replan <note>` — answer a proposed plan (📋) — or tap its buttons
 `/merge` · `/discard` — close the git-session (📝): merge the diff into the branch or discard it
 `/mode default|acceptEdits|plan|auto` — session permissions (auto = allow everything)
 
@@ -12786,6 +12858,8 @@ async def _startup_telegram():
     try:
         from telegram_daemon import TelegramDaemon
         TELEGRAM_DAEMON = TelegramDaemon(HUB_PATH, on_message=_telegram_dispatch)
+        TELEGRAM_DAEMON.callback_handlers["perm"] = _tg_asp_callback
+        TELEGRAM_DAEMON.callback_handlers["plan"] = _tg_asp_callback
         await TELEGRAM_DAEMON.start()
     except Exception as e:
         print(f"[telegram] startup error: {e}")
@@ -12940,6 +13014,26 @@ async def api_telegram_stop(request: Request):
         raise HTTPException(503, "daemon not initialized")
     await TELEGRAM_DAEMON.stop()
     return JSONResponse(TELEGRAM_DAEMON.status())
+
+
+@app.post("/api/telegram/link-code")
+async def api_telegram_link_code(request: Request):
+    """Codice monouso per collegare una chat DALLA UI: l'utente apre il deep link
+    (o manda `/link <code>` al bot) e il daemon la mette in allow-list da solo."""
+    _require_admin(request)   # equivale a scrivere allowed_chat_ids
+    if not TELEGRAM_DAEMON or not TELEGRAM_DAEMON.token:
+        raise HTTPException(503, "Telegram bot token missing")
+    if not TELEGRAM_DAEMON.running:
+        raise HTTPException(409, "Telegram daemon not running: enable + start it first")
+    if not TELEGRAM_DAEMON.bot_username:
+        try:
+            from telegram_daemon import get_me
+            me = await get_me(TELEGRAM_DAEMON.token)
+            TELEGRAM_DAEMON.bot_username = (me.get("result") or {}).get("username")
+        except Exception:
+            pass
+    by = getattr(request.state, "user", None) or "admin"
+    return JSONResponse(TELEGRAM_DAEMON.create_link_code(by=str(by)))
 
 
 @app.post("/api/telegram/config")

@@ -7179,7 +7179,7 @@ No research yet — launch the first one above, or ask for it in chat.
               <button class="btn btn--ghost btn--xs" @click="loadTelegramStatus()" title="Refresh"><i data-lucide="refresh-cw" class="icon icon--sm"></i></button>
             </div>
             <p class="text-muted" style="margin: 0 0 var(--s-3) 0; font-size: var(--t-sm);">
-              Lets you chat with Anja via the Telegram app. Setup: 1) create a bot with <strong>@BotFather</strong>, 2) save token as <code>TELEGRAM_BOT_TOKEN</code> in Custom Secrets above, 3) enable below + add your chat_id to the allow-list.
+              Lets you chat with Anja via the Telegram app. Setup: 1) create a bot with <strong>@BotFather</strong>, 2) save token as <code>TELEGRAM_BOT_TOKEN</code> in Custom Secrets above, 3) enable + start below, then <strong>Link a chat</strong> (or add the chat_id to the allow-list by hand).
             </p>
 
             <template x-if="telegramStatus">
@@ -7193,11 +7193,30 @@ No research yet — launch the first one above, or ask for it in chat.
 
                 <div x-show="telegramStatus.last_error" class="text-danger" style="font-size: var(--t-sm); margin-bottom: var(--s-2);" x-text="`Last error: ${telegramStatus.last_error}`"></div>
 
-                <div style="display: flex; gap: var(--s-2); margin-bottom: var(--s-3);">
+                <div style="display: flex; gap: var(--s-2); margin-bottom: var(--s-3); flex-wrap: wrap;">
                   <button class="btn btn--primary btn--sm" @click="telegramAction('start')" :disabled="telegramStatus.running || !telegramStatus.has_token">Start</button>
                   <button class="btn btn--ghost btn--sm" @click="telegramAction('stop')" :disabled="!telegramStatus.running">Stop</button>
                   <button class="btn btn--ghost btn--sm" @click="telegramAction('reload')">Reload config</button>
+                  <button class="btn btn--ghost btn--sm" @click="telegramLinkCode()" :disabled="!telegramStatus.running || telegramLink.loading" title="Generate a one-time code to link a Telegram chat from your phone"><i data-lucide="link" class="icon icon--sm"></i> Link a chat</button>
                 </div>
+
+                <template x-if="telegramLink.code">
+                  <div style="background: var(--bg-2); padding: var(--s-3); border-radius: 6px; font-size: var(--t-sm); margin-bottom: var(--s-3);">
+                    <template x-if="telegramLink.linked">
+                      <div><strong>✅ Chat linked</strong> — it's now in the allow-list. You can close this.</div>
+                    </template>
+                    <template x-if="!telegramLink.linked">
+                      <div>
+                        <div style="margin-bottom: var(--s-2);"><strong>Link a Telegram chat</strong> <span class="text-muted">— one-time code, expires in <span x-text="telegramLinkCountdown()"></span></span></div>
+                        <template x-if="telegramLink.deep_link">
+                          <div style="margin-bottom: var(--s-2);">Open on your phone: <a :href="telegramLink.deep_link" target="_blank" rel="noopener" class="text-mono" x-text="telegramLink.deep_link"></a> <button class="btn btn--ghost btn--xs" @click="copyText(telegramLink.deep_link); showToast('success', 'Link copied')" title="Copy link"><i data-lucide="copy" class="icon icon--sm"></i></button></div>
+                        </template>
+                        <div>…or send to <span class="text-mono" x-text="telegramLink.bot_username ? '@' + telegramLink.bot_username : 'the bot'"></span>: <code x-text="'/link ' + telegramLink.code"></code> <button class="btn btn--ghost btn--xs" @click="copyText('/link ' + telegramLink.code); showToast('success', 'Command copied')" title="Copy command"><i data-lucide="copy" class="icon icon--sm"></i></button></div>
+                        <div class="text-muted" style="margin-top: var(--s-2); font-size: var(--t-xs);">Waiting for the chat to link… (this box updates by itself)</div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
 
                 <div style="display: flex; gap: var(--s-3); align-items: end; margin-bottom: var(--s-3);">
                   <div style="flex: 0 0 60px;">

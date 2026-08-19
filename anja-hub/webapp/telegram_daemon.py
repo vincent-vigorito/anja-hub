@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import secrets
 import sys
 import time
 import urllib.parse
@@ -137,6 +138,11 @@ async def get_updates(token: str, offset: int, timeout: int = DEFAULT_TIMEOUT_SE
     return await _http_get(url, timeout=timeout + 5)
 
 
+async def get_me(token: str) -> dict:
+    """Telegram getMe → {"ok", "result": {"username", ...}} (per il deep link t.me/<bot>)."""
+    return await _http_get(f"{TELEGRAM_API_BASE}/bot{token}/getMe", timeout=10)
+
+
 async def send_message(token: str, chat_id: int, text: str,
                       parse_mode: str = "Markdown",
                       reply_markup: Optional[dict] = None) -> dict:
@@ -207,14 +213,22 @@ async def delete_message(token: str, chat_id: int, message_id: int) -> dict:
 
 
 async def edit_message_text(token: str, chat_id: int, message_id: int, text: str,
-                            parse_mode: str = "Markdown",
+                            parse_mode: Optional[str] = "Markdown",
                             reply_markup: Optional[dict] = None) -> dict:
-    """Modifica un messaggio esistente (usato dopo callback per aggiornare inline keyboard)."""
+    """Modifica un messaggio esistente (usato dopo callback per aggiornare inline keyboard).
+    `parse_mode=None` → plain text. Con Markdown malformato ritenta in plain
+    (stesso fallback di send_message). `reply_markup={"inline_keyboard": []}` rimuove i bottoni."""
     url = f"{TELEGRAM_API_BASE}/bot{token}/editMessageText"
-    payload = {"chat_id": str(chat_id), "message_id": message_id, "text": text, "parse_mode": parse_mode}
+    payload = {"chat_id": str(chat_id), "message_id": message_id, "text": text}
+    if parse_mode:
+        payload["parse_mode"] = parse_mode
     if reply_markup is not None:
         payload["reply_markup"] = json.dumps(reply_markup)
-    return await _http_post(url, payload)
+    resp = await _http_post(url, payload)
+    if not resp.get("ok") and parse_mode:
+        payload.pop("parse_mode", None)
+        resp = await _http_post(url, payload)
+    return resp
 
 
 # Reply keyboard persistente con azioni quick (mostrata dopo ogni risposta Anja)
@@ -745,19 +759,13 @@ async def send_typing(token: str, chat_id: int) -> None:
 ONBOARDING_TEMPLATE = """\
 Hi! I'm Anja, your personal AI assistant.
 
-To talk to me you need to be authorized. Add this chat_id to the allow-list:
+This chat isn't linked to the hub yet. To link it, generate a *link code* in the hub UI (Settings → Integrations → Telegram → *Link a chat*) and open the link on this device — or send me the code here:
+
+  `/link <code>`
+
+Alternatively an admin can add this chat_id to the allow-list manually:
 
   chat_id: `{chat_id}`
-
-Edit `<hub>/config.json` adding:
-```
-"telegram": {{
-  "enabled": true,
-  "allowed_chat_ids": [{chat_id}]
-}}
-```
-
-Then restart the server or call the /api/telegram/reload endpoint.
 """
 
 
@@ -780,6 +788,11 @@ class TelegramDaemon:
         self.unknown_chat_ids: list[int] = []  # log per onboarding UI
         self.message_count = 0
         self.last_message_at: Optional[float] = None
+        # Handler di callback_query per prefisso (`perm:`, `plan:` …): async fn(cbq)->bool.
+        # True = gestito (niente dispatch come comando). Registrati dal server.
+        self.callback_handlers: dict[str, Callable[[dict], Awaitable[bool]]] = {}
+        self.bot_username: Optional[str] = None      # da getMe, per il deep link t.me/<bot>?start=<code>
+        self.link_codes: dict[str, dict] = {}        # code → {created, expires, by}; monouso, in memoria
 
     def reload_config(self) -> dict:
         """Re-read config.json + .secrets.env (per cambi runtime)."""
@@ -792,6 +805,7 @@ class TelegramDaemon:
             "running": self.running,
             "enabled": self.config.get("enabled", False),
             "has_token": bool(self.token),
+            "bot_username": self.bot_username,
             "allowed_chat_ids": self.config.get("allowed_chat_ids", []),
             "default_agent": self.config.get("default_agent", ""),
             "poll_interval_sec": self.config.get("poll_interval_sec", DEFAULT_POLL_INTERVAL_SEC),
@@ -800,6 +814,87 @@ class TelegramDaemon:
             "message_count": self.message_count,
             "last_message_at": self.last_message_at,
         }
+
+    # ---- Link code (UI → Telegram) --------------------------------------
+    LINK_CODE_TTL_SEC = 600
+
+    def create_link_code(self, by: str = "") -> dict:
+        """Codice monouso (TTL 10 min) da mostrare in UI: chi lo manda al bot
+        (`/start <code>` via deep link, o `/link <code>`) finisce in allow-list."""
+        self._purge_link_codes()
+        code = secrets.token_urlsafe(9)     # 12 char [A-Za-z0-9_-]: valido come start param
+        now = time.time()
+        self.link_codes[code] = {"created": now, "expires": now + self.LINK_CODE_TTL_SEC, "by": by}
+        deep_link = f"https://t.me/{self.bot_username}?start={code}" if self.bot_username else None
+        return {"code": code, "expires_at": self.link_codes[code]["expires"],
+                "ttl_sec": self.LINK_CODE_TTL_SEC, "deep_link": deep_link,
+                "bot_username": self.bot_username}
+
+    def _purge_link_codes(self) -> None:
+        now = time.time()
+        for c in [c for c, m in self.link_codes.items() if m["expires"] < now]:
+            self.link_codes.pop(c, None)
+
+    def consume_link_code(self, code: str) -> Optional[dict]:
+        """Ritorna i meta e brucia il codice se valido e non scaduto, altrimenti None."""
+        self._purge_link_codes()
+        return self.link_codes.pop(code, None)
+
+    def add_allowed_chat_id(self, chat_id: int) -> None:
+        """Aggiunge chat_id a config.telegram.allowed_chat_ids (config.json) e
+        alla config live: vale dal messaggio dopo, senza restart."""
+        cfg_path = self.hub_path / "config.json"
+        try:
+            data = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.is_file() else {}
+        except Exception:
+            data = {}
+        tg = data.setdefault("telegram", {})
+        ids = [int(x) for x in tg.get("allowed_chat_ids", [])]
+        if chat_id not in ids:
+            ids.append(chat_id)
+        tg["allowed_chat_ids"] = ids
+        tg.setdefault("enabled", True)
+        cfg_path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        self.config["allowed_chat_ids"] = ids
+        if chat_id in self.unknown_chat_ids:
+            self.unknown_chat_ids.remove(chat_id)
+
+    async def _handle_link_command(self, chat: dict, chat_id: int, text: str) -> bool:
+        """`/start [code]` (deep link) e `/link <code>`: True se gestito."""
+        parts = text.split(maxsplit=1)
+        cmd = parts[0].lower().split("@", 1)[0]     # nei gruppi: /start@botname
+        if cmd not in ("/start", "/link"):
+            return False
+        code = parts[1].strip() if len(parts) > 1 else ""
+        allowed = self.config.get("allowed_chat_ids") or []
+        if chat_id in allowed:
+            await send_message(self.token, chat_id,
+                               "✅ This chat is already linked. Write me anything, or /help.")
+            return True
+        if not code:
+            return False    # /start nudo da chat sconosciuta → onboarding standard
+        meta = self.consume_link_code(code)
+        if meta is None:
+            await send_message(self.token, chat_id,
+                               "⚠ Invalid or expired link code. Generate a new one in the hub UI "
+                               "(Settings → Integrations → Telegram → Link a chat).")
+            return True
+        self.add_allowed_chat_id(chat_id)
+        who = chat.get("username") or chat.get("title") or chat.get("first_name") or ""
+        print(f"[telegram] chat {chat_id} ({who}) linked via code (by {meta.get('by') or '?'})", flush=True)
+        await send_message(self.token, chat_id,
+                           "✅ *Linked!* This chat can now talk to Anja. Try /help to see the commands.")
+        try:
+            import notification_bus as _nb
+            _nb.publish(self.hub_path, source="telegram", category="info",
+                        title="Telegram chat linked",
+                        body=f"chat_id={chat_id} {('@' + who) if who else ''} added to the allow-list "
+                             f"(link code by {meta.get('by') or 'admin'})",
+                        action={"label": "Open Telegram settings", "url": "/#settings/telegram",
+                                "type": "navigate"})
+        except Exception:
+            pass
+        return True
 
     async def start(self):
         if self.running:
@@ -822,7 +917,13 @@ class TelegramDaemon:
                 print(f"[telegram] setMyCommands warn: {r}")
         except Exception as e:
             print(f"[telegram] setMyCommands error: {e}")
-        print(f"[telegram] daemon STARTED. allow-list: {self.config['allowed_chat_ids']}")
+        try:
+            me = await get_me(self.token)
+            self.bot_username = ((me.get("result") or {}).get("username")) or self.bot_username
+        except Exception as e:
+            print(f"[telegram] getMe error: {e}")
+        print(f"[telegram] daemon STARTED. allow-list: {self.config['allowed_chat_ids']}"
+              + (f" bot=@{self.bot_username}" if self.bot_username else ""))
 
     async def stop(self):
         if not self.running:
@@ -885,6 +986,9 @@ class TelegramDaemon:
         if is_voice and not chat_id:
             return
         if not text and not is_voice:
+            return
+
+        if text.startswith("/") and await self._handle_link_command(chat, chat_id, text):
             return
 
         allowed = self.config.get("allowed_chat_ids") or []
@@ -1014,6 +1118,15 @@ class TelegramDaemon:
                     return
             except Exception as e:
                 print(f"[telegram] coding callback error: {e}", flush=True)
+                await answer_callback_query(self.token, cb_id, f"❌ {type(e).__name__}")
+                return
+        handler = self.callback_handlers.get(data.split(":", 1)[0])
+        if handler is not None:
+            try:
+                if await handler(cbq):
+                    return
+            except Exception as e:
+                print(f"[telegram] callback handler error ({data[:20]}): {type(e).__name__}: {e}", flush=True)
                 await answer_callback_query(self.token, cb_id, f"❌ {type(e).__name__}")
                 return
         # Acknowledge subito (rimuove spinner)

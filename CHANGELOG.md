@@ -14,6 +14,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Added
 
+- **Telegram: link a chat from the UI**: Settings → Integrations → Telegram →
+  *Link a chat* generates a one-time code (10 min) with a `t.me/<bot>?start=…`
+  deep link; the chat that opens it (or sends `/link <code>`) is added to the
+  allow-list automatically — no more copying chat_ids around. Manual
+  allow-list still works.
+- **Telegram: inline buttons for permissions and plans**: 🔐 permission
+  requests come with ✅ Allow · ✅ Always · 🚫 Deny buttons and 📋 plan
+  proposals with ✅ Approve · 🔄 Replan (plus a plan excerpt). Buttons carry
+  the request id, so they resolve exactly that request — including requests
+  raised by **web UI** sessions pushed to the notification chat — and the
+  message is edited afterwards (buttons removed, outcome + who decided).
+  Text commands `/allow` `/deny` `/approve` `/replan` keep working.
 - **Google OAuth client from the UI**: Settings → Integrations guides the
   one-time Cloud Console setup (redirect URI to copy, APIs to enable) and
   accepts the client JSON upload — no filesystem access needed. Workspaces

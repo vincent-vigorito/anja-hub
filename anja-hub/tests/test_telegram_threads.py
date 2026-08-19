@@ -95,7 +95,7 @@ def main():
     # 6. /thread inesistente → rifiutato, attivo invariato ----------------
     assert _cmd("/thread", "t9") is True
     assert server._tg_active_conv(123) == "telegram-123"           # invariato
-    assert "non trovato" in _SENT[-1]["text"].lower()
+    assert "not found" in _SENT[-1]["text"].lower()
     print("✓ /thread t9: inesistente rifiutato, attivo invariato")
 
     print("\nOK 6/6")

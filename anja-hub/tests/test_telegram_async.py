@@ -72,7 +72,7 @@ def main():
     # 3. /async senza prompt → messaggio d'uso ------------------------------
     _write_conv(tmp, "telegram-123", title="Main chat")
     assert _cmd("/async") is True
-    assert "Uso:" in _SENT[-1]["text"]
+    assert "Usage:" in _SENT[-1]["text"]
     print("✓ /async senza prompt: messaggio d'uso")
 
     # 4. /async <prompt> → lancia bg sul thread attivo + ack ----------------

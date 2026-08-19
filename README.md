@@ -127,7 +127,7 @@ Sales tab lights up on the next statistics refresh.
 ```
 anja-hub/               # plugin + Mission Control webapp
 ├── webapp/             # FastAPI server + UI (vanilla JS + Alpine)
-├── scripts/            # MCP servers (marketing, images, hub API…) + init
+├── scripts/            # MCP servers (hub runtime, marketing, images, hub API…) + init
 ├── blueprints/         # workspace blueprints (starter: marketing-site)
 ├── skills/             # agent skills (research, media, hub-admin…)
 └── templates/          # hub/agent/user skeletons
@@ -143,7 +143,11 @@ anja-routines/          # cron-like daemon + action handlers
   REST interface instead.
 - **Multi-harness**: agent memory (wiki/identity/skills) also works from
   Codex, OpenCode, and Grok Build via the
-  [anjadev](https://github.com/vincent-vigorito/anjadev) plugin.
+  [anjadev](https://github.com/vincent-vigorito/anjadev) plugin. Anja Hub is
+  a *consumer* of anjadev (requires **anjadev ≥ 0.21**): the plugin stays a
+  pure CLI tool, while the agents' work plane — kanban, goals, delegation,
+  workspace files, one-shot tasks — lives here in the `anja_hub_runtime` MCP
+  server (`anja-hub/scripts/mcp_hub_runtime.py`).
 
 ## Security
 

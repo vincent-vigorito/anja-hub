@@ -335,12 +335,15 @@ async def run_judge_async(hub_path: Path, scope: str, goal_id: str,
                     agent_config=None,
                 )
                 # M4 fix — Strip server di distrazione per il judge:
-                # - anja_goals: il judge lavora SUL goal, non ha senso che si chiami
-                #   goal.show o goal.list, riceve già il context nel system prompt
-                # - anja_memory_core: il judge è stateless, non deve cercare sessions
-                # - anja_skills: pure overhead, niente skills per un task così focalizzato
-                # Lasciamo: domain MCPs installati nel workspace + anja_code (per calcoli)
-                JUDGE_BLOCKED = {"anja_goals", "anja_memory_core", "anja_skills"}
+                # - anja_hub_runtime (goals/kanban/agents): il judge lavora SUL goal,
+                #   riceve già il context nel system prompt — non deve chiamare goal.show
+                #   né delegare
+                # - anja_memory (sessions/skills): il judge è stateless, niente ricerche
+                #   né skill per un task così focalizzato
+                # Lasciamo: domain MCPs installati nel workspace + anja_code (per calcoli).
+                # (I nomi pre-split anja_goals/anja_memory_core/anja_skills non
+                # esistevano come entry .mcp.json: il filtro era un no-op.)
+                JUDGE_BLOCKED = {"anja_hub_runtime", "anja_memory"}
                 if scoped:
                     scoped = [s for s in scoped if s not in JUDGE_BLOCKED]
                 _emit("mcp_scope", f"MCP scoped: {scoped}", level="tool", payload={"servers": scoped})

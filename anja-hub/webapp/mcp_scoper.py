@@ -29,9 +29,13 @@ from pathlib import Path
 from typing import Optional
 
 DEFAULT_MANIFEST = {
-    # Fase 16 — Tier 0 minimo: memory_core + skills_catalog (per 3-level lazy disclosure)
-    # Tutti gli altri tool sono in server "logici" attivati su keyword (vedi keyword_map).
-    "tier0": ["anja_memory_core", "anja_skills"],
+    # Tier 0 = server SEMPRE montati, per nome reale di entry `.mcp.json`. Vuoto di
+    # default: `anja_memory` arriva già da tier1 (hub: lista esplicita; project: dal
+    # `.mcp.json` del workspace; agent: da `mcp_servers` della config). I vecchi nomi
+    # logici `anja_memory_core`/`anja_skills` non esistevano in nessun `.mcp.json` e
+    # venivano scartati come "unavailable" (F-ConnectorUX residuo, chiuso 2026-08-19).
+    # Un hub può forzare server always-on in <hub>/config/mcp_tiers.json.
+    "tier0": [],
     "keyword_map": {
         # Pattern keyword → server MCP. Regex case-insensitive.
         # External tools — F-CLI-Media: immagini/video via CLI giv (Bash),
@@ -53,18 +57,20 @@ DEFAULT_MANIFEST = {
         # direttamente gli endpoint /api/* e questo design è cross-provider.
         # WS — Web research skills (DuckDuckGo + SerpAPI). Trigger su intent di ricerca web/news/info.
         r"\b(cerca(re)? (info|informaz|online|sul web|su google|news|notizie)|trova(re)? (info|notizie|news|qualcosa)|google[r]? (questa|questo|info)|cosa dicono|ultim(e|i) (news|notizie)|search.* (web|online|google)|web search|research (su|on)|ricerca (web|online))\b": "anja_memory",
-        # Fase 16 — Logical servers (env-filtered tool groups)
-        r"\b(kanban|task\b|tasks\b|todo|ricorda.*di|aggiungi.*lista|cosa.*devo|cosa.*c'è.*da.*fare|backlog|board)\b": "anja_kanban",
-        # Fase 18.A — Goals (obiettivi persistenti, judge cron, journal narrativo)
-        r"\b(goal|goals|obiettivo|obiettivi|target|deadline|judge|verdict|valuta.*goal|progress.*goal|raggiungere|riflessione|reflection|on.track|drift)\b": "anja_goals",
-        r"\b(workspace|ufficio|files.*hub|files.*workspace|scripts.*hub|crea.*workspace|nuovo workspace)\b": "anja_workspace",
-        r"\b(soul|personalit[àa]|stile.*anja|come.*ti.*comporti)\b": "anja_soul",
-        r"\b(schedula|ricontrolla|tra.*\d+.*min|tra.*\d+.*ore|domani.*alle|verifica.*tra|in.*\d+.*minuti)\b": "anja_tasks",
-        r"(?:^|\W)@\w[\w-]*": "anja_agents",
-        r"\b(agent\.list|elenca.*agent|delega|delegare|chiedi.*a.*@)\b": "anja_agents",
-        # Fase P-CLI — Printing Press catalog discovery
-        r"\b(integra(re|zione)?|integrare|integration|nuovo.*mcp|nuovo.*cli|nuovo.*connettore|connettore|wrap(pa(re)?)?.*api|printing.press|pp-cli|cli-architect)\b": "anja_pp",
-        r"\b(stripe|notion|github|linear|slack|airtable|zapier|gmail.*api|google.*search.*console|gsc|google.*calendar|drive\b|hubspot|salesforce|paypal|shopify)\b": "anja_pp",
+        # F-AnjadevCoreSplit — piano di lavoro degli agent: kanban/goals/workspace/tasks/
+        # agents/pp vivono nel server REALE `anja_hub_runtime` (anja-hub/scripts/
+        # mcp_hub_runtime.py). I vecchi nomi logici (anja_kanban, anja_goals, …) non
+        # matchavano nessuna entry `.mcp.json` e venivano scartati.
+        r"\b(kanban|task\b|tasks\b|todo|ricorda.*di|aggiungi.*lista|cosa.*devo|cosa.*c'è.*da.*fare|backlog|board)\b": "anja_hub_runtime",
+        r"\b(goal|goals|obiettivo|obiettivi|target|deadline|judge|verdict|valuta.*goal|progress.*goal|raggiungere|riflessione|reflection|on.track|drift)\b": "anja_hub_runtime",
+        r"\b(workspace|ufficio|files.*hub|files.*workspace|scripts.*hub|crea.*workspace|nuovo workspace)\b": "anja_hub_runtime",
+        r"\b(soul|personalit[àa]|stile.*anja|come.*ti.*comporti)\b": "anja_memory",
+        r"\b(schedula|ricontrolla|tra.*\d+.*min|tra.*\d+.*ore|domani.*alle|verifica.*tra|in.*\d+.*minuti)\b": "anja_hub_runtime",
+        r"(?:^|\W)@\w[\w-]*": "anja_hub_runtime",
+        r"\b(agent\.list|elenca.*agent|delega|delegare|chiedi.*a.*@)\b": "anja_hub_runtime",
+        # Fase P-CLI — Printing Press catalog discovery (gruppo pp del runtime)
+        r"\b(integra(re|zione)?|integrare|integration|nuovo.*mcp|nuovo.*cli|nuovo.*connettore|connettore|wrap(pa(re)?)?.*api|printing.press|pp-cli|cli-architect)\b": "anja_hub_runtime",
+        r"\b(stripe|notion|github|linear|slack|airtable|zapier|gmail.*api|google.*search.*console|gsc|google.*calendar|drive\b|hubspot|salesforce|paypal|shopify)\b": "anja_hub_runtime",
     },
     # Native Claude SDK tools (Read/Edit/Bash/Grep/...) ON di default solo per project.
     "native_tools_default": {

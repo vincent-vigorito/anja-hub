@@ -12,6 +12,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
   error messages, notifications) and Telegram bot (commands menu, /help,
   acks, permission prompts). Agent prompts unchanged for now.
 
+### Changed
+
+- **anjadev core split** (requires anjadev ≥ 0.21): the agents' work plane —
+  `agent.list`/`agent.delegate`, `task.*`, `workspace.*`, `kanban.*`,
+  `goal.*`, `pp.*` (28 tools, same names) — moved from the anjadev plugin into
+  the new `anja_hub_runtime` MCP server (`anja-hub/scripts/mcp_hub_runtime.py`),
+  which imports the webapp by position (no more `ANJA_HUB_WEBAPP` guessing).
+  `anja_memory` (anjadev) is back to a pure CLI plugin: memory, sessions,
+  soul/user, skills, wiki, roadmap, code, graph. Blueprint scaffold now writes
+  **two** servers per workspace (`anja_memory` core + `anja_hub_runtime`
+  planning; leads also get `agents`); `init_hub.py` registers both at hub
+  level; the MCP scoper keyword map routes kanban/goals/@mentions/tasks/pp to
+  the real `anja_hub_runtime` entry (the old logical names never matched an
+  entry and were silently dropped). **Existing hubs**: run
+  `python3 anja-hub/scripts/migrate_memory_hub_split.py --hub <hub> [--dry-run]`
+  *before* updating the plugin — it rewrites every `.mcp.json` (hub, workspace,
+  agent dirs) and lead configs, idempotently.
+
 ### Added
 
 - **Telegram: link a chat from the UI**: Settings → Integrations → Telegram →

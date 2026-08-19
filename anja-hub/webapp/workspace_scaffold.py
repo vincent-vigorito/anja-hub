@@ -203,8 +203,8 @@ type: tools-doc
 
 ## MCP servers usati
 
-- `anja_memory` (Tier 0, always-on)
-- `anja_workspace` (Tier 0 in workspace scope) — file ops
+- `anja_memory` (dal `.mcp.json` dell'hub/workspace)
+- `anja_hub_runtime` (workspace.* file ops, kanban, goals — keyword-routed)
 - altri server keyword-routed
 
 ## Tool patterns

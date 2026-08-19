@@ -411,8 +411,8 @@ async def _invoke_role_impl(role: str, agent: str, llm: dict, *,
                     cwd=hub_path, user_prompt=scoper_prompt,
                     active_mcps=[], agent_config=None,
                 )
-                # Strip distractor servers come fa il judge
-                JUDGE_BLOCKED = {"anja_goals", "anja_memory_core", "anja_skills"}
+                # Strip distractor servers come fa il judge (vedi goal_judge.py)
+                JUDGE_BLOCKED = {"anja_hub_runtime", "anja_memory"}
                 if scoped:
                     scoped = [s for s in scoped if s not in JUDGE_BLOCKED]
             except Exception:

@@ -193,6 +193,7 @@ def main() -> None:
     ensure_hub_wiki(target)
     _write_hub_config(target)
     _register_anja_memory_mcp(target)
+    _register_hub_runtime_mcp(target)
     _regenerate_tools_md(target)
     _compose_claude_md(target)
 
@@ -239,13 +240,15 @@ def _anjadev_dir() -> Path:
     return Path(env) if env else Path.home() / ".claude" / "plugins" / "marketplaces" / "anjadev"
 
 
-def _register_anja_memory_mcp(hub_root: Path) -> None:
-    """Registra anja_memory MCP server nel <hub>/.mcp.json."""
-    mcp_server_path = _anjadev_dir() / "scripts" / "mcp_memory_server.py"
-    if not mcp_server_path.is_file():
-        print(f"[init-hub] WARNING: mcp_memory_server.py non trovato: {mcp_server_path}")
-        return
-    mcp_path = hub_root / ".mcp.json"
+# F-AnjadevCoreSplit: anja_memory (anjadev, CLI puro) espone SOLO i gruppi core;
+# il piano di lavoro degli agent (agents/tasks/workspace/kanban/goals/pp) sta nel
+# server anja_hub_runtime di questo repo. Stessi nomi tool di prima.
+HUB_MEMORY_GROUPS = "memory,sessions,soul,user,skills,wiki,roadmap,code,graph"
+HUB_RUNTIME_GROUPS = "agents,tasks,workspace,kanban,goals,pp"
+HUB_RUNTIME_SCRIPT = Path(__file__).resolve().parent / "mcp_hub_runtime.py"
+
+
+def _load_mcp_json(mcp_path: Path) -> dict:
     data = {"mcpServers": {}}
     if mcp_path.is_file():
         try:
@@ -254,6 +257,17 @@ def _register_anja_memory_mcp(hub_root: Path) -> None:
                 data["mcpServers"] = {}
         except Exception:
             pass
+    return data
+
+
+def _register_anja_memory_mcp(hub_root: Path) -> None:
+    """Registra anja_memory (plugin anjadev) nel <hub>/.mcp.json, gruppi core espliciti."""
+    mcp_server_path = _anjadev_dir() / "scripts" / "mcp_memory_server.py"
+    if not mcp_server_path.is_file():
+        print(f"[init-hub] WARNING: mcp_memory_server.py non trovato: {mcp_server_path}")
+        return
+    mcp_path = hub_root / ".mcp.json"
+    data = _load_mcp_json(mcp_path)
     if "anja_memory" in data["mcpServers"]:
         return
     data["mcpServers"]["anja_memory"] = {
@@ -263,10 +277,26 @@ def _register_anja_memory_mcp(hub_root: Path) -> None:
             "ANJA_SCOPE": "hub",
             "ANJA_ROOT": str(hub_root),
             "ANJA_HUB": str(hub_root),
-            # kanban/goals/roadmap/pp del memory server importano moduli della webapp:
-            # senza questo path (il fallback <hub>/../anja-hub/webapp raramente esiste)
-            # i tool rispondono "not available" sugli hub installati da repo clonato.
-            "ANJA_HUB_WEBAPP": str(Path(__file__).resolve().parent.parent / "webapp"),
+            "ANJA_TOOL_GROUPS": HUB_MEMORY_GROUPS,
+        },
+    }
+    mcp_path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def _register_hub_runtime_mcp(hub_root: Path) -> None:
+    """Registra anja_hub_runtime (piano di lavoro degli agent) nel <hub>/.mcp.json."""
+    mcp_path = hub_root / ".mcp.json"
+    data = _load_mcp_json(mcp_path)
+    if "anja_hub_runtime" in data["mcpServers"]:
+        return
+    data["mcpServers"]["anja_hub_runtime"] = {
+        "command": sys.executable,
+        "args": [str(HUB_RUNTIME_SCRIPT)],
+        "env": {
+            "ANJA_SCOPE": "hub",
+            "ANJA_ROOT": str(hub_root),
+            "ANJA_HUB": str(hub_root),
+            "ANJA_TOOL_GROUPS": HUB_RUNTIME_GROUPS,
         },
     }
     mcp_path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

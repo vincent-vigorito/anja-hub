@@ -10,7 +10,8 @@
   "workspace_name": "{WS}",
   "workspace_lead": true,
   "mcp_servers": [
-    "anja_agents",
+    "anja_hub_runtime",
+    "anja_memory",
     "anja_marketing"
   ],
   "allowed_tools": [

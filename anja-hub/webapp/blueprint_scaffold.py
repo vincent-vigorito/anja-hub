@@ -13,9 +13,9 @@ Modello MCP (opzione 1 — `.mcp.json` per-scope, GENERATI non scritti a mano):
 IMPORTANTE (verificato 2026-06-15): `claude_chat` risolve le DEFINIZIONI dei server
 SOLO dal `.mcp.json` del cwd (`setting_sources=[]`). Quindi ogni `.mcp.json` generato
 deve essere **self-contained**: include `anja_marketing` (brand) + `anja_memory`
-(riscopizzato sul brand: wiki/memory/skill) + i server hub reali dichiarati dall'agente
-(es. `anja_images` per il social). I server "logici" non presenti nell'hub `.mcp.json`
-(es. `anja_agents`) NON si possono includere così → da verificare live.
+(riscopizzato sul brand: wiki/memory/skill/roadmap) + `anja_hub_runtime` (planning:
+kanban/goals, più `agents` per lead e chat di workspace) + i server hub reali dichiarati
+dall'agente. Solo entry REALI: i nomi "logici" del vecchio scoper non montano nulla.
 
 Sono artefatti derivati: `resync_marketing_mcp()` li rigenera tutti dal template.
 Stdlib only. Vedi anja-marketing-workspace-design.md §4/§5.
@@ -149,41 +149,62 @@ def _marketing_entry(ws_slug: str, ws_root: Path, anjawiki: Path, hub_path: Path
     }
 
 
-# Set tool per workspace: memoria + skill + sessioni + PLANNING (kanban/goals/roadmap).
-# Il planning trio è essenziale: senza, l'agente non sa rispondere a "cosa c'è in
-# programma / quante card / che goal" e improvvisa HTTP all'API hub → 404.
-# (Il taglio precedente "memory,skills,sessions" era la token-economy basata sulla
-# metrica cumulativa sbagliata — vedi audit roadmap. kanban/goals/roadmap leggono
-# sqlite/markdown locali, costo trascurabile.)
-MEMORY_GROUPS_LEAN = "memory,skills,sessions,kanban,goals,roadmap"
+# F-AnjadevCoreSplit (2026-08-19): DUE server per workspace.
+# - anja_memory (plugin anjadev, CLI puro): memoria + skill + sessioni + roadmap.
+# - anja_hub_runtime (anja-hub/scripts/mcp_hub_runtime.py): il PLANNING (kanban/goals)
+#   e, per chi orchestra, la delega (agents). Il planning è essenziale: senza, l'agente
+#   non sa rispondere a "cosa c'è in programma / quante card / che goal" e improvvisa
+#   HTTP all'API hub → 404. Stessi nomi tool di prima (kanban.*, goal.*, agent.*).
+MEMORY_GROUPS_LEAN = "memory,skills,sessions,roadmap"
+HUB_RUNTIME_SERVER_NAME = "anja_hub_runtime"
+HUB_RUNTIME_SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "mcp_hub_runtime.py"
+RUNTIME_GROUPS_SPECIALIST = "kanban,goals"          # gli specialisti non delegano
+RUNTIME_GROUPS_LEAD = "kanban,goals,agents"         # lead / chat di workspace: orchestrano
 
 
 def _memory_entry(hub_memory: dict, ws_root: Path, hub_path: Path) -> dict:
-    """Copia la def hub di anja_memory, riscopizzata sul brand + tool group sfoltiti."""
+    """Copia la def hub di anja_memory, riscopizzata sul brand + tool group core."""
     e = json.loads(json.dumps(hub_memory))  # deep copy
     env = e.setdefault("env", {})
     env["ANJA_ROOT"] = str(ws_root)
     env["ANJA_SCOPE"] = "project"
-    # ANJA_HUB: i tool hub-level scoped (kanban/goals/roadmap → <hub>/data/*.db) lo usano
-    # per risolvere l'hub root in scope=project; senza → "hub root not determinable".
+    # ANJA_HUB: user.read/update in scope=project risolvono il profilo dall'hub.
     env["ANJA_HUB"] = str(hub_path)
-    # ANJA_HUB_WEBAPP: il server MCP (processo separato) importa kanban_io/goals dalla
-    # webapp; la convention <hub>/../anja-hub/webapp non matcha sempre → puntiamo al dir
-    # reale (blueprint_scaffold.py vive nella webapp). Senza → "modulo kanban non disponibile".
-    env["ANJA_HUB_WEBAPP"] = str(Path(__file__).resolve().parent)
+    env.pop("ANJA_HUB_WEBAPP", None)   # pre-split: anjadev non importa più la webapp
     env["ANJA_TOOL_GROUPS"] = MEMORY_GROUPS_LEAN
     return e
 
 
+def _hub_runtime_entry(hub_memory: Optional[dict], ws_slug: str, ws_root: Path, hub_path: Path,
+                       runtime_groups: str) -> dict:
+    """Definizione di anja_hub_runtime scopizzata sul workspace. Stesso interprete di
+    anja_memory (se c'è); ANJA_WORKSPACE_SCOPE = default dei goal senza `scope`."""
+    command = (hub_memory or {}).get("command") or sys.executable
+    return {
+        "command": command,
+        "args": [str(HUB_RUNTIME_SCRIPT)],
+        "env": {
+            "ANJA_SCOPE": "project",
+            "ANJA_ROOT": str(ws_root),
+            "ANJA_HUB": str(hub_path),
+            "ANJA_WORKSPACE_SCOPE": f"workspace:{ws_slug}",
+            "ANJA_TOOL_GROUPS": runtime_groups,
+        },
+    }
+
+
 def _build_mcp_servers(ws_slug: str, ws_root: Path, anjawiki: Path, hub_path: Path,
-                       groups: str, extra_servers: tuple = ()) -> dict:
-    """Set self-contained: anja_marketing + anja_memory + server hub extra dichiarati."""
+                       groups: str, extra_servers: tuple = (),
+                       runtime_groups: str = RUNTIME_GROUPS_SPECIALIST) -> dict:
+    """Set self-contained: anja_marketing + anja_memory + anja_hub_runtime + server hub extra."""
     hub = _hub_servers(hub_path)
     servers: dict = {MARKETING_SERVER_NAME: _marketing_entry(ws_slug, ws_root, anjawiki, hub_path, groups)}
     if "anja_memory" in hub:
         servers["anja_memory"] = _memory_entry(hub["anja_memory"], ws_root, hub_path)
+    servers[HUB_RUNTIME_SERVER_NAME] = _hub_runtime_entry(hub.get("anja_memory"), ws_slug, ws_root,
+                                                          hub_path, runtime_groups)
     for name in extra_servers:
-        if name in (MARKETING_SERVER_NAME, "anja_memory"):
+        if name in (MARKETING_SERVER_NAME, "anja_memory", HUB_RUNTIME_SERVER_NAME):
             continue
         if name in hub:  # solo server hub REALI (non i nomi logici)
             servers[name] = json.loads(json.dumps(hub[name]))
@@ -191,8 +212,10 @@ def _build_mcp_servers(ws_slug: str, ws_root: Path, anjawiki: Path, hub_path: Pa
 
 
 def _write_mcp_json(target_dir: Path, ws_slug: str, ws_root: Path, anjawiki: Path,
-                    hub_path: Path, groups: str, extra_servers: tuple = ()) -> None:
-    cfg = {"mcpServers": _build_mcp_servers(ws_slug, ws_root, anjawiki, hub_path, groups, extra_servers)}
+                    hub_path: Path, groups: str, extra_servers: tuple = (),
+                    runtime_groups: str = RUNTIME_GROUPS_SPECIALIST) -> None:
+    cfg = {"mcpServers": _build_mcp_servers(ws_slug, ws_root, anjawiki, hub_path, groups,
+                                            extra_servers, runtime_groups)}
     _write(target_dir / ".mcp.json", json.dumps(cfg, indent=2, ensure_ascii=False) + "\n")
 
 
@@ -488,7 +511,8 @@ def scaffold_from_blueprint(
         cfg = _apply_agent_template(adir, tmpl, mapping, is_lead=is_lead, backend=backend)
         role_groups = _groups_for_agent(cfg.get("allowed_tools", []), full_groups)
         extra = tuple(cfg.get("mcp_servers", []))
-        _write_mcp_json(adir, ws_slug, ws_root, anjawiki, hub_path, role_groups, extra)
+        _write_mcp_json(adir, ws_slug, ws_root, anjawiki, hub_path, role_groups, extra,
+                        RUNTIME_GROUPS_LEAD if is_lead else RUNTIME_GROUPS_SPECIALIST)
         created_agents.append(adir.name)
 
     # 3) vault schema → .secrets.env.example
@@ -502,7 +526,8 @@ def scaffold_from_blueprint(
     content = _scaffold_content(bp_dir, ws_root, mapping, ecommerce)
 
     # 4) <ws_root>/.mcp.json (chat scope=project: lead/workspace, tutti i group del backend)
-    _write_mcp_json(ws_root, ws_slug, ws_root, anjawiki, hub_path, full_groups)
+    _write_mcp_json(ws_root, ws_slug, ws_root, anjawiki, hub_path, full_groups,
+                    runtime_groups=RUNTIME_GROUPS_LEAD)
 
     # 5) meta.yaml + registry
     _augment_meta(anjawiki / "meta.yaml", blueprint_name, backend, ecommerce)
@@ -544,7 +569,8 @@ def resync_marketing_mcp(hub_path: Path) -> dict:
             continue
         ws_slug = p["name"]
         full_groups = "analytics,social" if p.get("backend") == "swerpi" else "cms,analytics,social"
-        _write_mcp_json(ws_root, ws_slug, ws_root, anjawiki, hub_path, full_groups)
+        _write_mcp_json(ws_root, ws_slug, ws_root, anjawiki, hub_path, full_groups,
+                        runtime_groups=RUNTIME_GROUPS_LEAD)
         agents_dir = anjawiki / "agents"
         if agents_dir.is_dir():
             for adir in sorted(agents_dir.iterdir()):
@@ -557,7 +583,8 @@ def resync_marketing_mcp(hub_path: Path) -> dict:
                     continue
                 role_groups = _groups_for_agent(cfg.get("allowed_tools", []), full_groups)
                 extra = tuple(cfg.get("mcp_servers", []))
-                _write_mcp_json(adir, ws_slug, ws_root, anjawiki, hub_path, role_groups, extra)
+                _write_mcp_json(adir, ws_slug, ws_root, anjawiki, hub_path, role_groups, extra,
+                                RUNTIME_GROUPS_LEAD if cfg.get("workspace_lead") else RUNTIME_GROUPS_SPECIALIST)
         updated.append(ws_slug)
     return {"ok": True, "updated_workspaces": updated, "count": len(updated)}
 

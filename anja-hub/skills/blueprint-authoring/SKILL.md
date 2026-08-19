@@ -83,7 +83,7 @@ built-in del repo e compaiono subito nel Marketplace con badge `hub`.
   "default_provider": "claude", "default_model": "sonnet", "default_effort": "off",
   "workspace_name": "{WS}",
   "workspace_lead": true,              // solo sul lead
-  "mcp_servers": ["anja_agents"],      // server hub EXTRA da montare (oltre marketing+memory)
+  "mcp_servers": ["anja_office"],      // server hub EXTRA da montare (oltre marketing+memory+hub_runtime)
   "allowed_tools": ["mcp__anja_marketing__gsc_query", "Bash"],
   "skill_modules": ["wordpress"],      // moduli della shared_skill che carica
   "auto_route": ["seo", "posizionamento"]  // keyword per il routing @mention

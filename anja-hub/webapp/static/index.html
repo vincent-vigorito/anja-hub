@@ -6518,6 +6518,7 @@ No research yet — launch the first one above, or ask for it in chat.
                   <option value="groq">Groq</option>
                   <option value="ollama" :disabled="!ollamaState.enabled">Ollama (local)</option>
                   <option value="openai_oauth" :disabled="!openaiOauthState.anja_enabled">ChatGPT subscription</option>
+                  <option value="grok_cli" :disabled="!grokOauthState.session_active">Grok Build subscription</option>
                 </select>
               </div>
               <div style="flex: 1; min-width: 220px;">
@@ -6638,7 +6639,7 @@ No research yet — launch the first one above, or ask for it in chat.
               <i data-lucide="zap" class="icon icon--sm"></i> Grok Build — SuperGrok subscription
             </h2>
             <p class="text-muted" style="margin: 0 0 var(--s-3) 0; font-size: var(--t-sm);">
-              Uses your Grok Build / SuperGrok sign-in (<code>grok login</code>) through the official <code>grok</code> CLI on the host: the CLI runs the agent (native tools + the MCP servers of the workspace), anja streams it. Not the xAI API key — that stays the <code>xai</code> provider. Available in <strong>workspace</strong> chats; hub chat stays on Claude.
+              Uses your Grok Build / SuperGrok sign-in (<code>grok login</code>) through the official <code>grok</code> CLI on the host: the CLI runs the agent (native tools + the MCP servers of the workspace), anja streams it. Not the xAI API key — that stays the <code>xai</code> provider. In <strong>workspace</strong> chats the agent is complete; on the <strong>hub</strong> it runs restricted (read/grep/list + MCP, no shell, no file writes, secret files denied — <code>ANJA_GROK_CLI_HUB=off|restricted|full</code>).
             </p>
 
             <div x-show="!grokOauthState.session_active" style="padding: var(--s-3); background: var(--bg-2); border-radius: var(--r-1); font-size: var(--t-sm);">
@@ -6693,7 +6694,7 @@ No research yet — launch the first one above, or ask for it in chat.
               </div>
               <div class="text-muted" style="font-size: var(--t-sm);">
                 Models on the seat: <span x-text="(grokOauthState.models || []).map(m => m.id).join(', ') || '—'"></span>.
-                Pick <strong>Grok Build</strong> in the chat model picker of a workspace (effort low/medium/high supported). Telegram: <code>/provider</code> → Grok Build on a workspace thread.
+                Pick <strong>Grok Build</strong> in the chat model picker (effort low/medium/high supported). Telegram: <code>/provider</code> → Grok Build.
               </div>
             </div>
 
@@ -6702,7 +6703,7 @@ No research yet — launch the first one above, or ask for it in chat.
               <div style="padding: var(--s-2) 0; line-height: 1.6;">
                 <p style="margin: 0 0 var(--s-1) 0;"><strong>The CLI is the agent</strong>: each turn anja runs <code>grok -p</code> headless in the workspace folder (always-approve, folder trusted), passes the composed context as rules and streams the reply. Grok resumes its own session on the next turn.</p>
                 <p style="margin: 0 0 var(--s-1) 0;"><strong>Seat, not API</strong>: credentials live in <code>~/.grok/auth.json</code> of the host user and are refreshed by the CLI. One host = one seat, shared by all hub members.</p>
-                <p style="margin: 0;"><strong>Blast radius</strong>: the agent runs autonomously inside the workspace folder (same contract as headless Claude). That is why hub-level chat is not offered.</p>
+                <p style="margin: 0;"><strong>Blast radius</strong>: in a workspace the agent runs autonomously inside that folder (same contract as headless Claude). On the hub root it is restricted by default: shell, edits/writes and subagents are removed from its toolset and secret files (<code>*.env</code>, tokens, backup key) are denied everywhere.</p>
               </div>
             </details>
           </div>

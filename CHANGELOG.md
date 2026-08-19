@@ -20,10 +20,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
   **device-code sign-in** that works on a headless host, re-sign-in and sign-out;
   the model picker gets a "Grok Build (subscription)" group (models from
   `~/.grok/models_cache.json`, effort low/medium/high); Telegram `/provider`
-  offers it. Available on **workspace/agent** scopes; hub-level chat is refused
-  with an explicit message (the headless agent runs always-approve inside the
-  folder, the hub root is off limits). Child env is an allowlist (`ANJA_JOURNAL=0`,
-  Claude Code compat scanning off, no hub secrets). Distinct from `xai` (API key,
+  offers it. In workspace/agent scopes the agent is complete; on the **hub root**
+  it runs **restricted** by default (`ANJA_GROK_CLI_HUB=restricted|full|off`): shell,
+  edits/writes, subagents/workflows removed from the toolset, and secret files
+  (`**/*.env`, tokens, `backup.key`, connectors) denied via `--deny` in every scope.
+  Child env is an allowlist (`ANJA_JOURNAL=0`, Claude Code compat scanning off, no
+  hub secrets). Distinct from `xai` (API key,
   unchanged). New modules `webapp/grok_oauth.py`, `webapp/grok_cli.py`, endpoints
   `/api/grok-oauth/*`. Requires grok CLI ≥ 1.0.5 and anjadev ≥ 0.24.
 - **MCP tool names are flat on the wire** (`kanban_show`, `office_to_pdf`):

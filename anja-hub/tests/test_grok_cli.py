@@ -123,6 +123,11 @@ def main():
     check("flag essenziali", cmd[:3] == ["/x/grok", "--prompt-file", "/tmp/p.md"] and "--output-format" in cmd
           and cmd[cmd.index("--output-format") + 1] == "streaming-json" and "--always-approve" in cmd
           and "--trust" in cmd and "--no-auto-update" in cmd, str(cmd))
+    denies = [cmd[i + 1] for i, a in enumerate(cmd) if a == "--deny"]
+    check("deny sui file segreti sempre presenti (*.env, token, backup.key)",
+          "Read(**/*.env)" in denies and "Read(**/backup.key)" in denies and any("token" in d for d in denies), str(denies))
+    cmd_nd = grok_cli.build_command("/x/grok", prompt_file="/tmp/p.md", cwd=Path("/ws"), model="grok-4.6", deny_rules=[])
+    check("deny_rules=[] → nessun --deny", "--deny" not in cmd_nd)
     check("cwd/model/effort/resume/rules/disallowed/max-turns",
           cmd[cmd.index("--cwd") + 1] == "/ws" and cmd[cmd.index("-m") + 1] == "grok-4.6"
           and cmd[cmd.index("--effort") + 1] == "low" and cmd[cmd.index("-r") + 1] == "abc"
@@ -170,8 +175,8 @@ def main():
         evs = asyncio.run(collect(cwd=ws))
         check("seat non loggato → errore 'Settings → Providers'", evs and "not signed in" in evs[0]["message"], str(evs))
         grok_oauth.has_grok_session = lambda: True
-        evs = asyncio.run(collect(cwd=hub))
-        check("scope hub → rifiutato senza spawn", evs == [{"type": "error", "message": grok_cli.HUB_SCOPE_MESSAGE}], str(evs))
+        evs = asyncio.run(collect(cwd=hub, hub_policy="off"))
+        check("scope hub con policy off → rifiutato senza spawn", evs == [{"type": "error", "message": grok_cli.HUB_SCOPE_MESSAGE}], str(evs))
 
         print("spawn con binario finto: NDJSON su stdout + retry su resume rifiutato")
         fake = tmp / "fakegrok.py"
@@ -208,6 +213,21 @@ def main():
         evs = asyncio.run(collect(cwd=ws, resume_session_id="good-id"))
         calls = [json.loads(l) for l in log.read_text().splitlines()]
         check("resume valido → un solo spawn con -r", len(calls) == 1 and calls[0][calls[0].index("-r") + 1] == "good-id", str(calls))
+        check("workspace: nessun --disallowed-tools (agente completo)", "--disallowed-tools" not in calls[0], str(calls[0]))
+
+        print("scope hub: restricted (default) = spawn con tool disabilitati; full = come workspace")
+        log.write_text("")
+        evs = asyncio.run(collect(cwd=hub))
+        calls = [json.loads(l) for l in log.read_text().splitlines()]
+        dis = calls[0][calls[0].index("--disallowed-tools") + 1] if "--disallowed-tools" in calls[0] else ""
+        check("hub restricted: turno eseguito", [e["type"] for e in evs] == ["text", "session_id", "usage", "done"], str(evs)[:200])
+        check("hub restricted: shell/write/subagent disabilitati",
+              all(t in dis for t in ("run_terminal_cmd", "run_terminal_command", "search_replace", "write", "spawn_subagent", "Agent")), dis)
+        log.write_text("")
+        evs = asyncio.run(collect(cwd=hub, hub_policy="full", disallowed_tools=["web_search"]))
+        calls = [json.loads(l) for l in log.read_text().splitlines()]
+        dis = calls[0][calls[0].index("--disallowed-tools") + 1]
+        check("hub full: solo i disallowed passati dal chiamante", dis == "web_search", dis)
         check("prompt file rimosso dopo il turno", not list(Path(tempfile.gettempdir()).glob("anja-grok-*.md")) or True)
     finally:
         grok_oauth.grok_binary, grok_oauth.has_grok_session = orig_bin, orig_sess

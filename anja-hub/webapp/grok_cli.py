@@ -37,8 +37,30 @@ STDOUT_LINE_LIMIT = 64 * 1024 * 1024
 RULES_ARGV_MAX = 100_000
 EFFORTS = ("none", "minimal", "low", "medium", "high", "xhigh", "max")
 
-HUB_SCOPE_MESSAGE = ("Grok Build is for workspaces (agent harness). "
+HUB_SCOPE_MESSAGE = ("Grok Build is disabled on the hub scope (ANJA_GROK_CLI_HUB=off). "
                      "Use Claude for hub chat, or open a workspace chat.")
+# Hub scope policy: "restricted" (default) = the agent runs on the hub root with
+# read-only natives + MCP (no shell, no file writes, no subagents); "full" = same
+# contract as workspaces; "off" = refuse (design v1).
+HUB_POLICY = os.environ.get("ANJA_GROK_CLI_HUB", "restricted").strip().lower() or "restricted"
+# denylist ids: the shell is `run_terminal_cmd` here (the stream names it
+# `run_terminal_command` — both listed); no edits/writes, no subagents/workflows on
+# the hub root. (Do not remove scheduler_*/monitor: the session refuses to start.)
+HUB_DISALLOWED_TOOLS = ("run_terminal_cmd", "run_terminal_command", "search_replace", "write",
+                        "spawn_subagent", "Agent", "workflow")
+# Secret-bearing files are off limits everywhere (Read rules also cover grep and
+# `cat`-style shell reads): hub .secrets.env / credentials.env, workspace vaults,
+# Google/Codex tokens, backup key.
+SECRET_DENY_RULES = (
+    "Read(**/*.env)",
+    "Read(**/.env*)",
+    "Read(**/backup.key)",
+    "Read(**/config/connectors/**)",
+    "Read(**/config/openai_oauth.json)",
+    "Read(**/*token*.json)",
+    "Read(**/*credentials*.json)",
+    "Read(**/*oauth-client*.json)",
+)
 NOT_SIGNED_IN_MESSAGE = "Grok Build not signed in — Settings → Providers → Grok Build."
 NO_CLI_MESSAGE = ("Grok Build CLI not installed on the host: "
                   "curl -fsSL https://x.ai/cli/install.sh | bash")
@@ -110,7 +132,7 @@ def build_rules(system_prompt: str, tool_hints: Optional[Iterable[str]] = None) 
 def build_command(binary: str, *, prompt_file: str, cwd: Path, model: str,
                   effort: Optional[str] = None, resume_session_id: Optional[str] = None,
                   rules: str = "", disallowed_tools: Optional[Iterable[str]] = None,
-                  max_turns: Optional[int] = None) -> list[str]:
+                  max_turns: Optional[int] = None, deny_rules: Optional[Iterable[str]] = None) -> list[str]:
     cmd = [binary, "--prompt-file", prompt_file,
            "--output-format", "streaming-json",
            "--cwd", str(cwd),
@@ -129,6 +151,9 @@ def build_command(binary: str, *, prompt_file: str, cwd: Path, model: str,
         cmd += ["--disallowed-tools", ",".join(dis)]
     if max_turns:
         cmd += ["--max-turns", str(int(max_turns))]
+    for rule in (deny_rules if deny_rules is not None else SECRET_DENY_RULES):
+        if rule:
+            cmd += ["--deny", rule]
     return cmd
 
 
@@ -452,7 +477,7 @@ async def stream_turn(
     disallowed_tools: Optional[Iterable[str]] = None,
     timeout_sec: Optional[int] = None,
     max_turns: Optional[int] = None,
-    allow_hub_scope: bool = False,
+    hub_policy: Optional[str] = None,
 ) -> AsyncIterator[dict]:
     """Async generator of anja events for one Grok Build turn."""
     binary = grok_oauth.grok_binary()
@@ -463,10 +488,15 @@ async def stream_turn(
         yield {"type": "error", "message": NOT_SIGNED_IN_MESSAGE}
         return
     cwd = Path(cwd)
-    if is_hub_root(cwd) and not allow_hub_scope:
-        # v1 decision (design §8): no shell/write agent loose on the hub root
-        yield {"type": "error", "message": HUB_SCOPE_MESSAGE}
-        return
+    disallowed = list(disallowed_tools or [])
+    if is_hub_root(cwd):
+        policy = (hub_policy or HUB_POLICY)
+        if policy == "off":
+            yield {"type": "error", "message": HUB_SCOPE_MESSAGE}
+            return
+        if policy != "full":
+            # restricted: no shell/writes/subagents on the hub root; MCP + read natives stay
+            disallowed = list(dict.fromkeys(disallowed + list(HUB_DISALLOWED_TOOLS)))
 
     rules = build_rules(system_prompt, tool_hints)
     overflow = ""
@@ -486,7 +516,7 @@ async def stream_turn(
         for idx, rid in enumerate(attempts):
             cmd = build_command(binary, prompt_file=prompt_path, cwd=cwd, model=model, effort=effort,
                                 resume_session_id=rid, rules=rules,
-                                disallowed_tools=disallowed_tools, max_turns=max_turns)
+                                disallowed_tools=disallowed, max_turns=max_turns)
             st = StreamState(model or DEFAULT_MODEL)
             st.returncode = None
             stderr_sink: list[bytes] = []

@@ -185,6 +185,8 @@ def main():
             "pf = args[args.index('--prompt-file') + 1]\n"
             "prompt = open(pf).read()\n"
             "rules = args[args.index('--rules') + 1] if '--rules' in args else ''\n"
+            "# una riga da 300 KiB (tool output intero): oltre il default 64 KiB di readline()\n"
+            "print(json.dumps({'type': 'tool_call_update', 'toolCallId': 'c1', 'status': 'completed', 'rawOutput': {'content': 'x' * 300000}}))\n"
             "print(json.dumps({'type': 'text', 'data': 'echo:' + prompt + '|rules:' + rules[:20]}))\n"
             "print(json.dumps({'type': 'end', 'stopReason': 'end_turn', 'sessionId': 'fresh-1', 'usage': {'input_tokens': 1, 'output_tokens': 1}, 'num_turns': 1}))\n"
         )
@@ -196,7 +198,7 @@ def main():
         grok_cli.ENV_ALLOWLIST = tuple(grok_cli.ENV_ALLOWLIST) + ("FAKE_LOG",)
         evs = asyncio.run(collect(cwd=ws, system_prompt="SYSTEM-PROMPT", resume_session_id="stale"))
         types = [e["type"] for e in evs]
-        check("resume rifiutato → notice + turno fresh (text, session_id, usage, done)",
+        check("resume rifiutato → notice + turno fresh (text, session_id, usage, done) — con una riga da 300 KiB nello stream",
               types == ["notice", "text", "session_id", "usage", "done"], str(types))
         check("testo del turno fresh con rules", evs[1]["content"].startswith("echo:hi|rules:SYSTEM-PROMPT"), str(evs[1]))
         calls = [json.loads(l) for l in log.read_text().splitlines()]

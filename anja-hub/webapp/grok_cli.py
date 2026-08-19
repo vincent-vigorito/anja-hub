@@ -28,6 +28,10 @@ import grok_oauth
 DEFAULT_MODEL = "grok-4.6"
 DEFAULT_TIMEOUT_SEC = int(os.environ.get("ANJA_GROK_CLI_TIMEOUT", "900"))
 DEFAULT_MAX_TURNS = int(os.environ.get("ANJA_GROK_CLI_MAX_TURNS", "60"))
+# One NDJSON line can carry a whole tool output (read_file, kanban_show…): the
+# asyncio default of 64 KiB per line raised "Separator is found, but chunk is
+# longer than limit" on the first real workspace turn.
+STDOUT_LINE_LIMIT = 64 * 1024 * 1024
 # `--rules` rides argv: Linux caps a single argument at 128 KiB. Above this the
 # composer block goes into the prompt file as a prefix instead.
 RULES_ARGV_MAX = 100_000
@@ -361,7 +365,7 @@ async def _run_process(cmd: list[str], *, cwd: Path, st: StreamState, timeout_se
             *cmd, cwd=str(cwd), env=build_child_env(),
             stdin=asyncio.subprocess.DEVNULL,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
-            start_new_session=True,
+            start_new_session=True, limit=STDOUT_LINE_LIMIT,
         )
     except Exception as e:
         st.saw_error = True

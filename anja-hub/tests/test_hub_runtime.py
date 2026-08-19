@@ -120,8 +120,9 @@ def main():
     check("28 tool", len(names) == 28, str(len(names)))
     check("6 gruppi", set(rt.TOOL_GROUPS) == {"agents", "tasks", "workspace", "kanban", "goals", "pp"})
     check("nessun tool core (wiki/memory/skill/roadmap/code)",
-          not any(n.split(".")[0] in ("wiki", "memory", "skill", "roadmap", "code", "sessions", "soul", "user", "graph") for n in names))
-    check("handler per ogni tool", all(n in rt.TOOL_HANDLERS for n in names))
+          not any(n.split("_")[0] in ("wiki", "memory", "skill", "roadmap", "code", "sessions", "soul", "user", "graph") for n in names))
+    check("nomi flat sul wire (niente punti)", not any("." in n for n in names), str(names[:5]))
+    check("handler per ogni tool (via nome canonico)", all(rt._canonical_name(n) in rt.TOOL_HANDLERS for n in names))
     check("webapp per posizione", rt.WEBAPP_DIR == ROOT / "webapp" and (rt.WEBAPP_DIR / "kanban_io.py").is_file())
     check("initialize → anja_hub_runtime",
           rt.handle_request({"jsonrpc": "2.0", "id": 0, "method": "initialize", "params": {}})["result"]["serverInfo"]["name"] == "anja_hub_runtime")
@@ -129,7 +130,9 @@ def main():
     print("filtro gruppi + gruppo ignoto")
     rt2 = load_runtime(ANJA_SCOPE="hub", ANJA_ROOT=str(hub), ANJA_TOOL_GROUPS="kanban,goals,nope")
     n2 = [t["name"] for t in rt2.handle_request({"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}})["result"]["tools"]]
-    check("kanban+goals = 15", len(n2) == 15 and all(n.startswith(("kanban.", "goal.")) for n in n2), str(n2))
+    check("kanban+goals = 15", len(n2) == 15 and all(n.startswith(("kanban_", "goal_")) for n in n2), str(n2))
+    r = rt2.handle_request({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "kanban_search", "arguments": {"query": "x"}}})
+    check("tools/call accetta il nome flat", "result" in r and not r["result"].get("isError"), str(r)[:160])
     r = rt2.handle_request({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "agent.list", "arguments": {}}})
     check("tool fuori gruppo → -32601", r.get("error", {}).get("code") == -32601)
 

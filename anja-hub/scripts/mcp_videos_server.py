@@ -657,6 +657,20 @@ TOOL_HANDLERS = {
 }
 
 
+# Nomi sul wire: canonici puntati (`video.generate`) internamente, flat (`video_generate`) in tools/list —
+# Grok Build e i client OpenAI-style scartano i nomi col punto, Claude Code li mostra
+# già flat. tools/call accetta entrambe le forme.
+def _wire_name(name: str) -> str:
+    return name.replace(".", "_")
+
+
+def _canonical_name(name: str) -> str:
+    return _CANONICAL_BY_WIRE.get(name, name)
+
+
+_CANONICAL_BY_WIRE = {_wire_name(n): n for n in TOOL_HANDLERS}
+
+
 def handle_request(req: dict) -> dict:
     method = req.get("method")
     req_id = req.get("id")
@@ -673,10 +687,10 @@ def handle_request(req: dict) -> dict:
     if method == "notifications/initialized":
         return None  # notification, no response
     if method == "tools/list":
-        return {"jsonrpc": "2.0", "id": req_id, "result": {"tools": TOOLS}}
+        return {"jsonrpc": "2.0", "id": req_id, "result": {"tools": [{**t, "name": _wire_name(t["name"])} for t in TOOLS]}}
     if method == "tools/call":
         params = req.get("params") or {}
-        name = params.get("name")
+        name = _canonical_name(params.get("name") or "")
         args = params.get("arguments") or {}
         handler = TOOL_HANDLERS.get(name)
         if not handler:

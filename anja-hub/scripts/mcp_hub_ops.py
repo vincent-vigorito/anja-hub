@@ -1502,6 +1502,20 @@ TOOL_HANDLERS = {
 # JSON-RPC dispatch (MCP)
 # =================================================================
 
+# Nomi sul wire: canonici puntati (`routine.list`) internamente, flat (`routine_list`) in tools/list —
+# Grok Build e i client OpenAI-style scartano i nomi col punto, Claude Code li mostra
+# già flat. tools/call accetta entrambe le forme.
+def _wire_name(name: str) -> str:
+    return name.replace(".", "_")
+
+
+def _canonical_name(name: str) -> str:
+    return _CANONICAL_BY_WIRE.get(name, name)
+
+
+_CANONICAL_BY_WIRE = {_wire_name(n): n for n in TOOL_HANDLERS}
+
+
 def handle_request(req: dict) -> Optional[dict]:
     method = req.get("method")
     rid = req.get("id")
@@ -1513,10 +1527,10 @@ def handle_request(req: dict) -> Optional[dict]:
     if method == "notifications/initialized":
         return None
     if method == "tools/list":
-        return {"jsonrpc": "2.0", "id": rid, "result": {"tools": TOOLS}}
+        return {"jsonrpc": "2.0", "id": rid, "result": {"tools": [{**t, "name": _wire_name(t["name"])} for t in TOOLS]}}
     if method == "tools/call":
         params = req.get("params") or {}
-        name = params.get("name")
+        name = _canonical_name(params.get("name") or "")
         args = params.get("arguments") or {}
         handler = TOOL_HANDLERS.get(name)
         if not handler:

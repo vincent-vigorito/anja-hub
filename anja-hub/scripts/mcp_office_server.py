@@ -644,6 +644,20 @@ TOOL_HANDLERS = {
 }
 
 
+# Nomi sul wire: canonici puntati (`office.to_pdf`) internamente, flat (`office_to_pdf`) in tools/list —
+# Grok Build e i client OpenAI-style scartano i nomi col punto, Claude Code li mostra
+# già flat. tools/call accetta entrambe le forme.
+def _wire_name(name: str) -> str:
+    return name.replace(".", "_")
+
+
+def _canonical_name(name: str) -> str:
+    return _CANONICAL_BY_WIRE.get(name, name)
+
+
+_CANONICAL_BY_WIRE = {_wire_name(n): n for n in TOOL_HANDLERS}
+
+
 def handle_request(req: dict):
     method = req.get("method")
     params = req.get("params") or {}
@@ -657,9 +671,9 @@ def handle_request(req: dict):
     if method == "notifications/initialized":
         return None
     if method == "tools/list":
-        return _ok(req_id, {"tools": TOOLS})
+        return _ok(req_id, {"tools": [{**t, "name": _wire_name(t["name"])} for t in TOOLS]})
     if method == "tools/call":
-        name = params.get("name")
+        name = _canonical_name(params.get("name") or "")
         args = params.get("arguments") or {}
         handler = TOOL_HANDLERS.get(name)
         if not handler:

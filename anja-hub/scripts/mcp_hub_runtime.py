@@ -1886,6 +1886,20 @@ TOOL_HANDLERS = {
 # JSON-RPC 2.0 dispatcher
 # ============================================================
 
+# Nomi sul wire: canonici puntati (`kanban.show`) internamente, flat (`kanban_show`) in tools/list —
+# Grok Build e i client OpenAI-style scartano i nomi col punto, Claude Code li mostra
+# già flat. tools/call accetta entrambe le forme.
+def _wire_name(name: str) -> str:
+    return name.replace(".", "_")
+
+
+def _canonical_name(name: str) -> str:
+    return _CANONICAL_BY_WIRE.get(name, name)
+
+
+_CANONICAL_BY_WIRE = {_wire_name(n): n for n in TOOL_HANDLERS}
+
+
 def handle_request(req: dict) -> Optional[dict]:
     method = req.get("method")
     params = req.get("params") or {}
@@ -1903,10 +1917,10 @@ def handle_request(req: dict) -> Optional[dict]:
 
     if method == "tools/list":
         allowed = _allowed_tool_names()
-        return _ok(req_id, {"tools": [t for t in TOOLS if t["name"] in allowed]})
+        return _ok(req_id, {"tools": [{**t, "name": _wire_name(t["name"])} for t in TOOLS if t["name"] in allowed]})
 
     if method == "tools/call":
-        name = params.get("name")
+        name = _canonical_name(params.get("name") or "")
         args = params.get("arguments") or {}
         if name not in _allowed_tool_names():
             return _err(req_id, -32601, f"tool '{name}' not available in this server instance")

@@ -7497,6 +7497,12 @@ async def ws_chat(websocket: WebSocket):
                                     except Exception as _ge:
                                         print(f"[asp-git] finalize error: {_ge}")
                                 _state.append(event)
+                                if event.get("type") == "usage":
+                                    # Registra qui, nel drainer: il reader WS poteva
+                                    # trovare lo stream già completed e saltare la
+                                    # usage (costo perso per i turni brevi, es. grok_cli).
+                                    cost_store.record_usage_event(HUB_PATH, event, feature="chat",
+                                                                  scope=_scope or "hub")
                                 if event.get("type") == "done":
                                     _saw_done = True
                                 if _state.tool_iter_count > _max_tool:
@@ -7562,7 +7568,6 @@ async def ws_chat(websocket: WebSocket):
                                 full_response += ev.get("content", "")
                             elif ev.get("type") == "usage":
                                 last_usage = state.last_usage
-                                cost_store.record_usage_event(HUB_PATH, ev, feature="chat")
                         except WebSocketDisconnect:
                             ws_alive = False
                             raise
@@ -8497,6 +8502,9 @@ async def api_provider_models(provider: str, refresh: int = 0):
         cfg = _load_ollama_config()
         _online, ml, _err = _ollama_fetch_tags(cfg["base_url"], timeout=3.0)
         models = [m["name"] for m in ml]
+    elif provider == "grok_cli":
+        from grok_oauth import grok_model_ids
+        models = grok_model_ids()
     else:
         raise HTTPException(404, f"unknown provider: {provider}")
 
@@ -9529,6 +9537,64 @@ async def api_claude_oauth_login_pending():
 
 
 # ============================================================
+# Grok Build (SuperGrok) seat via the official `grok` CLI (F-GrokBuild)
+# ============================================================
+
+@app.get("/api/grok-oauth/status")
+async def api_grok_oauth_status():
+    """Grok Build seat detection (CLI installed? signed in? models). Never the token."""
+    try:
+        import grok_oauth
+    except ImportError as e:
+        raise HTTPException(500, f"grok_oauth module missing: {e}")
+    return JSONResponse(await asyncio.to_thread(grok_oauth.grok_auth_summary))
+
+
+@app.post("/api/grok-oauth/login/start")
+async def api_grok_oauth_login_start(request: Request):
+    """Device-code login from the UI: runs `grok login --device-auth` on the host and
+    returns the URL + user code to confirm in any browser. Admin only."""
+    _require_admin(request)
+    import grok_oauth
+    res = await asyncio.to_thread(grok_oauth.login_start)
+    if not res.get("ok"):
+        raise HTTPException(502, res.get("error", "login start failed"))
+    return JSONResponse(res)
+
+
+@app.post("/api/grok-oauth/login/wait")
+async def api_grok_oauth_login_wait(request: Request):
+    """Long-poll (≤25s) for the pending device login. done=false → poll again."""
+    _require_admin(request)
+    import grok_oauth
+    return JSONResponse(await asyncio.to_thread(grok_oauth.login_wait, 25.0))
+
+
+@app.post("/api/grok-oauth/login/cancel")
+async def api_grok_oauth_login_cancel(request: Request):
+    _require_admin(request)
+    import grok_oauth
+    grok_oauth.login_cancel()
+    return JSONResponse({"ok": True})
+
+
+@app.get("/api/grok-oauth/login/pending")
+async def api_grok_oauth_login_pending():
+    import grok_oauth
+    return JSONResponse(grok_oauth.login_pending())
+
+
+@app.post("/api/grok-oauth/logout")
+async def api_grok_oauth_logout(request: Request):
+    _require_admin(request)
+    import grok_oauth
+    res = await asyncio.to_thread(grok_oauth.logout)
+    if not res.get("ok"):
+        raise HTTPException(500, res.get("error", "logout failed"))
+    return JSONResponse(res)
+
+
+# ============================================================
 # OpenAI ChatGPT subscription OAuth (Fase 7v)
 # ============================================================
 
@@ -9622,6 +9688,14 @@ async def api_onboarding_status():
         from openai_oauth import has_codex_auth
         if has_codex_auth():
             available.append("openai_oauth")
+    except Exception:
+        pass
+
+    # Grok Build seat (official grok CLI signed in)
+    try:
+        from grok_oauth import has_grok_session
+        if has_grok_session():
+            available.append("grok_cli")
     except Exception:
         pass
 
@@ -9747,6 +9821,7 @@ _PROVIDER_MODELS_SHORTLIST = {
     "claude": ["sonnet", "opus", "haiku"],
     "openai": ["gpt-5", "gpt-5-mini", "gpt-4.1", "o3", "o3-mini"],
     "openai_oauth": ["gpt-5.5"],  # Fase 7v — solo modello whitelisted da OpenAI per ChatGPT account
+    "grok_cli": ["grok-4.6", "grok-4.5"],  # F-GrokBuild — fallback; runtime legge ~/.grok/models_cache.json
     "xai": ["grok-4", "grok-4-fast", "grok-3"],
     "openrouter": ["anthropic/claude-sonnet-4-5", "openai/gpt-5", "x-ai/grok-4", "google/gemini-2.5-pro"],
     "gemini": ["gemini-3.7-flash", "gemini-3.5-flash", "gemini-3.1-pro-preview"],
@@ -9762,6 +9837,12 @@ def _get_provider_models_short(provider: str) -> list[str]:
     Per gli altri ritorna shortlist hardcoded.
     """
     p = provider.lower()
+    if p == "grok_cli":
+        try:
+            from grok_oauth import grok_model_ids
+            return grok_model_ids()
+        except Exception:
+            return list(_PROVIDER_MODELS_SHORTLIST["grok_cli"])
     if p == "ollama":
         # Runtime: leggi /api/tags di Ollama
         try:
@@ -11808,6 +11889,12 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             except Exception:
                 pass
             try:
+                from grok_oauth import has_grok_session
+                if has_grok_session():
+                    providers.insert(1 if "openai_oauth" not in providers else 2, "grok_cli")
+            except Exception:
+                pass
+            try:
                 ollama_cfg_path = HUB_PATH / "config" / "ollama.json"
                 if ollama_cfg_path.is_file():
                     ocfg = json.loads(ollama_cfg_path.read_text())
@@ -11819,6 +11906,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             labels = {
                 "claude": "Claude",
                 "openai_oauth": "ChatGPT sub",
+                "grok_cli": "Grok Build",
                 "openai": "OpenAI",
                 "xai": "xAI",
                 "openrouter": "OpenRouter",

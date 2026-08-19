@@ -18,7 +18,7 @@ from typing import Any, Optional
 
 REQUIRED_FIELDS = ("name", "scope", "schedule", "prompt")
 VALID_MODELS = ("haiku", "sonnet", "opus", "fast")
-VALID_PROVIDERS = ("claude", "anthropic", "openai", "openai_oauth", "openrouter", "xai", "")
+VALID_PROVIDERS = ("claude", "anthropic", "openai", "openai_oauth", "grok_cli", "openrouter", "xai", "")
 VALID_OUTPUT_TYPES = (
     "email", "google_chat", "slack", "telegram",
     "wiki_ingest", "wiki_page_hub", "file", "webhook",

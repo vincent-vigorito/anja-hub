@@ -927,6 +927,47 @@ async def stream_response(
                     return
             continue
 
+        # F-GrokBuild: provider=grok_cli → Grok Build seat via the official `grok` CLI
+        # (the CLI is the agent: native tools + MCP of the cwd; we only map the stream).
+        if att_provider == "grok_cli":
+            try:
+                import grok_cli
+            except ImportError:
+                yield {"type": "error", "message": "grok_cli module not available"}
+                return
+            try:
+                got_any_text = False
+                try:
+                    hints = await grok_cli.tool_hints_for(cwd, scoped_servers)
+                except Exception:
+                    hints = []
+                async for ev in grok_cli.stream_turn(
+                    user_prompt,
+                    cwd=cwd,
+                    system_prompt=system_prompt or "",
+                    model=attempt_model or grok_cli.DEFAULT_MODEL,
+                    effort=attempt_effort if attempt_effort in grok_cli.EFFORTS else None,
+                    resume_session_id=resume_session_id,
+                    tool_hints=hints,
+                ):
+                    if ev.get("type") == "error":
+                        last_error = ev.get("message", "grok_cli error")
+                        if attempt_idx == len(attempts) - 1:
+                            yield ev
+                            return
+                        break
+                    if ev.get("type") == "text":
+                        got_any_text = True
+                    yield ev
+                if got_any_text:
+                    return
+            except Exception as e:
+                last_error = f"{type(e).__name__}: {e}"
+                if attempt_idx == len(attempts) - 1:
+                    yield {"type": "error", "message": last_error}
+                    return
+            continue
+
         if not is_claude_provider(att_provider):
             # Multi-provider via LiteLLM (Fase 8a). MCP tool calling integrato.
             try:

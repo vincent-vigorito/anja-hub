@@ -451,6 +451,7 @@ def run_llm(
     """Wrapper multi-provider (Fase 7).
     Per provider claude/anthropic → claude-agent-sdk in-process.
     Per openai_oauth → ChatGPT subscription via Codex Responses API.
+    Per grok_cli → Grok Build seat via `grok -p` (workspace cwd).
     Per altri (openai/openrouter/xai/...) → spawn opencode CLI subprocess.
     """
     p = (provider or "claude").lower()
@@ -483,6 +484,21 @@ def run_llm(
             timeout_sec=timeout_sec,
             allowed_tools=mcp_patterns or None,
         )
+
+    if p == "grok_cli":
+        # F-GrokBuild: Grok Build seat via the official grok CLI (headless, workspace cwd).
+        try:
+            here = Path(__file__).resolve()
+            webapp_dir = here.parent.parent.parent / "anja-hub" / "webapp"
+            if not (webapp_dir / "grok_cli.py").is_file():
+                return {"text": "", "duration_sec": 0.0, "error": f"grok_cli not found at {webapp_dir}"}
+            if str(webapp_dir) not in sys.path:
+                sys.path.insert(0, str(webapp_dir))
+            import grok_cli as gc
+        except Exception as e:
+            return {"text": "", "duration_sec": 0.0, "error": f"grok_cli import failed: {e}"}
+        return gc.call_blocking(prompt, cwd=cwd, system_prompt=system_prompt, model=model,
+                                effort=effort, timeout_sec=timeout_sec)
 
     # Multi-provider via OpenCode (lazy import llm_router)
     try:

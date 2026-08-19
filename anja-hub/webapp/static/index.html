@@ -1630,7 +1630,7 @@
                   </template>
                 </div>
               </div>
-              <select x-model="selectedEffort" title="Thinking effort" x-show="selectedProvider === 'claude' || selectedProvider === 'openai_oauth'">
+              <select x-model="selectedEffort" title="Thinking effort" x-show="selectedProvider === 'claude' || selectedProvider === 'openai_oauth' || selectedProvider === 'grok_cli'">
                 <option value="">effort: off</option>
                 <option value="low">effort: low</option>
                 <option value="medium">effort: medium</option>
@@ -5869,6 +5869,7 @@ No research yet — launch the first one above, or ask for it in chat.
                       <option value="xai">xai</option>
                       <option value="ollama" :disabled="!ollamaState.enabled">ollama (local)</option>
                       <option value="openai_oauth" :disabled="!openaiOauthState.anja_enabled">chatgpt sub</option>
+                      <option value="grok_cli" :disabled="!grokOauthState.session_active">grok build (sub)</option>
                     </select>
                   </div>
                   <div class="wizard-field">
@@ -6325,6 +6326,7 @@ No research yet — launch the first one above, or ask for it in chat.
                   <option value="groq">Groq</option>
                   <option value="ollama" :disabled="!ollamaState.enabled">Ollama (local)</option>
                   <option value="openai_oauth" :disabled="!openaiOauthState.anja_enabled">ChatGPT subscription</option>
+                  <option value="grok_cli" :disabled="!grokOauthState.session_active">Grok Build subscription</option>
                 </select>
               </div>
               <div style="flex: 1; min-width: 220px;">
@@ -6626,6 +6628,81 @@ No research yet — launch the first one above, or ask for it in chat.
                 <p style="margin: 0 0 var(--s-1) 0;"><strong>Native auth</strong>: <code>claude-agent-sdk</code> detects subscription via the <code>claude</code> CLI installed on the system. anja does not manage Anthropic tokens directly.</p>
                 <p style="margin: 0 0 var(--s-1) 0;"><strong>Precedence</strong>: if <code>ANTHROPIC_API_KEY</code> is set in env/secrets, the SDK uses it instead of the subscription (billing API). To use subscription, leave the key empty.</p>
                 <p style="margin: 0;"><strong>Cost</strong>: with an active subscription, Claude calls in anja respect Pro/Max plan limits — no extra API billing.</p>
+              </div>
+            </details>
+          </div>
+
+          <!-- Grok Build (SuperGrok) seat via the official grok CLI (F-GrokBuild) -->
+          <div class="card" style="padding: var(--s-4); margin-bottom: var(--s-4);">
+            <h2 style="font-size: var(--t-lg); margin: 0 0 var(--s-2) 0; display: flex; align-items: center; gap: var(--s-2);">
+              <i data-lucide="zap" class="icon icon--sm"></i> Grok Build — SuperGrok subscription
+            </h2>
+            <p class="text-muted" style="margin: 0 0 var(--s-3) 0; font-size: var(--t-sm);">
+              Uses your Grok Build / SuperGrok sign-in (<code>grok login</code>) through the official <code>grok</code> CLI on the host: the CLI runs the agent (native tools + the MCP servers of the workspace), anja streams it. Not the xAI API key — that stays the <code>xai</code> provider. Available in <strong>workspace</strong> chats; hub chat stays on Claude.
+            </p>
+
+            <div x-show="!grokOauthState.session_active" style="padding: var(--s-3); background: var(--bg-2); border-radius: var(--r-1); font-size: var(--t-sm);">
+              <div style="display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap;">
+                <span class="badge badge--error">● not signed in</span>
+                <span class="text-muted" x-show="grokOauthState.cli_installed">Sign in with a device code from here, or run <code>grok login</code> on the host.</span>
+                <span class="text-muted" x-show="!grokOauthState.cli_installed">Install the Grok Build CLI on the host and make sure <code>grok</code> is on PATH (or in <code>~/.grok/bin</code>).</span>
+              </div>
+              <div x-show="!grokLogin.pending" style="margin-top: var(--s-3); display: flex; gap: var(--s-2); align-items: center; flex-wrap: wrap;">
+                <button class="btn btn--primary btn--xs" @click="startGrokLogin()" :disabled="grokLogin.busy || !grokOauthState.cli_installed">
+                  <span class="spinner" x-show="grokLogin.busy"></span>
+                  <i data-lucide="log-in" class="icon icon--sm" x-show="!grokLogin.busy"></i> Sign in with a device code
+                </button>
+                <button class="btn btn--ghost btn--xs" @click="loadGrokOauthStatus()"><i data-lucide="refresh-cw" class="icon icon--sm"></i> Re-check</button>
+              </div>
+              <div x-show="grokLogin.pending" style="margin-top: var(--s-3);">
+                <ol style="margin: 0 0 var(--s-2) 0; padding-left: var(--s-4); line-height: 1.7;">
+                  <li>A sign-in page opened in a new tab (<a :href="grokLogin.authUrl" target="_blank" rel="noopener" style="color: var(--accent);">open it again</a> if not) — any device works.</li>
+                  <li>Confirm this code there: <code class="text-mono" style="font-size: var(--t-md); font-weight: 600;" x-text="grokLogin.userCode"></code></li>
+                </ol>
+                <div style="display: flex; gap: var(--s-2); align-items: center; flex-wrap: wrap;">
+                  <span class="spinner"></span> <span class="text-muted">Waiting for the browser confirmation…</span>
+                  <button class="btn btn--ghost btn--xs" @click="cancelGrokLogin()">Cancel</button>
+                </div>
+              </div>
+              <div x-show="grokLogin.msg" x-text="grokLogin.msg" style="margin-top: var(--s-2); font-size: var(--t-sm); color: #b91c1c;"></div>
+              <div x-show="!grokOauthState.cli_installed" class="text-muted" style="margin-top: var(--s-2); font-size: var(--t-xs);">
+                Install on the host: <code>curl -fsSL https://x.ai/cli/install.sh | bash</code>, then re-check.
+              </div>
+            </div>
+
+            <div x-show="grokOauthState.session_active">
+              <div style="display: flex; gap: var(--s-3); align-items: center; flex-wrap: wrap; margin-bottom: var(--s-3); padding: var(--s-2); background: var(--bg-2); border-radius: var(--r-1); font-size: var(--t-sm);">
+                <span class="badge badge--success">● signed in</span>
+                <span class="text-muted" x-show="grokOauthState.email" x-text="grokOauthState.email"></span>
+                <span class="text-muted" x-show="grokOauthState.expires_at">session renews · expires <span x-text="grokExpiryLabel()"></span></span>
+                <span class="text-muted" x-show="grokOauthState.cli_version"><code class="text-mono" style="font-size: var(--t-xs);" x-text="grokOauthState.cli_version"></code></span>
+                <button class="btn btn--ghost btn--xs" @click="loadGrokOauthStatus()" title="Re-check" style="margin-left: auto;">
+                  <i data-lucide="refresh-cw" class="icon icon--sm"></i> Refresh status
+                </button>
+                <button class="btn btn--ghost btn--xs" @click="startGrokLogin()" title="Sign in again (switch account)">
+                  <i data-lucide="log-in" class="icon icon--sm"></i> Re-sign in
+                </button>
+                <button class="btn btn--ghost btn--xs" @click="grokLogout()" title="Sign out on the host">
+                  <i data-lucide="log-out" class="icon icon--sm"></i> Sign out
+                </button>
+              </div>
+              <div x-show="grokLogin.pending" style="margin-bottom: var(--s-3); padding: var(--s-3); background: var(--bg-2); border-radius: var(--r-1); font-size: var(--t-sm);">
+                Confirm the code <code class="text-mono" x-text="grokLogin.userCode"></code> in the new tab (<a :href="grokLogin.authUrl" target="_blank" rel="noopener" style="color: var(--accent);">open again</a>)…
+                <button class="btn btn--ghost btn--xs" @click="cancelGrokLogin()">Cancel</button>
+                <div x-show="grokLogin.msg" x-text="grokLogin.msg" style="margin-top: var(--s-2); color: #b91c1c;"></div>
+              </div>
+              <div class="text-muted" style="font-size: var(--t-sm);">
+                Models on the seat: <span x-text="(grokOauthState.models || []).map(m => m.id).join(', ') || '—'"></span>.
+                Pick <strong>Grok Build</strong> in the chat model picker of a workspace (effort low/medium/high supported). Telegram: <code>/provider</code> → Grok Build on a workspace thread.
+              </div>
+            </div>
+
+            <details style="margin-top: var(--s-3); font-size: var(--t-xs); color: var(--text-3);">
+              <summary style="cursor: pointer;">ℹ️ How it works</summary>
+              <div style="padding: var(--s-2) 0; line-height: 1.6;">
+                <p style="margin: 0 0 var(--s-1) 0;"><strong>The CLI is the agent</strong>: each turn anja runs <code>grok -p</code> headless in the workspace folder (always-approve, folder trusted), passes the composed context as rules and streams the reply. Grok resumes its own session on the next turn.</p>
+                <p style="margin: 0 0 var(--s-1) 0;"><strong>Seat, not API</strong>: credentials live in <code>~/.grok/auth.json</code> of the host user and are refreshed by the CLI. One host = one seat, shared by all hub members.</p>
+                <p style="margin: 0;"><strong>Blast radius</strong>: the agent runs autonomously inside the workspace folder (same contract as headless Claude). That is why hub-level chat is not offered.</p>
               </div>
             </details>
           </div>

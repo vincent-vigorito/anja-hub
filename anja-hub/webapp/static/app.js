@@ -657,6 +657,20 @@ function app() {
       precedence: '',
     },
 
+    // F-GrokBuild — Grok Build (SuperGrok) seat via the official grok CLI
+    grokLogin: { pending: false, busy: false, authUrl: '', userCode: '', msg: '', polling: false },
+    grokOauthState: {
+      cli_installed: true,
+      cli_path: '',
+      cli_version: '',
+      session_active: false,
+      email: '',
+      expires_at: '',
+      models: [],
+      api_key_set: false,
+      loaded: false,
+    },
+
     // Fase 7v — OpenAI ChatGPT subscription state
     openaiOauthState: {
       configured: false,
@@ -4036,6 +4050,7 @@ function app() {
       const m = {
         claude: '◆',
         openai_oauth: '◆',
+        grok_cli: '◆',
         openai: '◇',
         xai: '◇',
         openrouter: '◇',
@@ -4051,6 +4066,7 @@ function app() {
       const m = {
         claude: 'Claude sub',
         openai_oauth: 'ChatGPT sub',
+        grok_cli: 'Grok Build',
         openai: 'OpenAI',
         xai: 'xAI',
         openrouter: 'OpenRouter',
@@ -4066,7 +4082,7 @@ function app() {
       this.selectedProvider = providerId;
       this.selectedModel = model;
       this.modelPickerOpen = false;
-      if (providerId !== 'claude') {
+      if (providerId !== 'claude' && providerId !== 'grok_cli') {
         this.selectedEffort = '';
       }
     },
@@ -4106,6 +4122,17 @@ function app() {
           label: 'ChatGPT (subscription)',
           icon: '◆',
           models: this.openaiOauthState.supported_models,
+        });
+      }
+
+      // Grok Build seat (official grok CLI signed in on the host)
+      if (this.grokOauthState?.session_active) {
+        const ids = (this.grokOauthState.models || []).map(m => m.id).filter(Boolean);
+        groups.push({
+          providerId: 'grok_cli',
+          label: 'Grok Build (subscription)',
+          icon: '◆',
+          models: ids.length ? ids : ['grok-4.6', 'grok-4.5'],
         });
       }
 
@@ -4153,6 +4180,7 @@ function app() {
         this.loadOllamaConfig(),
         this.loadOpenaiOauthStatus(),
         this.loadClaudeOauthStatus(),
+        this.loadGrokOauthStatus(),
       ]);
       await this.buildUnifiedModels();
       this.refreshIcons();
@@ -4164,6 +4192,7 @@ function app() {
         // Force refresh ollama + openai_oauth status, poi rebuild
         await this.refreshOllamaModels(true);
         await this.loadOpenaiOauthStatus();
+        await this.loadGrokOauthStatus();
         // Force refresh cache modelli per ogni provider configurato
         const configured = (this.settingsState?.providers || [])
           .filter(p => p.configured).map(p => p.id);
@@ -6238,6 +6267,7 @@ function app() {
       await this.loadOllamaConfig();
       await this.loadOpenaiOauthStatus();
       await this.loadClaudeOauthStatus();
+      await this.loadGrokOauthStatus();
       // Rebuild unified picker dopo che i provider state sono aggiornati
       await this.buildUnifiedModels();
       this.refreshIcons();
@@ -7027,6 +7057,98 @@ function app() {
       } catch (e) {
         console.error('loadClaudeOauthStatus failed', e);
       }
+    },
+
+    // ===== F-GrokBuild — Grok Build seat (official grok CLI) =====
+    async loadGrokOauthStatus() {
+      try {
+        const s = await this.fetchJson('/api/grok-oauth/status');
+        Object.assign(this.grokOauthState, {
+          cli_installed: s.cli_installed !== false,
+          cli_path: s.cli_path || '',
+          cli_version: s.cli_version || '',
+          session_active: !!s.session_active,
+          email: s.email || '',
+          expires_at: s.expires_at || '',
+          models: s.models || [],
+          api_key_set: !!s.api_key_set,
+          loaded: true,
+        });
+      } catch (e) {
+        console.error('loadGrokOauthStatus failed', e);
+      }
+    },
+
+    grokExpiryLabel() {
+      const v = this.grokOauthState.expires_at;
+      if (!v) return '';
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d.toLocaleString();
+    },
+
+    async startGrokLogin() {
+      this.grokLogin.msg = ''; this.grokLogin.busy = true;
+      try {
+        const res = await fetch('/api/grok-oauth/login/start', { method: 'POST' });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'could not start login');
+        this.grokLogin.authUrl = d.auth_url;
+        this.grokLogin.userCode = d.user_code || '';
+        this.grokLogin.pending = true;
+        window.open(d.auth_url, '_blank');
+        this.pollGrokLogin();
+      } catch (e) {
+        this.grokLogin.msg = 'Error: ' + (e.message || e);
+      } finally {
+        this.grokLogin.busy = false;
+        this.$nextTick(() => this.refreshIcons());
+      }
+    },
+
+    async pollGrokLogin() {
+      // the CLI polls xAI itself; we long-poll the server until it exits
+      if (this.grokLogin.polling) return;
+      this.grokLogin.polling = true;
+      try {
+        while (this.grokLogin.pending) {
+          const res = await fetch('/api/grok-oauth/login/wait', { method: 'POST' });
+          const d = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(d.detail || 'login wait failed');
+          if (!d.done) continue;
+          this.grokLogin.pending = false;
+          if (d.ok && d.logged_in) {
+            this.showToast('success', 'Grok Build connected', 'The seat is available in the model picker.');
+          } else {
+            this.grokLogin.msg = 'Error: ' + (d.error || 'login not completed');
+          }
+          await this.loadGrokOauthStatus();
+          await this.buildUnifiedModels();
+        }
+      } catch (e) {
+        this.grokLogin.pending = false;
+        this.grokLogin.msg = 'Error: ' + (e.message || e);
+      } finally {
+        this.grokLogin.polling = false;
+      }
+    },
+
+    async cancelGrokLogin() {
+      try { await fetch('/api/grok-oauth/login/cancel', { method: 'POST' }); } catch (e) { /* best-effort */ }
+      this.grokLogin.pending = false; this.grokLogin.userCode = ''; this.grokLogin.msg = '';
+    },
+
+    async grokLogout() {
+      if (!confirm('Sign out the Grok Build seat on the host? Chats on provider "Grok Build" will stop until you sign in again.')) return;
+      try {
+        const res = await fetch('/api/grok-oauth/logout', { method: 'POST' });
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(d.detail || 'logout failed');
+        this.showToast('success', 'Grok Build signed out', '');
+      } catch (e) {
+        this.showToast('error', 'Grok Build logout failed', e.message || String(e));
+      }
+      await this.loadGrokOauthStatus();
+      await this.buildUnifiedModels();
     },
 
     // ===== Fase 7v — OpenAI ChatGPT subscription =====

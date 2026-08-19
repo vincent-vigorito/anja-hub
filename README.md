@@ -17,8 +17,9 @@ isolation, and multi-LLM support — built on the
 ## What it does
 
 - **Mission Control** — web app with multi-pane chat (Claude subscription via
-  SDK, OpenAI, Gemini, xAI, OpenRouter…), workspace switcher, memory
-  inspector, media gallery, statistics dashboards, kanban, goals.
+  SDK, ChatGPT and Grok Build subscriptions, OpenAI, Gemini, xAI, OpenRouter…),
+  workspace switcher, memory inspector, media gallery, statistics dashboards,
+  kanban, goals.
 - **Workspaces from blueprints** — one command scaffolds a complete vertical
   workspace: a pod of specialized agents, routines, connector schema, and
   editorial templates. Ships with a `marketing-site` starter blueprint
@@ -63,6 +64,11 @@ isolation, and multi-LLM support — built on the
   (the Claude provider uses your subscription — no API key needed; you can
   sign in from Settings → Providers, no shell needed)
 - macOS or Linux
+- Optional subscriptions as chat backends, no API key: **ChatGPT** (Codex CLI
+  login) and **Grok Build / SuperGrok** (official `grok` CLI:
+  `curl -fsSL https://x.ai/cli/install.sh | bash`, then sign in from
+  Settings → Providers with a device code — Grok runs as the agent inside
+  workspace folders, with the workspace's MCP servers)
 
 ## Quickstart
 

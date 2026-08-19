@@ -6,6 +6,39 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ## [Unreleased]
 
+### Added
+
+- **Grok Build subscription as a chat backend** (`provider=grok_cli`): uses the
+  Grok Build / SuperGrok seat through the official `grok` CLI — the CLI *is* the
+  agent (native tools + the MCP servers of the workspace folder, trusted via
+  `--trust`), anja spawns `grok -p --output-format streaming-json` per turn with
+  the composed context as `--rules`, maps the stream (text, thinking, tool_use
+  with `use_tool` → `mcp__<server>__<tool>`, one aggregated usage with the
+  seat's real cost) and resumes Grok's own session on the next turn (`-r`; a
+  stale or foreign id falls back to a fresh session). Settings → Providers has
+  a **Grok Build** card (CLI detected? signed in as? models on the seat) with a
+  **device-code sign-in** that works on a headless host, re-sign-in and sign-out;
+  the model picker gets a "Grok Build (subscription)" group (models from
+  `~/.grok/models_cache.json`, effort low/medium/high); Telegram `/provider`
+  offers it. Available on **workspace/agent** scopes; hub-level chat is refused
+  with an explicit message (the headless agent runs always-approve inside the
+  folder, the hub root is off limits). Child env is an allowlist (`ANJA_JOURNAL=0`,
+  Claude Code compat scanning off, no hub secrets). Distinct from `xai` (API key,
+  unchanged). New modules `webapp/grok_oauth.py`, `webapp/grok_cli.py`, endpoints
+  `/api/grok-oauth/*`. Requires grok CLI ≥ 1.0.5 and anjadev ≥ 0.24.
+- **MCP tool names are flat on the wire** (`kanban_show`, `office_to_pdf`):
+  Grok Build (and OpenAI-style function calling) hide tools whose name contains a
+  dot, so `anja_hub_runtime`, `anja_office`, `anja_hub_ops`, `anja_images`,
+  `anja_videos` now list underscore names and accept both forms in `tools/call`.
+  No change for Claude Code (it already showed `mcp__anja_hub_runtime__kanban_show`).
+
+### Fixed
+
+- Web chat usage/cost was recorded only if the WebSocket reader saw the `usage`
+  event before the stream completed — short turns could lose their cost row.
+  Recording moved to the stream drainer (once per event), tagged with the chat
+  scope.
+
 ### Changed
 
 - UI language is now fully English: web app (labels, hints, toasts, API

@@ -45,8 +45,6 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
 
-import re as _re
-import secrets as _secrets
 
 
 # ============================================================
@@ -510,25 +508,25 @@ def _parse_when(when_str: str) -> Optional[datetime]:
         pass
 
     # "in N min/minutes/m"
-    m = _re.match(r"^in\s+(\d+)\s*(min|m|minute|minutes)\b", s)
+    m = re.match(r"^in\s+(\d+)\s*(min|m|minute|minutes)\b", s)
     if m:
         return now + timedelta(minutes=int(m.group(1)))
     # "in N h/hour/hours"
-    m = _re.match(r"^in\s+(\d+)\s*(h|hour|hours)\b", s)
+    m = re.match(r"^in\s+(\d+)\s*(h|hour|hours)\b", s)
     if m:
         return now + timedelta(hours=int(m.group(1)))
     # "in N s/sec/seconds"
-    m = _re.match(r"^in\s+(\d+)\s*(s|sec|seconds)\b", s)
+    m = re.match(r"^in\s+(\d+)\s*(s|sec|seconds)\b", s)
     if m:
         return now + timedelta(seconds=int(m.group(1)))
     # "tomorrow HH:MM"
-    m = _re.match(r"^tomorrow\s+(\d{1,2}):(\d{2})\b", s)
+    m = re.match(r"^tomorrow\s+(\d{1,2}):(\d{2})\b", s)
     if m:
         h, mi = int(m.group(1)), int(m.group(2))
         d = (now + timedelta(days=1)).replace(hour=h, minute=mi, second=0, microsecond=0)
         return d
     # "today HH:MM"
-    m = _re.match(r"^today\s+(\d{1,2}):(\d{2})\b", s)
+    m = re.match(r"^today\s+(\d{1,2}):(\d{2})\b", s)
     if m:
         h, mi = int(m.group(1)), int(m.group(2))
         d = now.replace(hour=h, minute=mi, second=0, microsecond=0)
@@ -577,12 +575,12 @@ def tool_task_schedule_one_shot(args: dict) -> dict:
 
     # Determine name
     if custom_name:
-        if not _re.match(r"^[a-z0-9][a-z0-9_-]*$", custom_name):
+        if not re.match(r"^[a-z0-9][a-z0-9_-]*$", custom_name):
             return {"error": "name must be kebab-case"}
         name = custom_name
     else:
-        slug = _re.sub(r"[^a-z0-9]+", "-", prompt.lower())[:32].strip("-")
-        name = f"oneshot-{slug or 'task'}-{_secrets.token_hex(3)}"
+        slug = re.sub(r"[^a-z0-9]+", "-", prompt.lower())[:32].strip("-")
+        name = f"oneshot-{slug or 'task'}-{secrets.token_hex(3)}"
 
     # Build routine yaml
     routines_dir = hub / "routines"
@@ -620,7 +618,7 @@ def tool_task_schedule_one_shot(args: dict) -> dict:
         for k, v in o.items():
             if k == "type":
                 continue
-            if not _re.match(r"^[a-zA-Z0-9_-]+$", str(k)):
+            if not re.match(r"^[a-zA-Z0-9_-]+$", str(k)):
                 continue  # scarta chiavi non-identificatore (anti-injection)
             yaml_lines.append(f"    {k}: {json.dumps(v)}")
     yaml_text = "\n".join(yaml_lines) + "\n"
@@ -654,8 +652,8 @@ def tool_task_list(args: dict) -> dict:
             if "enabled: true" not in txt:
                 continue
             # Estrai schedule + name + description
-            sched = _re.search(r"^schedule:\s*['\"]?([^'\"\n]+)", txt, _re.MULTILINE)
-            desc = _re.search(r"^description:\s*(.+)", txt, _re.MULTILINE)
+            sched = re.search(r"^schedule:\s*['\"]?([^'\"\n]+)", txt, re.MULTILINE)
+            desc = re.search(r"^description:\s*(.+)", txt, re.MULTILINE)
             tasks.append({
                 "name": f.stem,
                 "schedule": sched.group(1).strip() if sched else None,
@@ -670,7 +668,7 @@ def tool_task_list(args: dict) -> dict:
 def tool_task_cancel(args: dict) -> dict:
     """Cancella una routine one-shot pendente."""
     name = (args.get("name") or "").strip()
-    if not name or not _re.match(r"^[a-z0-9][a-z0-9_-]*$", name):
+    if not name or not re.match(r"^[a-z0-9][a-z0-9_-]*$", name):
         return {"error": "valid name required"}
     hub = _hub_root_from_scope()
     if not hub:

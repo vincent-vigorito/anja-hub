@@ -12,8 +12,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
   error messages, notifications) and Telegram bot (commands menu, /help,
   acks, permission prompts). Agent prompts unchanged for now.
 
-### Changed
-
 - **anjadev core split** (requires anjadev ≥ 0.21): the agents' work plane —
   `agent.list`/`agent.delegate`, `task.*`, `workspace.*`, `kanban.*`,
   `goal.*`, `pp.*` (28 tools, same names) — moved from the anjadev plugin into

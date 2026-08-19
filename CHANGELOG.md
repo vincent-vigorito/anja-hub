@@ -34,6 +34,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Fixed
 
+- Telegram `/project <ws>` / `/agent <name>` did not survive the next turn: the
+  scope was saved as `scope: "project:<ws>"` but the dispatcher read a
+  `scope_project` key nobody persisted, so every message fell back to the hub
+  and re-saved `scope: "hub"`. The dispatcher now derives the scope from `scope`
+  (`_tg_scope_parts`) and the post-turn save keeps it. `/provider grok_cli` also
+  moves a leftover non-Grok model (e.g. `opus`) to the seat default.
 - Web chat usage/cost was recorded only if the WebSocket reader saw the `usage`
   event before the stream completed — short turns could lose their cost row.
   Recording moved to the stream drainer (once per event), tagged with the chat

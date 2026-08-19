@@ -69,6 +69,14 @@ CHILD_ENV_FIXED = {
 }
 
 
+def known_models() -> list[str]:
+    """Model ids valid for `-m` on this seat (catalog cache, fallback shortlist)."""
+    try:
+        return grok_oauth.grok_model_ids()
+    except Exception:
+        return list(grok_oauth.FALLBACK_MODELS)
+
+
 def build_child_env() -> dict:
     env = {k: os.environ[k] for k in ENV_ALLOWLIST if k in os.environ}
     env.update(CHILD_ENV_FIXED)

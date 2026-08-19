@@ -11616,7 +11616,7 @@ def _tg_list_threads(chat_id: int) -> list:
                 "conv_id": f.stem,
                 "suffix": (m.group(1) or "").lstrip("-") or "main",
                 "title": (data.get("title") or "").strip(),
-                "scope_agent": data.get("scope_agent") or "",
+                "scope_agent": _tg_scope_parts(data)[1],
                 "n_msgs": len(data.get("messages", [])),
                 "mtime": f.stat().st_mtime,
             })
@@ -11811,8 +11811,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
         defaults = _load_hub_defaults()
         prov = existing.get("provider") or defaults["provider"]
         mod = existing.get("model") or defaults["model"]
-        scope_p = existing.get("scope_project") or ""
-        scope_a = existing.get("scope_agent") or ""
+        scope_p, scope_a = _tg_scope_parts(existing)
         if scope_p:
             scope_line = f"project: `{scope_p}`"
         elif scope_a:
@@ -11928,11 +11927,24 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
             return True
         existing["provider"] = args.strip()
         existing["sdk_session_id"] = ""
+        _old_model = existing.get("model", "")
+        _new_model = _old_model
+        if args.strip() == "grok_cli":
+            # il modello del provider precedente (es. "opus") non esiste sul seat Grok
+            try:
+                from grok_oauth import grok_model_ids
+                _ids = grok_model_ids()
+            except Exception:
+                _ids = []
+            if _new_model not in _ids:
+                _new_model = _ids[0] if _ids else "grok-4.6"
+                existing["model"] = _new_model
         chat.save_conversation(WEBAPP_DIR, conv_id, existing.get("messages", []),
                                title=existing.get("title", ""), scope=existing.get("scope", "hub"),
-                               provider=args.strip(), model=existing.get("model", ""),
+                               provider=args.strip(), model=_new_model,
                                effort=existing.get("effort", ""))
-        await _tg_send(token, chat_id, f"✓ provider: `{args.strip()}` (session reset)")
+        _mnote = f", model: `{_new_model}`" if _new_model != _old_model else ""
+        await _tg_send(token, chat_id, f"✓ provider: `{args.strip()}`{_mnote} (session reset)")
         return True
 
     if cmd == "/agent":
@@ -11953,7 +11965,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
                 buttons.append(row)
             buttons.append([{"text": "↩ reset (Anja)", "callback_data": "agent:reset"}])
             markup = {"inline_keyboard": buttons}
-            cur = existing.get("scope_agent") or "Anja (default)"
+            cur = _tg_scope_parts(existing)[1] or "Anja (default)"
             await _tg_send(token, chat_id, f"Which agent? (current: `{cur}`)", reply_markup=markup)
             return True
         if args.strip().lower() == "reset":
@@ -12095,7 +12107,7 @@ async def _telegram_handle_command(chat: Any, conv_id: str, chat_id: int,
                 buttons.append(row)
             buttons.append([{"text": "↩ reset (Anja hub)", "callback_data": "project:reset"}])
             markup = {"inline_keyboard": buttons}
-            cur = existing.get("scope_project") or "Anja hub (default)"
+            cur = _tg_scope_parts(existing)[0] or "Anja hub (default)"
             await _tg_send(token, chat_id, f"Which project? (current: `{cur}`)", reply_markup=markup)
             return True
         if args.strip().lower() == "reset":
@@ -12504,7 +12516,7 @@ def _tg_thread_label(conv_data: dict, conv_id: str, chat_id: int) -> str:
     if title:
         return title[:30]
     suffix = conv_id.removeprefix(f"telegram-{chat_id}").lstrip("-") or "main"
-    ag = conv_data.get("scope_agent") or ""
+    ag = _tg_scope_parts(conv_data)[1]
     return f"{suffix}·{ag}" if ag else suffix
 
 
@@ -12527,6 +12539,22 @@ async def _telegram_async_bg(chat_id: int, conv_id: str, text: str, label: str):
                                f"⚠ Async task *{label}* failed: {type(e).__name__}: {e}")
             except Exception:
                 pass
+
+
+def _tg_scope_parts(conv: dict) -> tuple[str, str]:
+    """(scope_project, scope_agent) di un thread Telegram. I comandi /project e
+    /agent settano le chiavi solo in memoria: su disco `save_conversation` scrive
+    `scope` ("project:<name>" | "agent:<name>" | "hub") — è quella la verità."""
+    sp = (conv.get("scope_project") or "").strip()
+    sa = (conv.get("scope_agent") or "").strip()
+    if sp or sa:
+        return sp, sa
+    sc = (conv.get("scope") or "").strip()
+    if sc.startswith("project:"):
+        return sc.split(":", 1)[1], ""
+    if sc.startswith("agent:"):
+        return "", sc.split(":", 1)[1]
+    return "", ""
 
 
 async def _telegram_dispatch_locked(msg: dict, conv_id_override: str = None, reply_prefix: str = ""):
@@ -12591,8 +12619,7 @@ async def _telegram_dispatch_locked(msg: dict, conv_id_override: str = None, rep
 
     # Resolve scope: project > agent > hub (mutuamente esclusivi, project ha priorità)
     projects = _build_projects_context()
-    scope_project = existing.get("scope_project") or ""
-    scope_agent = existing.get("scope_agent") or ""
+    scope_project, scope_agent = _tg_scope_parts(existing)
     if scope_project:
         scope_str = f"project:{scope_project}"
         scope_kind_str = "project"
@@ -12907,7 +12934,7 @@ async def _telegram_dispatch_locked(msg: dict, conv_id_override: str = None, rep
         chat.save_conversation(
             WEBAPP_DIR, conv_id, new_messages,
             title=existing.get("title") or text[:60],
-            scope="hub",
+            scope=scope_str,   # non "hub" fisso: /project e /agent vivono qui
             provider=provider, model=model, effort=effort or "",
         )
         # Salva sdk_session_id + last_usage (espandiamo a-mano oltre save_conversation)

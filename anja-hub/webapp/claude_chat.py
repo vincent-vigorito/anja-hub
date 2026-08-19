@@ -941,11 +941,14 @@ async def stream_response(
                     hints = await grok_cli.tool_hints_for(cwd, scoped_servers)
                 except Exception:
                     hints = []
+                # a model left over from another provider (e.g. "opus" after /provider
+                # on Telegram) is not a Grok id: fall back to the seat default
+                _gmodel = attempt_model if attempt_model in grok_cli.known_models() else grok_cli.DEFAULT_MODEL
                 async for ev in grok_cli.stream_turn(
                     user_prompt,
                     cwd=cwd,
                     system_prompt=system_prompt or "",
-                    model=attempt_model or grok_cli.DEFAULT_MODEL,
+                    model=_gmodel,
                     effort=attempt_effort if attempt_effort in grok_cli.EFFORTS else None,
                     resume_session_id=resume_session_id,
                     tool_hints=hints,

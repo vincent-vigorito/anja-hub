@@ -1,0 +1,28 @@
+# wiki-steward-nightly — il notturno del wiki (anjadev steward, AnjaHub consumer).
+# 04:15, dopo il dreaming delle 04:00: dreaming = chi è l'utente, steward = cosa sa il repo.
+# Distill: promuove al wiki ciò che dalle sessioni della settimana deve restare
+# (append su pagine esistenti, ## Recent nell'overview, log); compact: archivia i diari.
+# Niente ragionamento: la routine esegue lo script (hub + ogni workspace con .anjawiki/)
+# e riporta la riga di riepilogo su Telegram. Richiede anjadev ≥ 0.23 installato
+# (~/.claude/plugins/marketplaces/anjadev, o ANJADEV_DIR) e `anja-cli` nel PATH
+# (symlink a <repo>/anja-hub/bin/anja-cli: da lì si risale a scripts/).
+name: wiki-steward-nightly
+description: Wiki steward notturno — distill dei journal nel wiki + compact (hub + workspace)
+scope: hub
+schedule: "15 4 * * *"
+enabled: false            # abilita dal pannello Routines quando vuoi il notturno
+model: haiku
+tools:
+  - Bash
+prompt: |
+  Non sei un agente di ragionamento. Esegui ESATTAMENTE questo comando con Bash (cwd = hub):
+
+    python3 "$(dirname "$(readlink -f "$(command -v anja-cli)")")/../scripts/wiki_steward_nightly.py" --hub "$PWD"
+
+  Rispondi SOLO con la prima riga del suo stdout, così com'è (è già il messaggio finale).
+  Se il comando fallisce, rispondi con una sola riga che inizia con "wiki steward: errore —" e il motivo.
+output:
+  - type: telegram
+timeout_sec: 900
+max_retries: 0
+tags: [wiki, steward, nightly, maintenance]

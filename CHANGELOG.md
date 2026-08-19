@@ -30,6 +30,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Added
 
+- **Wiki steward nightly routine** (requires anjadev ≥ 0.23): the hub is a
+  consumer of the anjadev steward — `anja-hub/scripts/wiki_steward_nightly.py`
+  runs `steward.py --apply` on the hub wiki and on every workspace with
+  `.anjawiki/` (10-minute budget, decision-trail record `actor=steward`), and the
+  new hub-skeleton routine `wiki-steward-nightly` (04:15, after dreaming at 04:00,
+  disabled by default) reports the one-line summary on Telegram. Dreaming = who
+  the user is; steward = what the repo knows.
 - **Telegram: link a chat from the UI**: Settings → Integrations → Telegram →
   *Link a chat* generates a one-time code (10 min) with a `t.me/<bot>?start=…`
   deep link; the chat that opens it (or sends `/link <code>`) is added to the

@@ -32,7 +32,9 @@ isolation, and multi-LLM support — built on the
   replies, image/video generation delivered as photos in chat. Link a chat
   from the UI with a one-time code (Settings → Integrations → Telegram).
 - **Routines daemon** — cron-like YAML routines with action handlers (email,
-  Slack, Google Chat, wiki, file, webhook).
+  Slack, Google Chat, wiki, file, webhook). Ships a `wiki-steward-nightly`
+  routine (off by default) that distills the week's sessions into the wiki and
+  compacts the journals via the anjadev steward.
 - **Marketing integrations** — Google Search Console, GA4, Google Ads
   (native API: campaigns, keywords, search terms), Merchant Center, Meta
   (Facebook/Instagram) insights and ads, WordPress content + **WooCommerce

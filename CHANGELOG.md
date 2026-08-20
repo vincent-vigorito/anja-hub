@@ -36,6 +36,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Fixed
 
+- Routines daemon under systemd (user) ran with the stock
+  `PATH=/usr/local/sbin:...:/usr/bin`, which lacks `~/.local/bin` — where the
+  CLIs routines rely on live (`anja-cli`, `giv`, `grok`). First live run of
+  `wiki-steward-nightly` failed with "script not found" because
+  `command -v anja-cli` resolved to nothing. The daemon now prepends
+  `~/.local/bin` to `PATH` at startup, and the nightly routine prompt falls
+  back to `$HOME/.local/bin/anja-cli` explicitly.
 - Telegram `/project <ws>` / `/agent <name>` did not survive the next turn: the
   scope was saved as `scope: "project:<ws>"` but the dispatcher read a
   `scope_project` key nobody persisted, so every message fell back to the hub

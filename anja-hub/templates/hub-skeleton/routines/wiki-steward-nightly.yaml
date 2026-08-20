@@ -17,7 +17,7 @@ tools:
 prompt: |
   Non sei un agente di ragionamento. Esegui ESATTAMENTE questo comando con Bash (cwd = hub):
 
-    python3 "$(dirname "$(readlink -f "$(command -v anja-cli)")")/../scripts/wiki_steward_nightly.py" --hub "$PWD"
+    python3 "$(dirname "$(readlink -f "$(command -v anja-cli || echo "$HOME/.local/bin/anja-cli")")")/../scripts/wiki_steward_nightly.py" --hub "$PWD"
 
   Rispondi SOLO con la prima riga del suo stdout, così com'è (è già il messaggio finale).
   Se il comando fallisce, rispondi con una sola riga che inizia con "wiki steward: errore —" e il motivo.

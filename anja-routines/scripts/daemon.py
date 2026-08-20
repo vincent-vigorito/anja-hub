@@ -196,6 +196,15 @@ def loop(hub: Path, interval: int, max_concurrent: int, once: bool = False) -> N
     _log("daemon stopped")
 
 
+def _ensure_user_path() -> None:
+    """Sotto systemd (user) il PATH è /usr/local/sbin:...:/usr/bin — senza ~/.local/bin,
+    dove vivono le CLI usate dalle routine (anja-cli, giv, grok). Prepend se manca."""
+    local_bin = Path.home() / ".local" / "bin"
+    parts = os.environ.get("PATH", "").split(":")
+    if str(local_bin) not in parts and local_bin.is_dir():
+        os.environ["PATH"] = f"{local_bin}:{os.environ.get('PATH', '')}"
+
+
 def main():
     p = argparse.ArgumentParser(description="anja routines daemon")
     p.add_argument("--hub", help="hub path (else ANJA_HUB env or auto)")
@@ -207,6 +216,7 @@ def main():
     args = p.parse_args()
 
     hub = Path(args.hub).expanduser().resolve() if args.hub else find_hub_root()
+    _ensure_user_path()
 
     signal.signal(signal.SIGTERM, _handle_signal)
     signal.signal(signal.SIGINT, _handle_signal)

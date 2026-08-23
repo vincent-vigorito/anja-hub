@@ -1,0 +1,29 @@
+# webhook-example — routine a TRIGGER EVENTO (F-EventTriggers), niente cron.
+# Si invoca dall'esterno:
+#   curl -X POST https://<hub>/hooks/webhook-example \
+#        -H 'X-Anja-Hook-Secret: <secret>' -H 'Content-Type: application/json' \
+#        -d '{"kind":"demo","msg":"ciao"}'
+# Il segreto vive in <hub>/routines/.secrets.env (HOOK_SECRET_EXAMPLE=...) — mai nel YAML.
+# Per GitHub: aggiungi `hook_hmac: github` e usa lo stesso secret nel webhook GitHub
+# (verifica X-Hub-Signature-256 sul body). Il payload arriva nel prompt al posto di
+# {{event}}, delimitato come dato NON fidato. Rate limit: hook_rate_limit (default
+# 6/min) + dedup payload identici entro 120s. Latenza max ≈ un ciclo daemon (30s).
+name: webhook-example
+description: Esempio di routine a trigger webhook (POST /hooks/webhook-example)
+scope: hub
+trigger: webhook
+hook_secret: "{{HOOK_SECRET_EXAMPLE}}"
+enabled: false
+model: haiku
+tools: []
+prompt: |
+  È arrivato questo evento via webhook:
+
+  {{event}}
+
+  Riassumilo in una riga per una notifica Telegram (cosa è successo, da che sorgente).
+output:
+  - type: telegram
+timeout_sec: 120
+max_retries: 0
+tags: [webhook, event, example]

@@ -7723,6 +7723,82 @@ def _safe_routine_name(name: str) -> str:
     return name
 
 
+# ============================================================
+# F-EventTriggers — webhook inbound → routine (POST /hooks/<name>)
+# Fuori da /api/* DI PROPOSITO: i webhook esterni non hanno né Origin nostro
+# (CSRF guard) né cookie di sessione (auth_gate). Il gate è il segreto per-hook
+# (`hook_secret` nel YAML, obbligatorio dal validator per trigger: webhook) o la
+# firma HMAC GitHub-style. Il fire vero lo fa il daemon routines leggendo i
+# fire-file in <hub>/routines/.fire/ (≤30s di latenza): il server non spawna
+# nulla — concorrenza e bookkeeping restano di proprietà del daemon.
+# ============================================================
+
+_HOOK_BODY_MAX = 256 * 1024
+_HOOK_RATE_DEFAULT = 6          # fire/minuto per routine (override: hook_rate_limit)
+_HOOK_DEDUP_WINDOW = 120.0      # payload identico entro la finestra → non ri-fired
+_HOOK_HITS: dict = {}
+_HOOK_LAST: dict = {}
+
+
+@app.post("/hooks/{name}")
+async def hooks_fire(name: str, request: Request):
+    import hashlib
+    import hmac as _hmac
+    mods = _get_routines_modules()
+    if not mods or not HUB_PATH:
+        raise HTTPException(404, "not found")
+    _, rr = mods
+    r = rr.get_routine(name, HUB_PATH)
+    y = (r or {}).get("yaml") or {}
+    enabled = (r or {}).get("state", {}).get("enabled", True)
+    # 404 uniforme: non riveliamo se la routine esiste ma non è webhook/enabled
+    if not r or not r.get("valid") or y.get("trigger") != "webhook" or not enabled:
+        raise HTTPException(404, "not found")
+    body = await request.body()
+    if len(body) > _HOOK_BODY_MAX:
+        raise HTTPException(413, "payload too large")
+    import runner as _rn  # scripts dir già in sys.path da _get_routines_modules
+    secret = _rn.expand_secrets(str(y.get("hook_secret") or ""), _rn.load_secrets(HUB_PATH)).strip()
+    if not secret or "{{" in secret:
+        raise HTTPException(404, "not found")  # {{VAR}} non risolto → fail-closed
+    if y.get("hook_hmac") == "github":
+        sig = request.headers.get("x-hub-signature-256", "")
+        want = "sha256=" + _hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+        if not _hmac.compare_digest(sig, want):
+            raise HTTPException(403, "bad signature")
+    else:
+        got = request.headers.get("x-anja-hook-secret") or request.query_params.get("secret", "")
+        if not _hmac.compare_digest(got, secret):
+            raise HTTPException(403, "bad secret")
+    now = time.time()
+    limit = int(y.get("hook_rate_limit") or _HOOK_RATE_DEFAULT)
+    hits = [t for t in _HOOK_HITS.get(name, []) if now - t < 60]
+    if len(hits) >= limit:
+        _HOOK_HITS[name] = hits
+        raise HTTPException(429, "rate limited")
+    hits.append(now)
+    _HOOK_HITS[name] = hits
+    digest = hashlib.sha256(body).hexdigest()
+    last = _HOOK_LAST.get(name)
+    if last and last[0] == digest and now - last[1] < _HOOK_DEDUP_WINDOW:
+        return JSONResponse({"queued": False, "deduped": True})
+    _HOOK_LAST[name] = (digest, now)
+    try:
+        event = json.loads(body) if body else {}
+    except Exception:
+        event = {"raw": body.decode("utf-8", errors="replace")}
+    fire_dir = HUB_PATH / "routines" / ".fire"
+    fire_dir.mkdir(parents=True, exist_ok=True)
+    ts = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+    fp = fire_dir / f"{name}-{ts}-{digest[:8]}.json"
+    tmp = fp.with_suffix(".tmp")
+    tmp.write_text(json.dumps(
+        {"routine": name, "received_at": ts, "event": event},
+        ensure_ascii=False), encoding="utf-8")
+    tmp.rename(fp)
+    return JSONResponse({"queued": True}, status_code=202)
+
+
 @app.get("/api/routines")
 async def api_routines_list():
     mods = _get_routines_modules()

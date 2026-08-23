@@ -8,6 +8,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Added
 
+- **Event triggers for routines** (`trigger: webhook`): a routine can now fire
+  on an inbound event, not just on cron. `POST /hooks/{name}` (public path,
+  gated by a mandatory per-hook secret — `hook_secret` in the YAML, resolvable
+  from `routines/.secrets.env` — or GitHub-style HMAC via `hook_hmac: github` /
+  `X-Hub-Signature-256`) validates, rate-limits (default 6/min,
+  `hook_rate_limit`), dedups identical payloads (120s) and queues a fire-file;
+  the routines daemon picks it up within one poll cycle (≤30s) and spawns the
+  run with the payload injected at `{{event}}` in the prompt — wrapped as
+  untrusted data and inserted only *after* secret expansion, so a hostile
+  payload cannot exfiltrate `{{VAR}}` secrets. `schedule` becomes optional for
+  webhook routines (cron + webhook can coexist). Example template
+  `webhook-example.yaml` in the hub skeleton.
+- **Scheduled metrics refresh**: new `scripts/metrics_refresh_all.py` iterates
+  every local project and runs the marketing collectors (GSC/GA/Ads/Merchant/
+  WooCommerce/Meta/social) with the workspace vault + hub fallback, reporting a
+  one-line summary; new hub routine template `metrics-refresh-nightly.yaml`
+  (05:30, off by default) sends it to Telegram. Dashboards and the morning
+  brief no longer depend on a manual "Refresh".
+
 - **Grok Build subscription as a chat backend** (`provider=grok_cli`): uses the
   Grok Build / SuperGrok seat through the official `grok` CLI — the CLI *is* the
   agent (native tools + the MCP servers of the workspace folder, trusted via

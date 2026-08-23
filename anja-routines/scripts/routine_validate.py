@@ -233,10 +233,23 @@ def validate_routine(yaml_obj: dict) -> tuple:
     errors = []
     warnings = []
 
-    # Required fields
+    # Required fields. F-EventTriggers: una routine `trigger: webhook` può non avere
+    # schedule (parte solo a evento via POST /hooks/<name>); il segreto è OBBLIGATORIO
+    # (fail-closed: endpoint pubblico, senza secret la routine non è invocabile).
+    is_webhook = yaml_obj.get("trigger") == "webhook"
     for f in REQUIRED_FIELDS:
+        if f == "schedule" and is_webhook:
+            continue
         if f not in yaml_obj or yaml_obj[f] in (None, ""):
             errors.append(f"missing required field: '{f}'")
+    trigger = yaml_obj.get("trigger")
+    if trigger not in (None, "", "webhook"):
+        errors.append(f"trigger '{trigger}' not supported (only 'webhook')")
+    if is_webhook and not str(yaml_obj.get("hook_secret") or "").strip():
+        errors.append("trigger: webhook requires 'hook_secret' (plain or {{VAR}} from .secrets.env)")
+    hook_hmac = yaml_obj.get("hook_hmac")
+    if hook_hmac not in (None, "", "github"):
+        errors.append(f"hook_hmac '{hook_hmac}' not supported (only 'github' = X-Hub-Signature-256)")
 
     # Name format
     name = yaml_obj.get("name", "")

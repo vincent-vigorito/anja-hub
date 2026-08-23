@@ -1,0 +1,25 @@
+# metrics-refresh-nightly — refresh schedulato delle metriche marketing.
+# 05:30, prima del morning brief: GSC/GA/Ads/Merchant/Woo/Meta per ogni progetto
+# locale con i Connettori configurati (vault workspace + fallback hub). Le sorgenti
+# non configurate sono skip silenziosi. Niente ragionamento: la routine esegue lo
+# script e riporta la riga di riepilogo su Telegram.
+name: metrics-refresh-nightly
+description: Refresh notturno metriche (GSC/GA/Ads/Woo/Meta) per tutti i progetti locali
+scope: hub
+schedule: "30 5 * * *"
+enabled: false            # abilita dal pannello Routines quando vuoi il refresh
+model: haiku
+tools:
+  - Bash
+prompt: |
+  Non sei un agente di ragionamento. Esegui ESATTAMENTE questo comando con Bash (cwd = hub):
+
+    python3 "$(dirname "$(readlink -f "$(command -v anja-cli || echo "$HOME/.local/bin/anja-cli")")")/../scripts/metrics_refresh_all.py" --hub "$PWD"
+
+  Rispondi SOLO con la prima riga del suo stdout, così com'è (è già il messaggio finale).
+  Se il comando fallisce, rispondi con una sola riga che inizia con "metrics refresh: errore —" e il motivo.
+output:
+  - type: telegram
+timeout_sec: 1200
+max_retries: 0
+tags: [metrics, marketing, nightly]

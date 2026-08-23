@@ -17,6 +17,7 @@ Env:
 """
 
 import argparse
+import json
 import os
 import signal
 import subprocess
@@ -117,7 +118,7 @@ def _reap_finished() -> None:
         _log(f"  ◀ '{name}' finished (rc={rc})")
 
 
-def _spawn(routine_name: str, hub: Path) -> bool:
+def _spawn(routine_name: str, hub: Path, extra_args: list | None = None) -> bool:
     """Spawna runner.py --name <routine_name> come subprocess detached."""
     runner = Path(__file__).parent / "runner.py"
     py = sys.executable
@@ -131,7 +132,7 @@ def _spawn(routine_name: str, hub: Path) -> bool:
     env = os.environ.copy()
     env["ANJA_HUB"] = str(hub)
     proc = subprocess.Popen(
-        [py, str(runner), "--name", routine_name],
+        [py, str(runner), "--name", routine_name] + (extra_args or []),
         stdout=f,
         stderr=subprocess.STDOUT,
         env=env,
@@ -140,6 +141,46 @@ def _spawn(routine_name: str, hub: Path) -> bool:
     _RUNNING[routine_name] = proc
     _log(f"  ▶ spawned '{routine_name}' pid={proc.pid} → {stdout_path.name}")
     return True
+
+
+def _fire_events(hub: Path, routines: list, max_concurrent: int = MAX_CONCURRENT_DEFAULT) -> int:
+    """F-EventTriggers: consuma i fire-file scritti da POST /hooks/<name> (webapp).
+
+    `<hub>/routines/.fire/<name>-<ts>-<hash>.json` → rename a `.run` (anti double-fire)
+    → spawn runner --event-file. Un solo run per routine alla volta (come i cron);
+    i file in eccesso aspettano il ciclo dopo. Stale `.run` (>24h, runner morto
+    prima di cancellarli) vengono ripuliti."""
+    fire_dir = hub / "routines" / ".fire"
+    if not fire_dir.is_dir():
+        return 0
+    known = {r["name"] for r in routines
+             if r.get("valid") and r.get("state", {}).get("enabled", True)}
+    fired = 0
+    now = time.time()
+    for fp in sorted(fire_dir.glob("*.json.run")):
+        if now - fp.stat().st_mtime > 86400:
+            fp.unlink(missing_ok=True)
+            _log(f"  ✗ stale event file removed: {fp.name}")
+    for fp in sorted(fire_dir.glob("*.json")):
+        try:
+            name = json.loads(fp.read_text(encoding="utf-8")).get("routine", "")
+        except Exception:
+            fp.unlink(missing_ok=True)
+            continue
+        if name not in known:
+            fp.unlink(missing_ok=True)
+            _log(f"  ✗ event for unknown routine '{name}' dropped")
+            continue
+        if name in _RUNNING or len(_RUNNING) >= max_concurrent:
+            continue
+        run_path = fp.with_suffix(fp.suffix + ".run")
+        try:
+            fp.rename(run_path)
+        except OSError:
+            continue
+        _spawn(name, hub, extra_args=["--event-file", str(run_path)])
+        fired += 1
+    return fired
 
 
 def loop(hub: Path, interval: int, max_concurrent: int, once: bool = False) -> None:
@@ -177,6 +218,8 @@ def loop(hub: Path, interval: int, max_concurrent: int, once: bool = False) -> N
 
         if fired:
             save_state(state, hub)
+
+        _fire_events(hub, routines, max_concurrent)
 
         if once:
             _log("--once mode → exiting after one cycle")

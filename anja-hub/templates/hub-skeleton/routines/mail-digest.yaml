@@ -1,0 +1,22 @@
+# mail-digest — ogni 30 min: mail non lette recenti → se c'è qualcosa che conta,
+# una riga su Telegram. Richiede una casella agganciata allo scope hub
+# (Settings → Integrations → Mailboxes): il server MCP anja_mail del cwd
+# viene auto-allowlistato dal runner. Silenzioso quando non c'è nulla.
+name: mail-digest
+description: Digest mail non lette (30 min) — segnala solo ciò che conta
+scope: hub
+schedule: "*/30 * * * *"
+enabled: false            # abilita quando la casella "main" è collegata
+model: haiku
+tools: []
+prompt: |
+  Controlla la posta con mail_search (query: "is:unread newer_than:1h").
+  Se non c'è nulla, rispondi esattamente: NIENTE-DI-NUOVO
+  Altrimenti rispondi con UNA riga per mail importante (mittente → oggetto, perché conta).
+  Ignora newsletter e notifiche automatiche a meno che non richiedano azione.
+output:
+  - type: telegram
+    skip_if_contains: NIENTE-DI-NUOVO
+timeout_sec: 180
+max_retries: 0
+tags: [mail, digest]

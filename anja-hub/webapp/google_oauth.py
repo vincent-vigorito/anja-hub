@@ -24,10 +24,18 @@ SCOPES = [
     "https://www.googleapis.com/auth/content",
     "https://www.googleapis.com/auth/adwords",
 ]
+# F-Mail: consenso SEPARATO con soli scope Gmail (readonly+compose: compose copre
+# draft E send — niente gmail.modify full). Token per-casella in .anjawiki/mail/<id>/.
+MAIL_SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.compose",
+]
+MAIL_SCOPES_RO = ["https://www.googleapis.com/auth/gmail.readonly"]
+
 CLIENT_NAME = "google-oauth-client.json"
 TOKEN_NAME = "google-token.json"
 
-_PENDING: dict[str, tuple[str, str]] = {}   # state → (token dir, code_verifier PKCE)
+_PENDING: dict[str, tuple[str, str, tuple]] = {}   # state → (token dir, code_verifier PKCE, scopes)
 
 
 def client_file(hub_dir: Path) -> Path | None:
@@ -35,23 +43,26 @@ def client_file(hub_dir: Path) -> Path | None:
     return p if p.is_file() else None
 
 
-def _flow(client: Path, redirect_uri: str):
+def _flow(client: Path, redirect_uri: str, scopes=None):
     from google_auth_oauthlib.flow import Flow
-    return Flow.from_client_secrets_file(str(client), scopes=SCOPES, redirect_uri=redirect_uri)
+    return Flow.from_client_secrets_file(str(client), scopes=list(scopes or SCOPES),
+                                         redirect_uri=redirect_uri)
 
 
-def start(hub_dir: Path, redirect_uri: str, token_dir: Path) -> str:
-    """Genera l'auth_url e registra state→token_dir. '' se manca l'OAuth client."""
+def start(hub_dir: Path, redirect_uri: str, token_dir: Path, scopes=None) -> str:
+    """Genera l'auth_url e registra state→token_dir. '' se manca l'OAuth client.
+    scopes: default SCOPES marketing; MAIL_SCOPES per il consenso caselle."""
     client = client_file(hub_dir)
     if not client:
         return ""
-    flow = _flow(client, redirect_uri)
+    flow = _flow(client, redirect_uri, scopes)
     url, state = flow.authorization_url(access_type="offline", prompt="consent",
                                         include_granted_scopes="true")
     # PKCE: le google-auth-oauthlib recenti generano un code_verifier nell'auth
     # request — il callback ricostruisce il flow e DEVE riusare lo stesso
     # verifier, o Google risponde invalid_grant "Missing code verifier".
-    _PENDING[state] = (str(token_dir), getattr(flow, "code_verifier", "") or "")
+    _PENDING[state] = (str(token_dir), getattr(flow, "code_verifier", "") or "",
+                       tuple(scopes or SCOPES))
     return url
 
 
@@ -60,12 +71,12 @@ def callback(hub_dir: Path, redirect_uri: str, code: str, state: str) -> dict:
     pending = _PENDING.pop(state, None)
     if not pending:
         return {"ok": False, "error": "state non valido o scaduto"}
-    token_dir, code_verifier = pending
+    token_dir, code_verifier, scopes = pending
     client = client_file(hub_dir)
     if not client:
         return {"ok": False, "error": "OAuth client non configurato"}
     try:
-        flow = _flow(client, redirect_uri)
+        flow = _flow(client, redirect_uri, scopes)
         if code_verifier:
             flow.code_verifier = code_verifier
         flow.fetch_token(code=code)

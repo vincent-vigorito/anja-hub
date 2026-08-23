@@ -8,6 +8,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Added
 
+- **Mail for the hub and workspaces** (`anja_mail`): mailboxes are hub-level
+  connections (`config/mailboxes.json`, no secrets inside — OAuth tokens and
+  IMAP credentials live in `.anjawiki/mail/<id>/`, 0600) that the hub and each
+  workspace explicitly attach to (no implicit workspace→hub fallback). Gmail
+  connects via OAuth with a **separate consent** limited to
+  `gmail.readonly + gmail.compose`; IMAP/SMTP boxes take an app password with a
+  connection test. Agents use a provider-agnostic MCP server
+  (`scripts/mcp_mail_server.py`, flat tool names, unified message model across
+  backends): `mail_mailboxes/search/get/thread/labels/outbox` (read) and
+  `mail_draft/send/modify` (write, per-scope `send_policy: ask|auto|deny`).
+  **Sending is two-phase**: `mail_send` queues the message in an outbox and a
+  human approves it — 📤/🚫 inline buttons on Telegram (`mact:`) or the Outbox
+  card in Settings → Integrations → Mailboxes; `auto` sends immediately but is
+  still audited in the outbox; every provider (Claude, Grok CLI, LiteLLM,
+  routines) goes through the same server-side gate. Routines gain
+  `type: email` + `mailbox: <id>` (through the outbox like everyone else) and
+  two templates, `mail-digest` and `mail-daily-brief` (off by default). Grok
+  child processes are denied `Read` on `.anjawiki/mail/**`.
+
 - **Event triggers for routines** (`trigger: webhook`): a routine can now fire
   on an inbound event, not just on cron. `POST /hooks/{name}` (public path,
   gated by a mandatory per-hook secret — `hook_secret` in the YAML, resolvable

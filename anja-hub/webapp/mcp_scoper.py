@@ -40,7 +40,7 @@ DEFAULT_MANIFEST = {
         # Pattern keyword → server MCP. Regex case-insensitive.
         # External tools — F-CLI-Media: immagini/video via CLI giv (Bash),
         # niente più server MCP anja_images/anja_videos negli agent.
-        r"\b(email|gmail|inbox|invia.*mail|send.*mail|messaggio.*email)\b": "gmail",
+        r"\b(email|gmail|inbox|posta|mail|newsletter|invia.*mail|send.*mail|messaggio.*email)\b": "anja_mail",
         r"\b(calendar|calendario|appuntamento|meeting|evento|event\b|invite)\b": "google_calendar",
         r"\b(drive|file.*google|condividi.*doc|google.*doc)\b": "google_drive",
         r"\b(browser|naviga|screenshot|click.*pagina|web.*scrape|crawl)\b": "playwright",

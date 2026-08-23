@@ -6168,6 +6168,326 @@ async def api_google_oauth_callback(request: Request, code: str = "", state: str
     return RedirectResponse("/?google=" + ("ok" if res.get("ok") else "err"), status_code=303)
 
 
+# --- F-Mail: caselle Gmail/IMAP + outbox two-phase ---------------------------
+# Design: anja-mail-design.md (repo ops). Registro hub-level senza segreti,
+# binding per scope senza risalita implicita, invio SEMPRE via outbox.
+
+def _mail_store():
+    import mail_store
+    return mail_store
+
+
+def _mail_backends():
+    scripts_dir = ANJA_HUB_DIR / "scripts"
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    import mail_backends
+    return mail_backends
+
+
+def _mail_scope_gate(request: Request, scope: str) -> None:
+    """Registro/hub = admin; binding workspace = accesso al workspace."""
+    if scope == "hub":
+        _require_admin(request)
+    elif scope.startswith("project:"):
+        _require_ws_access(request, scope.split(":", 1)[1])
+    else:
+        raise HTTPException(400, f"invalid scope '{scope}'")
+
+
+def _mail_write_mcp_entry(scope: str) -> None:
+    """Materializza/rimuove l'entry `anja_mail` nel .mcp.json dello scope in base
+    al binding. deny → solo mail_read; nessuna casella → entry rimossa."""
+    ms = _mail_store()
+    binding = ms.scope_binding(HUB_PATH, scope)
+    if scope == "hub":
+        root = HUB_PATH
+    else:
+        root = _project_root(scope.split(":", 1)[1])
+        if not root:
+            return
+    mcp_path = Path(root) / ".mcp.json"
+    data = {"mcpServers": {}}
+    if mcp_path.is_file():
+        try:
+            data = json.loads(mcp_path.read_text(encoding="utf-8")) or {"mcpServers": {}}
+        except Exception:
+            data = {"mcpServers": {}}
+    data.setdefault("mcpServers", {})
+    if not binding["mailboxes"]:
+        if "anja_mail" not in data["mcpServers"]:
+            return
+        data["mcpServers"].pop("anja_mail", None)
+    else:
+        groups = "mail_read" if binding["send_policy"] == "deny" else "mail_read,mail_write"
+        data["mcpServers"]["anja_mail"] = {
+            "command": sys.executable,
+            "args": [str(ANJA_HUB_DIR / "scripts" / "mcp_mail_server.py")],
+            "env": {"ANJA_HUB": str(HUB_PATH),
+                    "ANJA_MAILBOXES": ",".join(binding["mailboxes"]),
+                    "ANJA_TOOL_GROUPS": groups,
+                    "ANJA_SCOPE_NAME": scope,
+                    "ANJA_MAIL_SEND_POLICY": binding["send_policy"]},
+        }
+    tmp = mcp_path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(tmp, mcp_path)
+
+
+@app.get("/api/mail/mailboxes")
+async def api_mail_mailboxes(request: Request):
+    _require_admin(request)
+    ms = _mail_store()
+    out = []
+    for b in ms.list_mailboxes(HUB_PATH):
+        out.append({**b, "connected": ms.mailbox_connected(HUB_PATH, b)})
+    return JSONResponse({"mailboxes": out})
+
+
+@app.post("/api/mail/mailboxes")
+async def api_mail_mailbox_create(request: Request, payload: dict = Body(...)):
+    _require_admin(request)
+    ms = _mail_store()
+    try:
+        rec = ms.upsert_mailbox(HUB_PATH, payload)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return JSONResponse({"ok": True, "mailbox": rec})
+
+
+@app.delete("/api/mail/mailboxes/{mailbox_id}")
+async def api_mail_mailbox_delete(request: Request, mailbox_id: str):
+    _require_admin(request)
+    ms = _mail_store()
+    if not ms.remove_mailbox(HUB_PATH, mailbox_id):
+        raise HTTPException(404, "mailbox not found")
+    return JSONResponse({"ok": True})
+
+
+@app.get("/api/mail/oauth/start")
+async def api_mail_oauth_start(request: Request, mailbox: str = "", read_only: int = 0):
+    """Consenso Google con i soli scope Gmail; token in .anjawiki/mail/<id>/."""
+    _require_admin(request)
+    ms = _mail_store()
+    box = ms.get_mailbox(HUB_PATH, mailbox)
+    if not box or box.get("kind") != "gmail":
+        raise HTTPException(404, "gmail mailbox not found (create the record first)")
+    import google_oauth
+    scopes = google_oauth.MAIL_SCOPES_RO if read_only else google_oauth.MAIL_SCOPES
+    url = google_oauth.start(HUB_PATH / ".anjawiki", _oauth_redirect_uri(request),
+                             ms.secrets_dir(HUB_PATH, mailbox), scopes=scopes)
+    if not url:
+        raise HTTPException(400, "Google OAuth client not configured (Settings → Integrations)")
+    return RedirectResponse(url)
+
+
+@app.post("/api/mail/mailboxes/{mailbox_id}/imap")
+async def api_mail_imap_creds(request: Request, mailbox_id: str, payload: dict = Body(...)):
+    """Salva creds IMAP/SMTP (0600) + TEST connessione (login IMAP, NOOP SMTP)."""
+    _require_admin(request)
+    ms = _mail_store()
+    box = ms.get_mailbox(HUB_PATH, mailbox_id)
+    if not box or box.get("kind") != "imap":
+        raise HTTPException(404, "imap mailbox not found (create the record first)")
+    creds = {"MAIL_USER": payload.get("user", ""), "MAIL_PASS": payload.get("password", ""),
+             "SMTP_USER": payload.get("smtp_user", ""), "SMTP_PASS": payload.get("smtp_password", ""),
+             "MAIL_FROM": payload.get("from", "")}
+    if not creds["MAIL_USER"] or not creds["MAIL_PASS"]:
+        raise HTTPException(400, "user and password required")
+    ms.save_imap_creds(HUB_PATH, mailbox_id, creds)
+    mb = _mail_backends()
+    try:
+        be = mb.ImapBackend(box.get("imap") or {}, box.get("smtp") or {}, creds)
+        await asyncio.get_event_loop().run_in_executor(None, be.test)
+    except Exception as e:
+        return JSONResponse({"ok": False, "saved": True,
+                             "error": f"connection test failed: {e}"})
+    return JSONResponse({"ok": True, "saved": True})
+
+
+@app.get("/api/mail/mailboxes/{mailbox_id}/probe")
+async def api_mail_probe(request: Request, mailbox_id: str):
+    """Check live della casella; per Gmail aggiorna anche l'address dal profilo."""
+    _require_admin(request)
+    ms = _mail_store()
+    box = ms.get_mailbox(HUB_PATH, mailbox_id)
+    if not box:
+        raise HTTPException(404, "mailbox not found")
+    mb = _mail_backends()
+    try:
+        be = mb.backend_for(HUB_PATH, box)
+        if box["kind"] == "gmail":
+            prof = await asyncio.get_event_loop().run_in_executor(None, be.profile)
+            addr = prof.get("emailAddress", "")
+            if addr and addr != box.get("address"):
+                ms.upsert_mailbox(HUB_PATH, {**box, "address": addr})
+            return JSONResponse({"ok": True, "address": addr,
+                                 "messages_total": prof.get("messagesTotal")})
+        await asyncio.get_event_loop().run_in_executor(None, be.test)
+        return JSONResponse({"ok": True, "address": box.get("address", "")})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)[:300]})
+
+
+@app.get("/api/mail/binding")
+async def api_mail_binding_get(request: Request, scope: str = "hub"):
+    _mail_scope_gate(request, scope)
+    return JSONResponse(_mail_store().scope_binding(HUB_PATH, scope))
+
+
+@app.put("/api/mail/binding")
+async def api_mail_binding_put(request: Request, payload: dict = Body(...)):
+    scope = (payload.get("scope") or "hub").strip()
+    _mail_scope_gate(request, scope)
+    ms = _mail_store()
+    try:
+        data = ms.set_scope_binding(HUB_PATH, scope,
+                                    list(payload.get("mailboxes") or []),
+                                    payload.get("send_policy") or "ask")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    try:
+        _mail_write_mcp_entry(scope)
+    except Exception as e:
+        print(f"[mail] mcp.json write failed for {scope}: {e}")
+    return JSONResponse({"ok": True, **data})
+
+
+@app.get("/api/mail/outbox")
+async def api_mail_outbox(request: Request, scope: str = "", status: str = ""):
+    _require_admin(request)
+    return JSONResponse({"items": _mail_store().outbox_list(HUB_PATH, scope=scope, status=status)})
+
+
+def _mail_do_send(item: dict) -> tuple[bool, str]:
+    """Invio post-approvazione (bloccante, da executor). Ritorna (ok, message_id|errore)."""
+    ms = _mail_store()
+    box = ms.get_mailbox(HUB_PATH, item.get("mailbox", ""))
+    if not box:
+        return False, f"mailbox '{item.get('mailbox')}' no longer registered"
+    try:
+        be = _mail_backends().backend_for(HUB_PATH, box)
+        mid = be.send(item.get("to") or [], item.get("subject", ""), item.get("body", ""),
+                      cc=item.get("cc") or [], reply_to_id=item.get("reply_to_id", ""),
+                      draft_id=item.get("draft_id", ""))
+        return True, mid
+    except Exception as e:
+        return False, f"{type(e).__name__}: {e}"
+
+
+async def _mail_resolve_and_send(outbox_id: str, action: str, by: str) -> dict:
+    """approve → invia e marca sent/error; reject → marca. Ritorna esito per UI/TG."""
+    ms = _mail_store()
+    item = ms.outbox_resolve(HUB_PATH, outbox_id, action, by=by)
+    if item is None:
+        return {"ok": False, "error": "not pending (already resolved or expired)"}
+    if action == "reject":
+        return {"ok": True, "status": "rejected"}
+    ok, res = await asyncio.get_event_loop().run_in_executor(None, _mail_do_send, item)
+    if ok:
+        ms.outbox_mark(HUB_PATH, outbox_id, "sent", provider_message_id=res)
+        return {"ok": True, "status": "sent", "provider_message_id": res}
+    ms.outbox_mark(HUB_PATH, outbox_id, "error", error=res)
+    return {"ok": False, "status": "error", "error": res}
+
+
+@app.post("/api/mail/outbox/{outbox_id}/resolve")
+async def api_mail_outbox_resolve(request: Request, outbox_id: str, payload: dict = Body(...)):
+    _require_admin(request)
+    action = payload.get("action", "")
+    if action not in ("approve", "reject"):
+        raise HTTPException(400, "action must be approve|reject")
+    who = getattr(request.state, "user", None) or "ui"
+    res = await _mail_resolve_and_send(outbox_id, action, by=f"ui:{who}")
+    return JSONResponse(res)
+
+
+async def _tg_mail_callback(cbq: dict) -> bool:
+    """Bottoni outbox: `mact:<approve|reject>:<outbox_id>` — stesso pattern cact:."""
+    from telegram_daemon import answer_callback_query, edit_message_text
+    token = TELEGRAM_DAEMON.token if TELEGRAM_DAEMON else None
+    parts = (cbq.get("data") or "").split(":")
+    if len(parts) != 3 or parts[0] != "mact" or parts[1] not in ("approve", "reject") or not token:
+        return False
+    action, oid = parts[1], parts[2]
+    frm = cbq.get("from") or {}
+    who = frm.get("username") or frm.get("first_name") or str(frm.get("id", ""))
+    res = await _mail_resolve_and_send(oid, action, by=f"telegram:{frm.get('id', 0)}")
+    if res.get("status") == "sent":
+        outcome = f"📤 sent by {who}"
+    elif res.get("status") == "rejected":
+        outcome = f"🚫 rejected by {who}"
+    elif res.get("status") == "error":
+        outcome = f"⚠️ approved but send FAILED: {res.get('error', '')[:150]}"
+    else:
+        outcome = "⌛ already resolved or expired"
+    await answer_callback_query(token, cbq.get("id", ""), outcome[:180])
+    msg = cbq.get("message") or {}
+    chat_id = int((msg.get("chat") or {}).get("id", 0))
+    message_id = int(msg.get("message_id") or 0)
+    if chat_id and message_id:
+        base = (msg.get("text") or "").strip()
+        try:
+            await edit_message_text(token, chat_id, message_id,
+                                    f"{base}\n\n{outcome}", reply_markup={"inline_keyboard": []})
+        except Exception:
+            pass
+    return True
+
+
+async def _mail_outbox_watcher():
+    """Notifica i pending mai notificati: Telegram (bottoni mact:) + bell UI.
+    Unico path di notifica — copre MCP server, routine, qualunque produttore."""
+    while True:
+        try:
+            await asyncio.sleep(20)
+            if not HUB_PATH:
+                continue
+            ms = _mail_store()
+            for item in ms.outbox_unnotified(HUB_PATH):
+                ref = ""
+                try:
+                    notif_bus.publish(HUB_PATH, source="mail", category="action",
+                                      title=f"Mail pending approval → {', '.join(item.get('to') or [])[:80]}",
+                                      body=f"[{item.get('scope')}] {item.get('subject', '')[:120]}",
+                                      payload={"outbox_id": item["id"]}, scope=item.get("scope", "hub"))
+                except Exception:
+                    pass
+                if TELEGRAM_DAEMON and TELEGRAM_DAEMON.token:
+                    allowed = (TELEGRAM_DAEMON.config or {}).get("allowed_chat_ids", [])
+                    if allowed:
+                        preview = (item.get("body") or "")[:400].replace("`", "'")
+                        text = ("📧 *Mail pending approval*\n"
+                                f"scope: `{item.get('scope')}` · mailbox: `{item.get('mailbox')}`\n"
+                                f"to: `{', '.join(item.get('to') or [])[:120]}`\n"
+                                f"subject: `{(item.get('subject') or '')[:120]}`\n\n"
+                                f"{preview}{'…' if len(item.get('body') or '') > 400 else ''}")
+                        buttons = [[{"text": "📤 Send", "callback_data": f"mact:approve:{item['id']}"},
+                                    {"text": "🚫 Reject", "callback_data": f"mact:reject:{item['id']}"}]]
+                        try:
+                            from telegram_daemon import send_message as _tg_send_msg
+                            await _tg_send_msg(TELEGRAM_DAEMON.token, int(allowed[0]), text,
+                                               reply_markup={"inline_keyboard": buttons})
+                            ref = f"tg:{allowed[0]}"
+                        except Exception as e:
+                            print(f"[mail] outbox telegram notify error: {e}")
+                ms.outbox_mark_notified(HUB_PATH, item["id"], ref)
+        except asyncio.CancelledError:
+            return
+        except Exception as e:
+            print(f"[mail] outbox watcher error: {e}")
+
+
+MAIL_OUTBOX_TASK: Optional[asyncio.Task] = None
+
+
+@app.on_event("startup")
+async def _startup_mail_watcher():
+    global MAIL_OUTBOX_TASK
+    if HUB_PATH:
+        MAIL_OUTBOX_TASK = asyncio.create_task(_mail_outbox_watcher())
+
+
 # --- Brain personale/condiviso (F3) -----------------------------------------
 
 def _default_user(request: Request = None) -> str:
@@ -13055,6 +13375,7 @@ async def _startup_telegram():
         TELEGRAM_DAEMON = TelegramDaemon(HUB_PATH, on_message=_telegram_dispatch)
         TELEGRAM_DAEMON.callback_handlers["perm"] = _tg_asp_callback
         TELEGRAM_DAEMON.callback_handlers["plan"] = _tg_asp_callback
+        TELEGRAM_DAEMON.callback_handlers["mact"] = _tg_mail_callback
         await TELEGRAM_DAEMON.start()
     except Exception as e:
         print(f"[telegram] startup error: {e}")

@@ -193,6 +193,11 @@ function app() {
     hubConnMsg: '',
     mediaGen: { prompt: '', model: '', busy: false, msg: '', models: [] },
     googleOauth: { connected: false, client_configured: false, token_scope: '', redirect_uri: '' },
+    // F-Mail: caselle + outbox + binding hub (Settings → Integrations → Mailboxes)
+    mail: { boxes: [], outbox: [], binding: { mailboxes: [], send_policy: 'ask' }, msg: '', busy: false,
+            form: { open: false, id: '', label: '', kind: 'gmail', imap_host: '', imap_port: 993,
+                    imap_ssl: true, smtp_host: '', smtp_port: 587, smtp_tls: true,
+                    user: '', password: '', from: '' } },
     gclientSetup: { open: false, msg: '', ok: false },
     googleResources: null,
     audit: { loading: false, products: [], summary: null, msg: '', kind: 'products' },
@@ -2137,6 +2142,99 @@ function app() {
       const proj = this.currentProjectScopeName;
       if (!proj || !this.googleOauth.client_configured) return;
       window.location.href = '/api/google/oauth/start?scope=' + encodeURIComponent(proj);
+    },
+
+    // ===== F-Mail: Mailboxes + Outbox (Settings → Integrations) =====
+    async loadMail() {
+      const [b, o, bind] = await Promise.all([
+        this.fetchJson('/api/mail/mailboxes'),
+        this.fetchJson('/api/mail/outbox'),
+        this.fetchJson('/api/mail/binding?scope=hub'),
+      ]);
+      this.mail.boxes = (b && b.mailboxes) || [];
+      this.mail.outbox = (o && o.items) || [];
+      if (bind) this.mail.binding = bind;
+      this.refreshIcons();
+    },
+
+    async _mailPost(url, body, method = 'POST') {
+      const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' },
+                                   body: body === undefined ? undefined : JSON.stringify(body) });
+      let d = null;
+      try { d = await r.json(); } catch (e) { /* no body */ }
+      if (!r.ok) throw new Error((d && d.detail) || `HTTP ${r.status}`);
+      return d;
+    },
+
+    async addMailbox() {
+      const f = this.mail.form;
+      if (!f.id) { this.mail.msg = 'id required (kebab-case, e.g. "main")'; return; }
+      this.mail.busy = true; this.mail.msg = '';
+      try {
+        const rec = { id: f.id, label: f.label || f.id, kind: f.kind };
+        if (f.kind === 'imap') {
+          rec.address = f.user;
+          rec.imap = { host: f.imap_host, port: Number(f.imap_port) || 993, ssl: !!f.imap_ssl };
+          rec.smtp = { host: f.smtp_host, port: Number(f.smtp_port) || 587, tls: !!f.smtp_tls };
+        }
+        await this._mailPost('/api/mail/mailboxes', rec);
+        if (f.kind === 'gmail') {
+          window.location.href = '/api/mail/oauth/start?mailbox=' + encodeURIComponent(f.id);
+          return;
+        }
+        const res = await this._mailPost(`/api/mail/mailboxes/${encodeURIComponent(f.id)}/imap`,
+          { user: f.user, password: f.password, from: f.from });
+        this.mail.msg = res.ok ? 'Connected ✓' : (res.error || 'saved, test failed');
+        this.mail.form.open = false; this.mail.form.password = '';
+        await this.loadMail();
+      } catch (e) { this.mail.msg = String(e.message || e); }
+      this.mail.busy = false;
+    },
+
+    connectGmailBox(id) {
+      window.location.href = '/api/mail/oauth/start?mailbox=' + encodeURIComponent(id);
+    },
+
+    async probeMailbox(id) {
+      this.mail.msg = 'checking…';
+      const d = await this.fetchJson('/api/mail/mailboxes/' + encodeURIComponent(id) + '/probe');
+      this.mail.msg = d ? (d.ok ? `✓ ${id} reachable${d.address ? ' — ' + d.address : ''}`
+                                : `✗ ${id}: ${d.error || 'unreachable'}`) : '✗ probe failed';
+      await this.loadMail();
+    },
+
+    async deleteMailbox(id) {
+      if (!confirm(`Remove mailbox "${id}"? Its stored credentials are deleted.`)) return;
+      try {
+        await this._mailPost('/api/mail/mailboxes/' + encodeURIComponent(id), undefined, 'DELETE');
+        await this.loadMail();
+      } catch (e) { this.mail.msg = String(e.message || e); }
+    },
+
+    toggleMailBinding(id) {
+      const list = this.mail.binding.mailboxes;
+      const i = list.indexOf(id);
+      if (i >= 0) list.splice(i, 1); else list.push(id);
+    },
+
+    async saveMailBinding() {
+      try {
+        await this._mailPost('/api/mail/binding',
+          { scope: 'hub', mailboxes: this.mail.binding.mailboxes,
+            send_policy: this.mail.binding.send_policy }, 'PUT');
+        this.mail.msg = 'Hub binding saved ✓';
+      } catch (e) { this.mail.msg = String(e.message || e); }
+    },
+
+    async resolveMailOutbox(id, action) {
+      this.mail.busy = true;
+      try {
+        const d = await this._mailPost(`/api/mail/outbox/${encodeURIComponent(id)}/resolve`, { action });
+        this.mail.msg = d.status === 'sent' ? '📤 sent' :
+                        d.status === 'rejected' ? 'rejected' : (d.error || d.status || '?');
+      } catch (e) { this.mail.msg = String(e.message || e); }
+      await this.loadMail();
+      this.mail.busy = false;
     },
 
     // ===== Audit prodotti (Tier 2) =====

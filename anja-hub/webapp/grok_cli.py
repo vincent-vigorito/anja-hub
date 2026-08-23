@@ -60,6 +60,7 @@ SECRET_DENY_RULES = (
     "Read(**/*token*.json)",
     "Read(**/*credentials*.json)",
     "Read(**/*oauth-client*.json)",
+    "Read(**/.anjawiki/mail/**)",
 )
 NOT_SIGNED_IN_MESSAGE = "Grok Build not signed in — Settings → Providers → Grok Build."
 NO_CLI_MESSAGE = ("Grok Build CLI not installed on the host: "

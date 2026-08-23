@@ -540,7 +540,48 @@ def _expand_placeholders(value):
     return value
 
 
-def dispatch_action(action: dict, result_text: str, hub: Path, secrets: dict) -> dict:
+def _send_via_mailbox(cfg: dict, body: str, hub: Path, scope: str) -> dict:
+    """F-Mail: `type: email` + `mailbox: <id>` → invio via casella registrata,
+    SEMPRE attraverso l'outbox. Le routine non possono "chiedere": con
+    send_policy=auto dello scope parte subito, altrimenti resta pending finché
+    un umano approva (bottoni Telegram del watcher)."""
+    webapp = Path(__file__).resolve().parent.parent.parent / "anja-hub" / "webapp"
+    scripts = Path(__file__).resolve().parent.parent.parent / "anja-hub" / "scripts"
+    for p in (str(webapp), str(scripts)):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+    import mail_store
+    import mail_backends
+    mailbox = str(cfg.get("mailbox"))
+    box = mail_store.get_mailbox(hub, mailbox)
+    if not box:
+        return {"status": "error", "details": f"mailbox '{mailbox}' not registered"}
+    binding = mail_store.scope_binding(hub, scope)
+    if mailbox not in binding["mailboxes"]:
+        return {"status": "error", "details": f"mailbox '{mailbox}' not bound to scope '{scope}'"}
+    if binding["send_policy"] == "deny":
+        return {"status": "error", "details": f"send_policy=deny on scope '{scope}'"}
+    to = cfg.get("to") or []
+    if isinstance(to, str):
+        to = [to]
+    subject = cfg.get("subject") or "anja routine report"
+    if binding["send_policy"] == "auto":
+        try:
+            be = mail_backends.backend_for(hub, box)
+            mid = be.send(to, subject, body)
+            item = mail_store.outbox_add(hub, scope=scope, mailbox=mailbox, to=to,
+                                         subject=subject, body=body, status="sent")
+            mail_store.outbox_mark(hub, item["id"], "sent", provider_message_id=mid)
+            return {"status": "success", "details": f"sent via mailbox '{mailbox}' ({mid})"}
+        except Exception as e:
+            return {"status": "error", "details": f"send via '{mailbox}' failed: {e}"}
+    item = mail_store.outbox_add(hub, scope=scope, mailbox=mailbox, to=to,
+                                 subject=subject, body=body)
+    return {"status": "success",
+            "details": f"queued in outbox as pending ({item['id']}) — awaiting approval"}
+
+
+def dispatch_action(action: dict, result_text: str, hub: Path, secrets: dict, scope: str = "hub") -> dict:
     """Esegue un'output action. Ritorna {"status", "details"}."""
     atype = action.get("type")
     if not atype:
@@ -554,6 +595,8 @@ def dispatch_action(action: dict, result_text: str, hub: Path, secrets: dict) ->
     cfg = _expand_placeholders(expand_secrets(action, secrets))
 
     try:
+        if atype == "email" and cfg.get("mailbox"):
+            return _send_via_mailbox(cfg, result_text, hub, scope)
         if atype == "email":
             from tools.email import send_email
             return send_email(cfg, result_text, hub)
@@ -796,7 +839,7 @@ def run_routine(yaml_path: Path, dry_run: bool = False, event: Any = None) -> in
     actions_results = []
     if not result.get("error") and not dry_run:
         for action in yaml_obj.get("output", []):
-            ar = dispatch_action(action, result["text"], hub, secrets)
+            ar = dispatch_action(action, result["text"], hub, secrets, scope=scope)
             ar["action"] = action
             actions_results.append(ar)
             print(f"  → action '{action.get('type')}': {ar.get('status')} ({ar.get('details', '')})")

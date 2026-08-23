@@ -1,0 +1,22 @@
+# mail-daily-brief — 08:00: il quadro dell'inbox per iniziare la giornata.
+# Riassunto delle non lette (24h) + cosa richiede risposta. Con una casella
+# agganciata allo scope hub. I task operativi finiscono in kanban (se il
+# server hub è attivo nel cwd).
+name: mail-daily-brief
+description: Brief mattutino dell'inbox (08:00) — non lette, cosa richiede risposta
+scope: hub
+schedule: "0 8 * * *"
+enabled: false
+model: sonnet
+tools: []
+prompt: |
+  Prepara il brief mattutino della posta:
+  1. mail_search "is:unread newer_than:1d" — raggruppa per tema.
+  2. Evidenzia ciò che RICHIEDE una risposta o un'azione oggi (chi, cosa, entro quando).
+  3. Se qualcosa merita un task operativo, crealo con kanban_add (se disponibile).
+  Formato: poche righe, dirette, in italiano. Non inviare mail: solo leggere.
+output:
+  - type: telegram
+timeout_sec: 300
+max_retries: 0
+tags: [mail, brief, morning]

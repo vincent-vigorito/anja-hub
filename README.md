@@ -40,6 +40,10 @@ isolation, and multi-LLM support — built on the
   (distills the week's sessions into the wiki via the anjadev steward) and
   `metrics-refresh-nightly` (refreshes the marketing collectors for every
   project), both off by default.
+- **Mail** — Gmail (OAuth, `readonly+compose` only) and IMAP/SMTP mailboxes as
+  hub-level connections, attached per scope (a workspace only sees its own
+  boxes). Agents read freely in scope; **sending is two-phase**: the message
+  waits in an outbox until you approve it from Telegram or the UI.
 - **Marketing integrations** — Google Search Console, GA4, Google Ads
   (native API: campaigns, keywords, search terms), Merchant Center, Meta
   (Facebook/Instagram) insights and ads, WordPress content + **WooCommerce

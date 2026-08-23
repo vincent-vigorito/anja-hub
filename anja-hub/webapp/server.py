@@ -8073,7 +8073,7 @@ async def api_routine_create(request: Request):
         raise HTTPException(409, f"routine '{name}' already exists at {target}")
 
     # ordering canonico
-    order = ["name", "description", "scope", "schedule", "enabled", "provider", "model", "effort", "prompt", "context", "tools", "output", "timeout_sec", "max_retries", "tags"]
+    order = ["name", "description", "scope", "schedule", "trigger", "hook_secret", "hook_hmac", "hook_rate_limit", "enabled", "provider", "model", "effort", "prompt", "context", "tools", "output", "timeout_sec", "max_retries", "tags"]
     obj = {}
     for k in order:
         if k in body and body[k] not in (None, "", []):
@@ -8083,8 +8083,12 @@ async def api_routine_create(request: Request):
         if k not in obj and v not in (None, "", []):
             obj[k] = v
 
-    # required fields check (basic)
-    for f in ("name", "scope", "schedule", "prompt"):
+    # required fields check (basic). F-EventTriggers: schedule opzionale per
+    # trigger: webhook (la validazione vera — hook_secret obbligatorio ecc. —
+    # la fa load_and_validate sotto).
+    required = ("name", "scope", "prompt") if obj.get("trigger") == "webhook" \
+        else ("name", "scope", "schedule", "prompt")
+    for f in required:
         if f not in obj or not obj[f]:
             raise HTTPException(400, f"missing required field: '{f}'")
 

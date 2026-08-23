@@ -117,6 +117,21 @@ def test_endpoint():
                headers={"X-Hub-Signature-256": sig})
     check("body oltre il cap → 413", r.status_code == 413, str(r.status_code))
 
+    # creazione via REST (la via dell'orchestratore): webhook senza schedule
+    r = c.post("/api/routines", json={
+        "name": "wh-rest", "scope": "hub", "trigger": "webhook",
+        "hook_secret": "{{HOOK_SECRET_T}}", "prompt": "Evento: {{event}}",
+        "output": [{"type": "telegram"}]})
+    check("POST /api/routines webhook senza schedule → created",
+          r.status_code == 200 and r.json().get("status") == "created", f"{r.status_code} {r.text[:200]}")
+    r2 = c.post("/hooks/wh-rest", json={"via": "rest"}, headers={"X-Anja-Hook-Secret": "topsecret"})
+    check("la routine creata via REST è invocabile", r2.status_code == 202, str(r2.status_code))
+    r = c.post("/api/routines", json={
+        "name": "wh-bad", "scope": "hub", "trigger": "webhook", "prompt": "x"})
+    check("webhook senza hook_secret via REST → 400", r.status_code == 400, str(r.status_code))
+    r = c.post("/api/routines", json={"name": "cron-bad", "scope": "hub", "prompt": "x"})
+    check("routine cron senza schedule via REST → 400 (invariato)", r.status_code == 400, str(r.status_code))
+
     # routine disabilitata → 404 (uniforme, no-leak)
     (hub / "routines" / "routines.json").write_text(json.dumps({"wh-test": {"enabled": False}}))
     server._HOOK_LAST.clear()

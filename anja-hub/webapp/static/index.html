@@ -3648,6 +3648,42 @@
             </div>
           </div>
 
+          <!-- F-AgentBrowser: browser read-only del workspace -->
+          <div class="card" style="padding:16px 18px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div style="font-weight:600;display:flex;align-items:center;gap:8px">
+                <i data-lucide="globe" style="width:16px;height:16px;color:var(--ink-500)"></i>
+                Browser <span class="text-muted" style="font-weight:400;font-size:12px">(read-only)</span>
+                <span class="tag" :class="wsBrowser.mcp_present ? 'success' : 'neutral'" x-text="wsBrowser.mcp_present ? 'active' : 'off'"></span>
+                <span class="tag" :class="wsBrowser.state_present ? 'success' : 'neutral'" x-text="wsBrowser.state_present ? 'session imported' : 'no session'"></span>
+              </div>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                <input type="checkbox" x-model="wsBrowser.enabled"> enabled
+              </label>
+            </div>
+            <div class="text-muted" style="font-size:12.5px;margin:6px 0 10px 0">
+              Agents can read pages on the origins below (accessibility snapshots + screenshots). Actions and
+              arbitrary JS are blocked server-side. Logins stay per-workspace.
+            </div>
+            <label class="form-label" style="font-size:var(--t-xs)">Allowed origins (one per line, required)</label>
+            <textarea class="form-input" rows="3" style="width:100%;font-family:monospace;font-size:12px"
+                      placeholder="https://dashboard.example.com" x-model="wsBrowser.originsText"></textarea>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
+              <button class="btn btn-primary btn--xs" :disabled="wsBrowser.busy" @click="saveWsBrowser()">Save</button>
+              <label class="btn btn--ghost btn--xs" style="cursor:pointer">
+                <i data-lucide="key-round" style="width:13px;height:13px"></i> Import session (storage state)
+                <input type="file" accept=".json,application/json" style="display:none" @change="importBrowserState($event)">
+              </label>
+              <button class="btn btn--ghost btn--xs" x-show="wsBrowser.state_present" @click="resetBrowserState()">Remove session</button>
+            </div>
+            <div class="text-muted" style="font-size:11.5px;margin-top:8px">
+              To browse authenticated pages: on your computer run
+              <code style="user-select:all">npx playwright codegen --save-storage=state.json &lt;url&gt;</code>,
+              log in, close the browser, then import <code>state.json</code> here (stored 0600, never in git/backups).
+            </div>
+            <div x-show="wsBrowser.msg" x-text="wsBrowser.msg" style="margin-top:6px;font-size:12.5px;color:var(--text-2)"></div>
+          </div>
+
           <div x-show="connLoading" class="text-muted" style="padding:30px;text-align:center">Loading connectors…</div>
 
           <!-- stato cassaforte + materializzazione runtime (F2) -->

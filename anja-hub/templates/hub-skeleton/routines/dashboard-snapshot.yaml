@@ -1,0 +1,25 @@
+# dashboard-snapshot — lettura mattutina di una dashboard web (F-AgentBrowser).
+# TEMPLATE: duplicalo per workspace e personalizza scope + URL. Richiede il
+# browser abilitato sul workspace (Connectors → Browser: origins in allowlist,
+# sessione importata se la dashboard è autenticata). L'agente usa i tool
+# read-only del server anja_browser (auto-allowlistati dal runner via .mcp.json
+# del cwd). Le azioni sono comunque bloccate server-side dal gate.
+name: dashboard-snapshot
+description: Snapshot mattutino di una dashboard web nel brief Telegram
+scope: project:CHANGE-ME          # workspace col browser abilitato
+schedule: "45 7 * * 1-5"
+enabled: false
+model: haiku
+tools: []
+prompt: |
+  Apri la dashboard con browser_navigate su: https://CHANGE-ME
+  Leggi la pagina con browser_snapshot.
+  Rispondi con un riassunto di POCHE righe per Telegram: i numeri chiave che
+  vedi (metriche, variazioni, alert), niente descrizione dell'interfaccia.
+  Se la pagina chiede il login, rispondi con una sola riga:
+  "dashboard-snapshot: sessione scaduta — reimporta lo storage state dai Connectors".
+output:
+  - type: telegram
+timeout_sec: 300
+max_retries: 0
+tags: [browser, dashboard, morning]

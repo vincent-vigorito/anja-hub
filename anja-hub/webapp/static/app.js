@@ -193,6 +193,9 @@ function app() {
     hubConnMsg: '',
     mediaGen: { prompt: '', model: '', busy: false, msg: '', models: [] },
     googleOauth: { connected: false, client_configured: false, token_scope: '', redirect_uri: '' },
+    // F-AgentBrowser: card Browser nei Connectors del workspace
+    wsBrowser: { enabled: false, originsText: '', policy: 'read',
+                 state_present: false, mcp_present: false, msg: '', busy: false },
     // F-Mail: caselle + outbox + binding hub (Settings → Integrations → Mailboxes)
     mail: { boxes: [], outbox: [], binding: { mailboxes: [], send_policy: 'ask' }, msg: '', busy: false,
             form: { open: false, id: '', label: '', kind: 'gmail', imap_host: '', imap_port: 993,
@@ -2009,7 +2012,67 @@ function app() {
       this.loadConnectors();
       this.loadGoogleOauth();
       this.loadGoogleResources();
+      this.loadWsBrowser();
       this.refreshIcons();
+    },
+
+    // ===== F-AgentBrowser: browser del workspace (read-only v1) =====
+    async loadWsBrowser() {
+      const proj = this.currentProjectScopeName;
+      if (!proj) return;
+      const d = await this.fetchJson('/api/browser/config?scope=' + encodeURIComponent('project:' + proj));
+      if (!d) return;
+      const cfg = d.browser || {};
+      this.wsBrowser.enabled = !!cfg.enabled;
+      this.wsBrowser.originsText = (cfg.allowed_origins || []).join('\n');
+      this.wsBrowser.policy = cfg.policy || 'read';
+      this.wsBrowser.state_present = !!d.state_present;
+      this.wsBrowser.mcp_present = !!d.mcp_present;
+    },
+
+    async saveWsBrowser() {
+      const proj = this.currentProjectScopeName;
+      if (!proj) return;
+      this.wsBrowser.busy = true; this.wsBrowser.msg = '';
+      const origins = this.wsBrowser.originsText.split('\n').map(s => s.trim()).filter(Boolean);
+      try {
+        await this._mailPost('/api/browser/config', {
+          scope: 'project:' + proj,
+          browser: { enabled: this.wsBrowser.enabled, allowed_origins: origins, policy: 'read' } }, 'PUT');
+        this.wsBrowser.msg = this.wsBrowser.enabled ? 'Saved — browser active for this workspace ✓'
+                                                    : 'Saved — browser disabled';
+        await this.loadWsBrowser();
+      } catch (e) { this.wsBrowser.msg = String(e.message || e); }
+      this.wsBrowser.busy = false;
+    },
+
+    async importBrowserState(ev) {
+      const proj = this.currentProjectScopeName;
+      const file = ev.target.files && ev.target.files[0];
+      ev.target.value = '';
+      if (!proj || !file) return;
+      this.wsBrowser.busy = true; this.wsBrowser.msg = '';
+      try {
+        const fd = new FormData();
+        fd.append('scope', 'project:' + proj);
+        fd.append('file', file);
+        const r = await fetch('/api/browser/state-import', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+        this.wsBrowser.msg = `Session imported ✓ (${d.cookies} cookies)`;
+        await this.loadWsBrowser();
+      } catch (e) { this.wsBrowser.msg = String(e.message || e); }
+      this.wsBrowser.busy = false;
+    },
+
+    async resetBrowserState() {
+      const proj = this.currentProjectScopeName;
+      if (!proj) return;
+      try {
+        await this._mailPost('/api/browser/state-reset', { scope: 'project:' + proj });
+        this.wsBrowser.msg = 'Imported session removed';
+        await this.loadWsBrowser();
+      } catch (e) { this.wsBrowser.msg = String(e.message || e); }
     },
 
     async loadGoogleResources() {

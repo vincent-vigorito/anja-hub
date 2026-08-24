@@ -211,6 +211,7 @@ def scope_mcps(
     meta = {
         "scope_kind": scope_kind,
         "target_name": target_name,
+        "dropped": dropped,
         "tier0": tier0,
         "tier1": tier1,
         "tier1_source": tier1_source,

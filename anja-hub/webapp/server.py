@@ -7813,6 +7813,17 @@ async def ws_chat(websocket: WebSocket):
                 # server MCP media restano solo per la UI → strip sempre.
                 scoped_servers = [s for s in scoped_servers if s not in ("anja_images", "anja_videos")]
                 print(f"[anja] mcp_scoper scope={kind}/{target} → {scoped_servers} (reasons: {scope_meta.get('reasons')})")
+                # F-AgentBrowser: le keyword browser hanno matchato ma il server non è
+                # abilitato su questo scope → di' all'agente che la feature ESISTE
+                # (altrimenti improvvisa: "installo Playwright…").
+                if "anja_browser" in (scope_meta.get("dropped") or []):
+                    system_prompt = (system_prompt or "") + (
+                        "\n\n[anja] Un browser read-only per gli agenti esiste in piattaforma ma "
+                        "NON è abilitato su questo scope: non proporre di installare "
+                        "Playwright/Chromium o servizi esterni. Indica all'utente dove abilitarlo "
+                        "— Settings → Integrations → Hub browser (scope hub) oppure "
+                        "Connectors → Browser (workspace) — con l'allowlist dei domini; "
+                        "dopo l'attivazione avrai i tool browser_navigate/browser_snapshot.")
             except Exception as e:
                 print(f"[anja] mcp_scoper failed, fallback to all servers: {e}")
                 scoped_servers = None

@@ -35,6 +35,7 @@ PROJECT_TOOLS_FULL = [
 # qui appaiono comunque nel catalogo runtime con descrizione "(no catalog entry)".
 SERVER_DESCRIPTIONS = {
     "anja_mail": "caselle di posta dello scope (Gmail/IMAP): mail_search/get/thread, bozze, invio con approvazione umana (outbox)",
+    "anja_browser": "browser del workspace (Playwright, SOLO lettura): naviga i domini in allowlist, browser_snapshot legge la pagina come albero semantico, screenshot per grafici — sessioni autenticate via storage-state importato",
     "hub_api":       "REST bridge: gestione hub completa (routine, agent, workspace, goal, skill) via 1 solo tool generico `api(method, path, body)`",
     "anja_memory":   "wiki CRUD/search, sessions, soul/user, skill mgmt, roadmap, web research (DDG/SerpAPI)",
     "anja_hub_ops":  "[deprecated, use hub_api invece] create/lifecycle workspace, agent, routine, goal",

@@ -33,7 +33,7 @@
   "skill_modules": [
     "social"
   ],
-  "_comment_delegate": "delegate_tools/bypass_permissions valgono SOLO in agent.delegate da sessione hub (Telegram): genera kit social: script slide, conversione JPEG per IG, upload media. In chat workspace i tool arrivano da allowed_tools+PROJECT_TOOLS.",
+  "_comment_delegate": "delegate_tools valgono SOLO in agent.delegate da sessione hub (Telegram). F-DelegateHardening (c): niente bypass — guard mode con bash_allowlist (script kit/caroselli + giv), path confinati al workspace, segreti negati sempre.",
   "delegate_tools": [
     "Read",
     "Write",
@@ -43,5 +43,9 @@
     "Glob",
     "LS"
   ],
-  "bypass_permissions": true
+  "bash_allowlist": [
+    "python3 scripts/*",
+    "python3 .anjawiki/skills/*",
+    "giv *"
+  ]
 }

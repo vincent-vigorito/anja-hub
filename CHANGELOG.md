@@ -8,6 +8,44 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Added
 
+- **Delegate hardening — enumerated Bash allowlists instead of wholesale
+  bypass** (`webapp/agent_guard.py`): an agent config with `bash_allowlist`
+  (even `[]`) switches its headless delegation to **guard mode** — no
+  `bypassPermissions`; every native tool call goes through a deterministic
+  `can_use_tool` callback that (1) checks Bash commands against the role's
+  allowlist *per shell segment* (`&&`/`||`/`;`/`|` split, command substitution
+  always denied), (2) confines Read/Write/Edit/Grep/Glob paths to the agent's
+  workspace, (3) denies secret material everywhere (env files, tokens,
+  `backup.key`, `.anjawiki/mail/**`, `.browser/**` — same patterns as the Grok
+  `--deny` set). Headless-safe: the callback decides, no human prompt needed.
+  Interactive ASP sessions get the secret-material deny as a pre-filter too —
+  not even an "Allow" click can grant those. `marketing-site` blueprint:
+  `dev` loses Bash in delegation on WordPress (the `wp_*` MCP tools cover the
+  CMS); on SwerpiCommerce the scaffold re-adds Bash with a CLI allowlist
+  (`swerpicommerce *`, `python3 scripts/*`); `social` keeps Bash behind a
+  script allowlist; `seo-copy` runs guarded with no Bash. Legacy
+  `bypass_permissions: true` without an allowlist is unchanged (explicit
+  opt-in).
+- **Per-workspace agent browser, read-only v1** (F-AgentBrowser F1):
+  workspaces can opt in to a Playwright-powered browser — `browser.enabled` +
+  a **mandatory origin allowlist** (fail-closed) in the workspace preferences
+  materialize an `anja_browser` entry in the workspace `.mcp.json`. The entry
+  runs `@playwright/mcp` behind a new server-side gate
+  (`scripts/mcp_browser_gate.py`): action tools (click/type/fill…) are
+  stripped from `tools/list` and rejected in `tools/call` under the v1
+  `read` policy, and `browser_evaluate`/run-code/install are denied under any
+  policy (arbitrary JS can exfiltrate cookies) — the gate works identically
+  for Claude, Grok CLI and LiteLLM. Reading is cheap: `browser_snapshot`
+  returns the page's accessibility tree as text. Authenticated browsing via
+  **storage-state import**: export on your desktop with `npx playwright
+  codegen --save-storage=state.json <url>`, upload via
+  `POST /api/browser/state-import` — the only secret on disk is
+  `<ws>/.browser/state.json` (0600, gitignored, denied to Grok). Endpoints
+  `/api/browser/config` (GET/PUT, validates fail-closed) and state
+  import/reset; scoper keywords `browser|naviga|screenshot|dashboard` →
+  `anja_browser`. Host prerequisite:
+  `npx @playwright/mcp install-browser chrome-for-testing`.
+
 - **Mail for the hub and workspaces** (`anja_mail`): mailboxes are hub-level
   connections (`config/mailboxes.json`, no secrets inside — OAuth tokens and
   IMAP credentials live in `.anjawiki/mail/<id>/`, 0600) that the hub and each

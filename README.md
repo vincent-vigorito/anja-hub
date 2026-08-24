@@ -44,6 +44,11 @@ isolation, and multi-LLM support — built on the
   hub-level connections, attached per scope (a workspace only sees its own
   boxes). Agents read freely in scope; **sending is two-phase**: the message
   waits in an outbox until you approve it from Telegram or the UI.
+- **Agent browser (read-only)** — opt-in per workspace: agents browse an
+  explicit origin allowlist through Playwright (accessibility-tree snapshots,
+  screenshots), with authenticated sessions imported as storage state. Action
+  tools and arbitrary JS are blocked by a server-side gate; per-workspace
+  isolation (a client's logins never leak to another workspace).
 - **Marketing integrations** — Google Search Console, GA4, Google Ads
   (native API: campaigns, keywords, search terms), Merchant Center, Meta
   (Facebook/Instagram) insights and ads, WordPress content + **WooCommerce

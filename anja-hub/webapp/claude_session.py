@@ -146,6 +146,19 @@ def _make_can_use_tool(conv_id: str):
 
     async def can_use_tool(tool_name: str, input_data: Any, context: Any):
         import chat_stream_registry as chat_streams
+
+        # F-DelegateHardening: il materiale segreto è negato PRIMA della policy
+        # e senza chiedere — nemmeno un "Allow" umano può concederlo da qui
+        # (stessi pattern dei --deny di grok_cli: env, token, mail, browser).
+        import agent_guard as _guard
+        _reason = _guard.precheck_secrets(tool_name,
+                                          input_data if isinstance(input_data, dict) else {})
+        if _reason:
+            _emit(conv_id, {"type": "permission.resolved", "tool": tool_name,
+                            "target": _reason[:200], "decision": "auto-deny",
+                            "by": "secret-guard"})
+            return PermissionResultDeny(message=_reason, interrupt=False)
+
         target = ap.canonical_target(tool_name,
                                      input_data if isinstance(input_data, dict) else {})
         state = chat_streams.get(conv_id)

@@ -6488,6 +6488,80 @@ async def _startup_mail_watcher():
         MAIL_OUTBOX_TASK = asyncio.create_task(_mail_outbox_watcher())
 
 
+# --- F-AgentBrowser F1: browser per-workspace (lettura, gate server-side) ----
+# Design: anja-agent-browser-design.md. Config nelle prefs del workspace,
+# entry .mcp.json materializzata dal writer, login via storage-state import.
+
+_BROWSER_GATE = ANJA_HUB_DIR / "scripts" / "mcp_browser_gate.py"
+
+
+def _browser_ws_root(scope: str) -> Path:
+    if not scope.startswith("project:"):
+        raise HTTPException(400, "browser is per-workspace (scope project:<ws>)")
+    root = _project_root(scope.split(":", 1)[1])
+    if not root:
+        raise HTTPException(404, "workspace not found")
+    return root
+
+
+@app.get("/api/browser/config")
+async def api_browser_config_get(request: Request, scope: str = ""):
+    _mail_scope_gate(request, scope)      # stesso gate: hub admin / ws access
+    import browser_policy as bp
+    root = _browser_ws_root(scope)
+    cfg = bp.load_config(root)
+    return JSONResponse({"browser": cfg,
+                         "state_present": (bp.browser_dir(root) / bp.STATE_NAME).is_file(),
+                         "mcp_present": bp.SERVER_NAME in
+                         (json.loads((root / ".mcp.json").read_text())
+                          .get("mcpServers", {}) if (root / ".mcp.json").is_file() else {})})
+
+
+@app.put("/api/browser/config")
+async def api_browser_config_put(request: Request, payload: dict = Body(...)):
+    scope = (payload.get("scope") or "").strip()
+    _mail_scope_gate(request, scope)
+    import browser_policy as bp
+    root = _browser_ws_root(scope)
+    try:
+        cfg = bp.save_config(root, payload.get("browser") or {})
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    present = bp.write_mcp_entry(root, _BROWSER_GATE)
+    return JSONResponse({"ok": True, "browser": cfg, "mcp_present": present})
+
+
+@app.post("/api/browser/state-import")
+async def api_browser_state_import(request: Request, scope: str = Form(...),
+                                   file: UploadFile = File(...)):
+    """Upload dello storage state esportato dal Mac (0600, mai nei log)."""
+    _mail_scope_gate(request, scope)
+    import browser_policy as bp
+    root = _browser_ws_root(scope)
+    raw = await file.read()
+    if len(raw) > 2 * 1024 * 1024:
+        raise HTTPException(413, "storage state too large")
+    try:
+        info = bp.save_storage_state(root, raw)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    bp.write_mcp_entry(root, _BROWSER_GATE)   # aggiunge --storage-state all'entry
+    return JSONResponse({"ok": True, **info})
+
+
+@app.post("/api/browser/state-reset")
+async def api_browser_state_reset(request: Request, payload: dict = Body(...)):
+    scope = (payload.get("scope") or "").strip()
+    _mail_scope_gate(request, scope)
+    import browser_policy as bp
+    root = _browser_ws_root(scope)
+    state = bp.browser_dir(root) / bp.STATE_NAME
+    existed = state.is_file()
+    state.unlink(missing_ok=True)
+    bp.write_mcp_entry(root, _BROWSER_GATE)
+    return JSONResponse({"ok": True, "removed": existed})
+
+
 # --- Brain personale/condiviso (F3) -----------------------------------------
 
 def _default_user(request: Request = None) -> str:

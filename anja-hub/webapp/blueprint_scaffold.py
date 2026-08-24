@@ -255,6 +255,14 @@ def _adapt_agent_for_backend(cfg: dict, backend: str) -> dict:
             kept.append("Bash")
         if "swerpicommerce" not in mods:
             mods.append("swerpicommerce")
+        # F-DelegateHardening (c): anche in DELEGA serve Bash per la CLI — ma in
+        # allowlist, non in bypass: solo swerpicommerce + script del workspace.
+        dt = cfg.get("delegate_tools")
+        if isinstance(dt, list) and "Bash" not in dt:
+            cfg["delegate_tools"] = dt + ["Bash"]
+        if isinstance(cfg.get("bash_allowlist"), list):
+            base = ["swerpicommerce *", "python3 scripts/*"]
+            cfg["bash_allowlist"] = list(dict.fromkeys(cfg["bash_allowlist"] + base))
     cfg["allowed_tools"] = kept
     cfg["skill_modules"] = mods
     return cfg

@@ -40,7 +40,7 @@
     "editorial",
     "ecommerce"
   ],
-  "_comment_delegate": "delegate_tools/bypass_permissions valgono SOLO in agent.delegate da sessione hub (Telegram): scrive bozze/meta su file; niente Bash (pubblica via tool MCP wp_*). In chat workspace i tool arrivano da allowed_tools+PROJECT_TOOLS.",
+  "_comment_delegate": "delegate_tools valgono SOLO in agent.delegate da sessione hub (Telegram): scrive bozze/meta su file; niente Bash (pubblica via tool MCP wp_*). F-DelegateHardening: guard mode — Write/Edit confinati al workspace, segreti negati.",
   "delegate_tools": [
     "Read",
     "Write",
@@ -49,5 +49,5 @@
     "Glob",
     "LS"
   ],
-  "bypass_permissions": true
+  "bash_allowlist": []
 }

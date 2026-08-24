@@ -347,9 +347,6 @@ def tool_agent_delegate(args: dict) -> dict:
             pass
     model = cfg.get("default_model", "sonnet")
     role = cfg.get("role", "")
-    # F-Sec-Anjadev-DelegateBypass: bypassPermissions solo se l'agent lo dichiara
-    # esplicitamente nella sua config (default least-privilege).
-    bypass_perms = bool(cfg.get("bypass_permissions", False))
     # Tool NATIVI in delega: read-only di default. Un agent che deve PRODURRE (es. il
     # lead di un workspace marketing: generare kit, convertire immagini) li dichiara
     # in config `delegate_tools`. Filtrati su whitelist: niente nomi arbitrari.
@@ -402,22 +399,38 @@ def tool_agent_delegate(args: dict) -> dict:
     # già prodotto resta qui e viene restituito+loggato invece di andare perso.
     chunks: list = []
 
+    # F-DelegateHardening (c): regime dei permessi dalla config dell'agente.
+    # `bash_allowlist` presente (anche []) → GUARD MODE: niente bypass, ogni
+    # nativo passa da un callback deterministico (allowlist Bash + path
+    # confinati al workspace + deny segreti) — headless-safe perché decide da
+    # solo. Assente → comportamento storico (bypass solo se dichiarato).
+    agent_guard = _load_webapp_module("agent_guard")
+    if agent_guard is None:
+        return {"error": "agent_guard module not available (webapp dir missing?)"}
+    plan = agent_guard.delegate_permission_plan(cfg, native_tools, mcp_patterns)
+    guard_roots = [(hub / "workspaces" / workspace) if workspace else hub, agent_dir]
+
     async def _run():
         # Least-privilege di default: l'agent delegato legge/cerca + usa i suoi MCP,
-        # ma NON scrive/esegue bash senza opt-in (delegate_tools + bypass_permissions
-        # nella sua config). Con prompt injection non eredita pieni poteri sull'host.
+        # ma NON scrive/esegue bash senza opt-in (delegate_tools + bash_allowlist
+        # o bypass_permissions nella sua config). Con prompt injection non eredita
+        # pieni poteri sull'host.
         opts_kwargs = {
             "system_prompt": system_prompt,
             "model": model,
             "cwd": str(sdk_cwd),
-            "permission_mode": "bypassPermissions" if bypass_perms else "default",
-            "allowed_tools": native_tools + mcp_patterns,
+            "permission_mode": plan["mode"],
+            "allowed_tools": plan["allowed_tools"],
             # Solo i server montati qui: senza strict la sessione delegata eredita
             # gli MCP user-level dell'host (connettori personali: Gmail, Drive,
             # sandbox di esecuzione remota...) che in bypassPermissions sono
             # usabili senza limiti — escalation fuori scope osservata live.
             "strict_mcp_config": True,
         }
+        if plan["guarded"]:
+            opts_kwargs["can_use_tool"] = agent_guard.make_delegate_guard(
+                guard_roots, plan["granted"], plan["bash_allowlist"],
+                agent=target, log=lambda m: print(m, file=sys.stderr, flush=True))
         if mcp_servers:
             opts_kwargs["mcp_servers"] = mcp_servers
         options = ClaudeAgentOptions(**opts_kwargs)

@@ -38,15 +38,14 @@
     "seo-onsite",
     "wordpress"
   ],
-  "_comment_delegate": "delegate_tools/bypass_permissions valgono SOLO in agent.delegate da sessione hub (Telegram): costruisce pagine/HTML e asset del tema. In chat workspace i tool arrivano da allowed_tools+PROJECT_TOOLS.",
+  "_comment_delegate": "delegate_tools valgono SOLO in agent.delegate da sessione hub (Telegram). F-DelegateHardening (b): su backend wp il CMS si opera coi tool wp_* → niente Bash in delega; guard mode (bash_allowlist []) confina Write/Edit al workspace. Su swerpi lo scaffold ri-aggiunge Bash con allowlist della CLI (vedi _adapt_agent_for_backend).",
   "delegate_tools": [
     "Read",
     "Write",
     "Edit",
-    "Bash",
     "Grep",
     "Glob",
     "LS"
   ],
-  "bypass_permissions": true
+  "bash_allowlist": []
 }

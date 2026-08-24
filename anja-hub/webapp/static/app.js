@@ -196,6 +196,8 @@ function app() {
     // F-AgentBrowser: card Browser nei Connectors del workspace
     wsBrowser: { enabled: false, originsText: '', policy: 'read',
                  state_present: false, mcp_present: false, msg: '', busy: false },
+    hubBrowser: { enabled: false, originsText: '', policy: 'read',
+                  state_present: false, mcp_present: false, msg: '', busy: false },
     // F-Mail: caselle + outbox + binding hub (Settings → Integrations → Mailboxes)
     mail: { boxes: [], outbox: [], binding: { mailboxes: [], send_policy: 'ask' }, msg: '', busy: false,
             form: { open: false, id: '', label: '', kind: 'gmail', imap_host: '', imap_port: 993,
@@ -2063,6 +2065,56 @@ function app() {
         await this.loadWsBrowser();
       } catch (e) { this.wsBrowser.msg = String(e.message || e); }
       this.wsBrowser.busy = false;
+    },
+
+    // Browser hub-level (dashboard dell'operatore) — Settings → Integrations
+    async loadHubBrowser() {
+      const d = await this.fetchJson('/api/browser/config?scope=hub');
+      if (!d) return;
+      const cfg = d.browser || {};
+      this.hubBrowser.enabled = !!cfg.enabled;
+      this.hubBrowser.originsText = (cfg.allowed_origins || []).join('\n');
+      this.hubBrowser.state_present = !!d.state_present;
+      this.hubBrowser.mcp_present = !!d.mcp_present;
+    },
+
+    async saveHubBrowser() {
+      this.hubBrowser.busy = true; this.hubBrowser.msg = '';
+      const origins = this.hubBrowser.originsText.split('\n').map(s => s.trim()).filter(Boolean);
+      try {
+        await this._mailPost('/api/browser/config', {
+          scope: 'hub',
+          browser: { enabled: this.hubBrowser.enabled, allowed_origins: origins, policy: 'read' } }, 'PUT');
+        this.hubBrowser.msg = this.hubBrowser.enabled ? 'Saved — hub browser active ✓' : 'Saved — disabled';
+        await this.loadHubBrowser();
+      } catch (e) { this.hubBrowser.msg = String(e.message || e); }
+      this.hubBrowser.busy = false;
+    },
+
+    async importHubBrowserState(ev) {
+      const file = ev.target.files && ev.target.files[0];
+      ev.target.value = '';
+      if (!file) return;
+      this.hubBrowser.busy = true; this.hubBrowser.msg = '';
+      try {
+        const fd = new FormData();
+        fd.append('scope', 'hub');
+        fd.append('file', file);
+        const r = await fetch('/api/browser/state-import', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+        this.hubBrowser.msg = `Session imported ✓ (${d.cookies} cookies)`;
+        await this.loadHubBrowser();
+      } catch (e) { this.hubBrowser.msg = String(e.message || e); }
+      this.hubBrowser.busy = false;
+    },
+
+    async resetHubBrowserState() {
+      try {
+        await this._mailPost('/api/browser/state-reset', { scope: 'hub' });
+        this.hubBrowser.msg = 'Imported session removed';
+        await this.loadHubBrowser();
+      } catch (e) { this.hubBrowser.msg = String(e.message || e); }
     },
 
     async resetBrowserState() {

@@ -38,6 +38,36 @@ def load_config(ws_root: Path) -> dict:
         return {}
 
 
+def hub_load_config(hub: Path) -> dict:
+    """Config del browser HUB-LEVEL (dashboard dell'operatore, non dei clienti):
+    vive in config/config.json → "browser", come il binding mail."""
+    p = Path(hub) / "config" / "config.json"
+    try:
+        return (json.loads(p.read_text(encoding="utf-8")) or {}).get("browser", {}) or {}
+    except Exception:
+        return {}
+
+
+def hub_save_config(hub: Path, cfg: dict) -> dict:
+    errs = validate(cfg)
+    if errs:
+        raise ValueError("; ".join(errs))
+    p = Path(hub) / "config" / "config.json"
+    obj = {}
+    try:
+        obj = json.loads(p.read_text(encoding="utf-8")) or {}
+    except Exception:
+        obj = {}
+    obj["browser"] = {"enabled": bool(cfg.get("enabled")),
+                      "allowed_origins": [str(o).strip() for o in (cfg.get("allowed_origins") or [])
+                                          if str(o).strip()],
+                      "policy": cfg.get("policy", "read")}
+    tmp = p.with_suffix(".tmp")
+    tmp.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(tmp, p)
+    return obj["browser"]
+
+
 def validate(cfg: dict) -> list[str]:
     errs = []
     if not isinstance(cfg, dict):
@@ -97,11 +127,13 @@ def mcp_entry(ws_root: Path, cfg: dict, gate_script: Path) -> dict | None:
             "args": [str(gate_script), "--policy", cfg.get("policy", "read"), "--"] + child}
 
 
-def write_mcp_entry(ws_root: Path, gate_script: Path) -> bool:
-    """Materializza/rimuove l'entry nel .mcp.json del workspace dal config.
+def write_mcp_entry(ws_root: Path, gate_script: Path, cfg: dict | None = None) -> bool:
+    """Materializza/rimuove l'entry nel .mcp.json dello scope dal config.
+    cfg None → prefs del workspace; per l'hub passare hub_load_config(hub).
     Ritorna True se l'entry è presente dopo la scrittura."""
     ws_root = Path(ws_root)
-    cfg = load_config(ws_root)
+    if cfg is None:
+        cfg = load_config(ws_root)
     entry = mcp_entry(ws_root, cfg, gate_script)
     mcp_path = ws_root / ".mcp.json"
     data = {"mcpServers": {}}

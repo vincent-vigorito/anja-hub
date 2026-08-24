@@ -7342,6 +7342,43 @@ No research yet — launch the first one above, or ask for it in chat.
             </div>
           </div>
 
+          <!-- F-AgentBrowser: browser hub-level (dashboard dell'operatore, read-only) -->
+          <div class="card" style="padding: var(--s-4); margin-bottom: var(--s-4);"
+               x-effect="if (settingsTab === 'integrations') loadHubBrowser()">
+            <h2 style="font-size: var(--t-lg); margin: 0 0 var(--s-2) 0; display:flex; align-items:center; gap: var(--s-2);">
+              <i data-lucide="globe" class="icon icon--sm"></i>
+              <span>Hub browser</span>
+              <span class="text-muted" style="font-weight:400;font-size:12px">(read-only)</span>
+              <span class="tag" :class="hubBrowser.mcp_present ? 'success' : 'neutral'" x-text="hubBrowser.mcp_present ? 'active' : 'off'"></span>
+              <span class="tag" :class="hubBrowser.state_present ? 'success' : 'neutral'" x-text="hubBrowser.state_present ? 'session imported' : 'no session'"></span>
+              <span style="flex:1"></span>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:400">
+                <input type="checkbox" x-model="hubBrowser.enabled"> enabled
+              </label>
+            </h2>
+            <p class="text-muted" style="margin: 0 0 var(--s-3) 0; font-size: var(--t-sm);">
+              A browser for the <strong>hub orchestrator</strong> — your own dashboards (VPS panel, SaaS,
+              analytics), never client logins: those belong to each workspace's own browser. Reading only;
+              actions and arbitrary JS are blocked server-side.
+            </p>
+            <label class="form-label" style="font-size:var(--t-xs)">Allowed origins (one per line, required)</label>
+            <textarea class="form-input" rows="3" style="width:100%;font-family:monospace;font-size:12px"
+                      placeholder="https://panel.example.com" x-model="hubBrowser.originsText"></textarea>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
+              <button class="btn btn-primary btn--xs" :disabled="hubBrowser.busy" @click="saveHubBrowser()">Save</button>
+              <label class="btn btn--ghost btn--xs" style="cursor:pointer">
+                <i data-lucide="key-round" style="width:13px;height:13px"></i> Import session (storage state)
+                <input type="file" accept=".json,application/json" style="display:none" @change="importHubBrowserState($event)">
+              </label>
+              <button class="btn btn--ghost btn--xs" x-show="hubBrowser.state_present" @click="resetHubBrowserState()">Remove session</button>
+            </div>
+            <div class="text-muted" style="font-size:11.5px;margin-top:8px">
+              Authenticated pages: run <code style="user-select:all">npx playwright codegen --save-storage=state.json &lt;url&gt;</code>
+              on your computer, log in, close, import <code>state.json</code> here (stored 0600, never in git/backups).
+            </div>
+            <div x-show="hubBrowser.msg" x-text="hubBrowser.msg" style="margin-top:6px;font-size:12.5px;color:var(--text-2)"></div>
+          </div>
+
           <!-- Generazione immagini: credenziali condivise hub (key modelli immagine) -->
           <div class="card" style="padding: var(--s-4); margin-bottom: var(--s-4);">
             <h2 style="font-size: var(--t-lg); margin: 0 0 var(--s-2) 0;">

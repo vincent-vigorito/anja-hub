@@ -26,6 +26,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com); versions follow
   script allowlist; `seo-copy` runs guarded with no Bash. Legacy
   `bypass_permissions: true` without an allowlist is unchanged (explicit
   opt-in).
+- **Hub-level browser** (extension of F-AgentBrowser): the hub orchestrator
+  can get its own read-only browser for the operator's *own* dashboards (VPS
+  panel, SaaS, analytics) — config in `config/config.json`, card in Settings →
+  Integrations → Hub browser, same fail-closed origin allowlist, same
+  server-side gate and storage-state import. Client logins stay in each
+  workspace's browser: the two never share sessions.
 - **Per-workspace agent browser, read-only v1** (F-AgentBrowser F1):
   workspaces can opt in to a Playwright-powered browser — `browser.enabled` +
   a **mandatory origin allowlist** (fail-closed) in the workspace preferences

@@ -184,8 +184,31 @@ def test_endpoints():
     check("state import → ok", r.status_code == 200 and r.json()["cookies"] == 1, r.text[:150])
     r = c.post("/api/browser/state-reset", json={"scope": "project:alpha"})
     check("state reset", r.status_code == 200 and r.json()["removed"])
+    # scope HUB (dashboard dell'operatore): config in config.json, entry nel .mcp.json dell'hub
     r = c.get("/api/browser/config?scope=hub")
-    check("scope hub → 400 (browser è per-workspace)", r.status_code == 400)
+    check("GET hub config (vuota)", r.status_code == 200 and not r.json()["browser"], r.text[:120])
+    r = c.put("/api/browser/config", json={"scope": "hub", "browser":
+              {"enabled": True, "allowed_origins": ["https://panel.mio-vps.it"]}})
+    check("PUT hub config → entry nel .mcp.json dell'hub", r.status_code == 200 and r.json()["mcp_present"],
+          r.text[:150])
+    hub_mcp = json.loads((hub / ".mcp.json").read_text())["mcpServers"]
+    check("entry hub con le origins giuste", bp.SERVER_NAME in hub_mcp
+          and "https://panel.mio-vps.it" in hub_mcp[bp.SERVER_NAME]["args"])
+    import json as _j
+    cfgfile = _j.loads((hub / "config" / "config.json").read_text())
+    check("config hub persistita in config.json", cfgfile.get("browser", {}).get("enabled") is True)
+    r = c.put("/api/browser/config", json={"scope": "hub", "browser": {"enabled": True}})
+    check("hub enabled senza origins → 400 (fail-closed anche qui)", r.status_code == 400)
+    state = json.dumps({"cookies": [{"name": "sid"}], "origins": []})
+    r = c.post("/api/browser/state-import", data={"scope": "hub"},
+               files={"file": ("state.json", state, "application/json")})
+    check("state import hub → ok + --storage-state nell'entry", r.status_code == 200 and
+          "--storage-state" in json.loads((hub / ".mcp.json").read_text())["mcpServers"][bp.SERVER_NAME]["args"])
+    r = c.put("/api/browser/config", json={"scope": "hub", "browser": {"enabled": False, "allowed_origins": []}})
+    check("hub disabled → entry rimossa", r.status_code == 200 and bp.SERVER_NAME not in
+          json.loads((hub / ".mcp.json").read_text())["mcpServers"])
+    r = c.get("/api/browser/config?scope=agent:x")
+    check("scope invalido → 400", r.status_code == 400)
 
 
 def main():

@@ -43,6 +43,24 @@ SECRET_SUBSTRINGS = (
     "oauth-client", "credentials.json", "token.json",
 )
 
+# Config-INTEGRITY: file che definiscono i permessi/toolset degli agenti.
+# Un agente non deve poter riscrivere il perimetro che lo contiene — nemmeno con
+# un "Allow" umano (caso reale 2026-08-24: l'orchestratore hub si è allargato
+# l'allowlist del browser editando .mcp.json). Deny in SCRITTURA (la lettura
+# resta libera); la strada giusta è la card UI / REST API.
+CONFIG_INTEGRITY_GLOBS = (
+    "*/.mcp.json", ".mcp.json",
+    "*/config/asp_permissions.json",
+)
+WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
+_WRITEISH_RE = re.compile(r"(>>?|\btee\b|\bsed\s+-i|\bmv\b|\bcp\b|\brm\b)")
+
+
+def config_integrity_path(path_str: str) -> bool:
+    n = _norm(path_str)
+    return any(fnmatch.fnmatch(n, g) for g in CONFIG_INTEGRITY_GLOBS)
+
+
 # Tool nativi il cui input è un path da confinare.
 PATH_TOOLS = {"Read": "file_path", "Write": "file_path", "Edit": "file_path",
               "MultiEdit": "file_path", "NotebookEdit": "notebook_path",
@@ -111,22 +129,32 @@ def bash_denied(command: str, allowlist: Optional[list[str]]) -> Optional[str]:
     return None
 
 
+_INTEGRITY_MSG = ("negato: {p} definisce i permessi degli agenti — si modifica dalla "
+                  "UI (card Browser/Connectors) o dalla REST API, non dai tool dell'agente")
+
+
 def precheck_secrets(tool_name: str, input_data: dict) -> Optional[str]:
-    """Pre-filtro per le sessioni interattive: nega SOLO il materiale segreto
-    (niente confinamento roots: lì decide l'umano via ASP)."""
+    """Pre-filtro per le sessioni interattive: nega il materiale segreto e la
+    RISCRITTURA dei file di config-integrity (niente confinamento roots: per il
+    resto decide l'umano via ASP)."""
     if not isinstance(input_data, dict):
         return None
     if tool_name == "Bash":
-        cmd = str(input_data.get("command", "")).lower()
+        cmd = str(input_data.get("command", ""))
+        low = cmd.lower()
         for s in SECRET_SUBSTRINGS:
-            if s in cmd:
+            if s in low:
                 return f"comando negato: riferimento a materiale segreto ('{s}')"
+        if ".mcp.json" in low and _WRITEISH_RE.search(low):
+            return _INTEGRITY_MSG.format(p=".mcp.json")
         return None
     key = PATH_TOOLS.get(tool_name)
     if key:
         p = str(input_data.get(key) or "")
         if p and secret_path(p):
             return f"path negato dalla policy segreti: {p}"
+        if p and tool_name in WRITE_TOOLS and config_integrity_path(p):
+            return _INTEGRITY_MSG.format(p=p)
     return None
 
 
@@ -186,7 +214,10 @@ def make_delegate_guard(roots: list[Path], granted: set[str],
             return PermissionResultAllow(updated_input=input_data)
         key = PATH_TOOLS.get(tool_name)
         if key is not None:
-            reason = path_denied(str(data.get(key) or ""), roots)
+            p = str(data.get(key) or "")
+            reason = path_denied(p, roots)
+            if not reason and tool_name in WRITE_TOOLS and config_integrity_path(p):
+                reason = _INTEGRITY_MSG.format(p=p)
             if reason:
                 _log("deny", tool_name, reason)
                 return PermissionResultDeny(message=reason, interrupt=False)

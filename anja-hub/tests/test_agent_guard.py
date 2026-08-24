@@ -76,6 +76,14 @@ def test_precheck():
     check("Bash normale → ok", g.precheck_secrets("Bash", {"command": "ls -la"}) is None)
     check("Edit su oauth-client → deny", g.precheck_secrets("Edit", {"file_path": "a/google-oauth-client.json"}))
     check("tool MCP → passthrough", g.precheck_secrets("mcp__anja_mail__mail_search", {"query": ".env"}) is None)
+    # config-integrity (caso reale 2026-08-24: l'agente si è allargato l'allowlist in .mcp.json)
+    check("Edit su .mcp.json → deny", g.precheck_secrets("Edit", {"file_path": "/srv/app/hub/.mcp.json"}))
+    check("Write su asp_permissions → deny", g.precheck_secrets("Write", {"file_path": "/h/config/asp_permissions.json"}))
+    check("Read su .mcp.json → LIBERO (solo scrittura negata)",
+          g.precheck_secrets("Read", {"file_path": "/srv/app/hub/.mcp.json"}) is None)
+    check("Bash 'sed -i .mcp.json' → deny", g.precheck_secrets("Bash", {"command": "sed -i s/x/y/ /srv/app/hub/.mcp.json"}))
+    check("Bash 'echo >> .mcp.json' → deny", g.precheck_secrets("Bash", {"command": "echo x >> .mcp.json"}))
+    check("Bash 'cat .mcp.json' → LIBERO", g.precheck_secrets("Bash", {"command": "cat /srv/app/hub/.mcp.json"}) is None)
 
 
 def test_plan():
